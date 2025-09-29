@@ -13,117 +13,309 @@
 		<style>
 			/* 我的佣金页面特有样式 */
 			.commission-stats {
-				padding: 16px;
-				background: white;
-				border-bottom: 1px solid #eee;
+				padding: 20px;
+				background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+				border-bottom: 1px solid #e2e8f0;
+				position: relative;
+				z-index: 1;
+				backdrop-filter: blur(20px);
+				border: 1px solid rgba(255, 255, 255, 0.3);
+				margin: 0 20px 20px 20px;
+				border-radius: 20px;
+				box-shadow: 
+					0 10px 40px rgba(0, 0, 0, 0.1),
+					inset 0 1px 0 rgba(255, 255, 255, 0.8);
 			}
 			
 			.commission-grid {
 				display: grid;
-				grid-template-columns: repeat(5, 1fr);
-				gap: 12px;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 16px;
 				text-align: center;
 			}
 			
 			.commission-item {
-				padding: 12px 8px;
+				padding: 16px 12px;
+				background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+				border-radius: 16px;
+				border: 1px solid #e2e8f0;
+				transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+				position: relative;
+				overflow: hidden;
+			}
+			
+			.commission-item::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 3px;
+				background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+				opacity: 0;
+				transition: opacity 0.4s ease;
+			}
+			
+			.commission-item:hover {
+				transform: translateY(-4px) scale(1.05);
+				box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+			}
+			
+			.commission-item:hover::before {
+				opacity: 1;
 			}
 			
 			.commission-label {
 				font-size: 11px;
-				color: #666;
-				margin-bottom: 6px;
+				color: #64748b;
+				font-weight: 600;
+				margin-bottom: 8px;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
 			}
 			
 			.commission-value {
-				font-size: 14px;
-				font-weight: bold;
-				color: #333;
+				font-size: 16px;
+				font-weight: 800;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
 			}
 			
 			.commission-card {
-				margin-bottom: 16px;
+				margin-bottom: 20px;
+				position: relative;
+				overflow: hidden;
 			}
 			
 			.commission-header {
 				display: flex;
 				justify-content: space-between;
 				align-items: center;
-				margin-bottom: 12px;
+				margin-bottom: 16px;
 			}
 			
 			.apply-time {
-				font-size: 12px;
-				color: #666;
+				font-size: 13px;
+				color: #64748b;
+				font-weight: 600;
+				display: flex;
+				align-items: center;
+				gap: 6px;
+			}
+			
+			.apply-time::before {
+				content: '📅';
+				font-size: 14px;
 			}
 			
 			.commission-status {
-				padding: 4px 8px;
-				border-radius: 4px;
-				font-size: 11px;
-				font-weight: bold;
+				padding: 8px 16px;
+				border-radius: 25px;
+				font-size: 12px;
+				font-weight: 700;
+				letter-spacing: 0.5px;
+				text-transform: uppercase;
+				box-shadow: 
+					0 4px 12px rgba(0, 0, 0, 0.15),
+					inset 0 1px 0 rgba(255, 255, 255, 0.3);
+				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+				animation: pulse-glow 3s ease-in-out infinite;
+			}
+			
+			@keyframes pulse-glow {
+				0%, 100% { transform: scale(1); }
+				50% { transform: scale(1.05); }
 			}
 			
 			.commission-details {
 				display: grid;
 				grid-template-columns: 1fr 1fr 1fr;
-				gap: 12px;
-				margin-bottom: 12px;
+				gap: 16px;
+				margin-bottom: 16px;
+				padding: 20px;
+				background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
+				border-radius: 16px;
+				border: 2px solid #e9d5ff;
+				position: relative;
+				overflow: hidden;
+			}
+			
+			.commission-details::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 3px;
+				background: linear-gradient(90deg, #c084fc, #a855f7, #9333ea);
 			}
 			
 			.detail-item {
 				text-align: center;
-				padding: 8px;
-				background: #f8f9fa;
-				border-radius: 4px;
+				position: relative;
+			}
+			
+			.detail-item::after {
+				content: '';
+				position: absolute;
+				top: -10px;
+				left: 50%;
+				transform: translateX(-50%);
+				width: 4px;
+				height: 4px;
+				background: #a855f7;
+				border-radius: 50%;
+				opacity: 0.6;
 			}
 			
 			.detail-label {
 				font-size: 10px;
-				color: #666;
-				margin-bottom: 4px;
+				color: #7c3aed;
+				font-weight: 600;
+				margin-bottom: 6px;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
 			}
 			
 			.detail-value {
-				font-size: 12px;
-				font-weight: bold;
-				color: #333;
+				font-size: 14px;
+				font-weight: 800;
+				background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
 			}
 			
 			.project-name {
-				font-size: 13px;
-				color: #333;
-				margin-bottom: 8px;
-				font-weight: 500;
+				font-size: 16px;
+				color: #1e293b;
+				margin-bottom: 12px;
+				font-weight: 700;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 70%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			
+			.project-name::before {
+				content: '📋';
+				font-size: 16px;
 			}
 			
 			.payment-time {
-				font-size: 11px;
-				color: #666;
+				font-size: 12px;
+				color: #059669;
 				text-align: right;
+				font-weight: 600;
+				margin-bottom: 12px;
+				display: flex;
+				align-items: center;
+				justify-content: flex-end;
+				gap: 6px;
+			}
+			
+			.payment-time::before {
+				content: '💰';
+				font-size: 14px;
 			}
 			
 			.action-link {
-				color: #409eff;
+				color: white;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 				text-decoration: none;
-				font-size: 12px;
+				font-size: 14px;
+				font-weight: 600;
 				text-align: center;
 				display: block;
-				padding: 8px;
-				border: 1px solid #409eff;
-				border-radius: 4px;
-				margin-top: 8px;
+				padding: 16px 20px;
+				border: none;
+				border-radius: 16px;
+				margin-top: 12px;
+				box-shadow: 
+					0 8px 24px rgba(102, 126, 234, 0.3),
+					inset 0 1px 0 rgba(255, 255, 255, 0.2);
+				transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+				position: relative;
+				overflow: hidden;
+				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+			}
+			
+			.action-link::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: -100%;
+				width: 100%;
+				height: 100%;
+				background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+				transition: left 0.6s;
+			}
+			
+			.action-link:hover {
+				transform: translateY(-3px) scale(1.05);
+				box-shadow: 
+					0 16px 40px rgba(102, 126, 234, 0.4),
+					inset 0 1px 0 rgba(255, 255, 255, 0.3);
+			}
+			
+			.action-link:hover::before {
+				left: 100%;
+			}
+			
+			/* 卡片装饰元素 */
+			.commission-card::after {
+				content: '';
+				position: absolute;
+				bottom: -50%;
+				left: -50%;
+				width: 200%;
+				height: 200%;
+				background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+				transform: rotate(45deg);
+				opacity: 0;
+				transition: all 0.4s ease;
+			}
+			
+			.commission-card:hover::after {
+				opacity: 1;
+				bottom: -40%;
+				left: -40%;
+			}
+			
+			.commission-card:hover {
+				transform: translateY(-8px) scale(1.02);
+			}
+			
+			.commission-card:hover .project-name {
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+			}
+			
+			.commission-card:hover .detail-value {
+				animation: number-glow 2s ease-in-out infinite;
+			}
+			
+			@keyframes number-glow {
+				0%, 100% { transform: scale(1); }
+				50% { transform: scale(1.05); }
 			}
 			
 			@media (max-width: 768px) {
 				.commission-grid {
-					grid-template-columns: repeat(3, 1fr);
-					gap: 8px;
+					grid-template-columns: repeat(2, 1fr);
+					gap: 12px;
 				}
 				
 				.commission-details {
 					grid-template-columns: 1fr;
-					gap: 8px;
+					gap: 12px;
 				}
 			}
 		</style>
@@ -169,59 +361,87 @@
 			<div class="commission-stats">
 				<div class="commission-grid">
 					<div class="commission-item">
-						<div class="commission-label">累计提单佣金</div>
+						<div class="commission-label">💰 累计提单佣金</div>
 						<div class="commission-value">1,243.51</div>
 					</div>
 					<div class="commission-item">
-						<div class="commission-label">未完结项目佣金</div>
+						<div class="commission-label">🚧 未完结项目佣金</div>
 						<div class="commission-value">99.61</div>
 					</div>
 					<div class="commission-item">
-						<div class="commission-label">待打款佣金</div>
+						<div class="commission-label">⏳ 待打款佣金</div>
 						<div class="commission-value">30</div>
 					</div>
 					<div class="commission-item">
-						<div class="commission-label">本日已打款佣金</div>
+						<div class="commission-label">✅ 本日已打款佣金</div>
 						<div class="commission-value">0</div>
 					</div>
 					<div class="commission-item">
-						<div class="commission-label">已完佣金</div>
+						<div class="commission-label">🎯 已完佣金</div>
 						<div class="commission-value">0</div>
 					</div>
 				</div>
 			</div>
 			
 			<div class="filters">
-				<div class="filter-row">
-					<input type="text" class="filter-select" placeholder="请输入项目编号" />
-					<select class="filter-select">
-						<option>全部打款状态</option>
-					</select>
-					<select class="filter-select">
-						<option>申请时间-开始时间</option>
-					</select>
-					<select class="filter-select">
-						<option>申请时间-结束时间</option>
-					</select>
-				</div>
-				<div class="filter-row">
-					<select class="filter-select">
-						<option>打款时间-开始时间</option>
-					</select>
-					<select class="filter-select">
-						<option>打款时间-结束时间</option>
-					</select>
-					<select class="filter-select">
-						<option>开始金额</option>
-					</select>
-					<select class="filter-select">
-						<option>结束金额</option>
-					</select>
-				</div>
+				<div class="filter-content">
+					<div class="filter-row">
+						<div class="filter-group" data-icon="📝">
+							<input type="text" class="filter-select" placeholder="请输入项目编号" />
+						</div>
+						<div class="filter-group" data-icon="💰">
+							<select class="filter-select">
+								<option>全部打款状态</option>
+							</select>
+						</div>
+					</div>
+					<div class="filter-row">
+						<div class="filter-group" data-icon="📅">
+							<select class="filter-select">
+								<option>申请时间-开始时间</option>
+							</select>
+						</div>
+					</div>
+					<div class="filter-row">
+						<div class="filter-group" data-icon="📅">
+							<select class="filter-select">
+								<option>申请时间-结束时间</option>
+							</select>
+						</div>
+					</div>
+					<div class="filter-row">
+						<div class="filter-group" data-icon="💵">
+							<select class="filter-select">
+								<option>打款时间-开始时间</option>
+							</select>
+						</div>
+					</div>
+					<div class="filter-row">
+						<div class="filter-group" data-icon="💵">
+							<select class="filter-select">
+								<option>打款时间-结束时间</option>
+							</select>
+						</div>
+					</div>
+					<div class="filter-row">
+						<div class="filter-group" data-icon="💰">
+							<select class="filter-select">
+								<option>开始金额</option>
+							</select>
+						</div>
+					</div>
+					<div class="filter-row">
+						<div class="filter-group" data-icon="💰">
+							<select class="filter-select">
+								<option>结束金额</option>
+							</select>
+						</div>
+					</div>
 				
-				<div class="search-tabs">
-					<button class="search-tab">搜索</button>
-					<button class="search-tab secondary">重置</button>
+					<div class="search-tabs">
+						<button class="search-tab" data-icon="🔍">搜索</button>
+						<button class="search-tab secondary" data-icon="🔄">重置</button>
+					</div>
 				</div>
 			</div>
 			

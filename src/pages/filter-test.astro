@@ -1,0 +1,225 @@
+---
+
+---
+
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="generator" content={Astro.generator} />
+		<title>筛选器测试</title>
+		<link rel="stylesheet" href="/common.css" />
+	</head>
+	<body>
+		<div class="container">
+			<div class="header">
+				<div class="nav-tabs">
+					<div class="nav-tab active">任务大厅</div>
+					<div class="nav-tab">我的任务</div>
+					<div class="nav-tab">我的佣金</div>
+				</div>
+				
+				<div class="profile-section">
+					<img src="/favicon.svg" alt="用户头像" class="avatar" />
+					<button class="profile-btn">👤 个人主页</button>
+				</div>
+			</div>
+			
+			<div class="stats-grid">
+				<div class="stat-card">
+					<div class="stat-title">本月检单数</div>
+					<div class="stat-value">0</div>
+					<div class="stat-detail">项目：0 任务：7</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-title">本月佣金金额</div>
+					<div class="stat-value">2050.00元</div>
+					<div class="stat-detail">项目：0 任务：0</div>
+				</div>
+			</div>
+			
+			<!-- 筛选器触发按钮 -->
+			<button class="filter-trigger" onclick="openFilterDrawer()">
+				🔍 筛选条件
+			</button>
+
+			<!-- 筛选器抽屉 -->
+			<div class="filter-drawer" id="filterDrawer" onclick="closeFilterDrawer(event)">
+				<div class="filter-drawer-content" onclick="event.stopPropagation()">
+					<div class="filter-drawer-header">
+						<h3 class="filter-drawer-title">🎯 筛选条件</h3>
+						<button class="filter-drawer-close" onclick="closeFilterDrawer()">✕</button>
+					</div>
+					
+					<div class="filter-drawer-body">
+						<!-- 基础筛选 -->
+						<div class="filter-section">
+							<h4 class="filter-section-title">基础筛选</h4>
+							<div class="filter-grid two-cols">
+								<div class="filter-item">
+									<span class="filter-item-icon">📋</span>
+									<select class="filter-select">
+										<option>全部项目和任务</option>
+									</select>
+								</div>
+								<div class="filter-item">
+									<span class="filter-item-icon">💰</span>
+									<select class="filter-select">
+										<option>开始金额</option>
+									</select>
+								</div>
+							</div>
+							<div class="filter-grid" style="margin-top: 12px;">
+								<div class="filter-item">
+									<span class="filter-item-icon">💵</span>
+									<select class="filter-select">
+										<option>结束金额</option>
+									</select>
+								</div>
+							</div>
+						</div>
+
+						<!-- 时间筛选 -->
+						<div class="filter-section">
+							<h4 class="filter-section-title">时间筛选</h4>
+							<div class="filter-grid">
+								<div class="filter-item">
+									<span class="filter-item-icon">📅</span>
+									<select class="filter-select">
+										<option>发布时间-开始时间</option>
+									</select>
+								</div>
+								<div class="filter-item">
+									<span class="filter-item-icon">📅</span>
+									<select class="filter-select">
+										<option>发布时间-结束时间</option>
+									</select>
+								</div>
+								<div class="filter-item">
+									<span class="filter-item-icon">⏰</span>
+									<select class="filter-select">
+										<option>截止时间-开始时间</option>
+									</select>
+								</div>
+								<div class="filter-item">
+									<span class="filter-item-icon">⏰</span>
+									<select class="filter-select">
+										<option>截止时间-结束时间</option>
+									</select>
+								</div>
+								<div class="filter-item">
+									<span class="filter-item-icon">🤝</span>
+									<select class="filter-select">
+										<option>接单时间-开始时间</option>
+									</select>
+								</div>
+								<div class="filter-item">
+									<span class="filter-item-icon">🤝</span>
+									<select class="filter-select">
+										<option>接单时间-结束时间</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="filter-drawer-footer">
+						<div class="filter-actions">
+							<button class="filter-btn filter-btn-secondary" onclick="resetFilters()">
+								🔄 重置
+							</button>
+							<button class="filter-btn filter-btn-primary" onclick="applyFilters()">
+								🔍 应用筛选
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="content">
+				<div class="task-card card">
+					<div class="task-badge status-待接单">💼 待接单</div>
+					<div class="task-title">测试任务</div>
+					
+					<div class="task-info">
+						<div class="task-info-row">
+							<span class="task-info-label">📋 任务类型</span>
+							<span class="task-info-value">前端开发</span>
+						</div>
+					</div>
+					
+					<div class="task-salary">
+						<div class="salary-item">
+							<div class="salary-label">💰 项目金额</div>
+							<div class="salary-value">¥ 4,550.00</div>
+						</div>
+						<div class="salary-item">
+							<div class="salary-label">🎯 基础佣金</div>
+							<div class="salary-value">¥ 4,550.00</div>
+						</div>
+					</div>
+					
+					<div class="task-actions">
+						<button class="btn btn-primary">🚀 立即接取</button>
+						<button class="btn btn-secondary">👁️ 查看详情</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			function openFilterDrawer() {
+				console.log('开始打开抽屉...');
+				const drawer = document.getElementById('filterDrawer');
+				console.log('抽屉元素:', drawer);
+				if (drawer) {
+					drawer.classList.add('active');
+					document.body.style.overflow = 'hidden';
+					console.log('抽屉已打开');
+				} else {
+					console.error('抽屉元素未找到');
+				}
+			}
+
+			function closeFilterDrawer(event) {
+				if (event && event.target !== event.currentTarget) return;
+				const drawer = document.getElementById('filterDrawer');
+				if (drawer) {
+					drawer.classList.remove('active');
+					document.body.style.overflow = '';
+				}
+			}
+
+			function resetFilters() {
+				const selects = document.querySelectorAll('.filter-select');
+				const inputs = document.querySelectorAll('.filter-input');
+				
+				selects.forEach(select => select.selectedIndex = 0);
+				inputs.forEach(input => input.value = '');
+				
+				console.log('筛选条件已重置');
+			}
+
+			function applyFilters() {
+				console.log('应用筛选条件');
+				closeFilterDrawer();
+				// 这里可以添加具体的筛选逻辑
+			}
+
+			// ESC键关闭抽屉
+			document.addEventListener('keydown', function(event) {
+				if (event.key === 'Escape') {
+					closeFilterDrawer();
+				}
+			});
+			
+			// 页面加载完成后确保按钮可点击
+			document.addEventListener('DOMContentLoaded', function() {
+				console.log('页面已加载');
+				const triggerBtn = document.querySelector('.filter-trigger');
+				console.log('筛选按钮:', triggerBtn);
+			});
+		</script>
+	</body>
+</html>

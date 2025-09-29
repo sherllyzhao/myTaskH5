@@ -55,9 +55,8 @@ body {
     padding: 20px 24px;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 50;
     backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* 导航标签 */
@@ -209,7 +208,7 @@ body {
     margin-bottom: 24px;
     padding: 0 24px;
     position: relative;
-    z-index: 1;
+    z-index: 200;
 }
 
 .stat-card {
@@ -226,6 +225,7 @@ body {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    z-index: 201;
 }
 
 .stat-card::before {
@@ -297,80 +297,354 @@ body {
     font-weight: 500;
 }
 
-/* 筛选器样式 */
-.filters {
-    padding: 24px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border-top: 1px solid #e2e8f0;
-    margin-top: 12px;
+/* 筛选器按钮样式 */
+.filter-trigger {
+    margin: 20px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 
+        0 8px 24px rgba(102, 126, 234, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: calc(100% - 40px);
+    justify-content: center;
+    z-index: 10;
+    pointer-events: auto;
 }
 
-.filters::before {
+.filter-trigger::before {
     content: '';
     position: absolute;
     top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s;
+}
+
+.filter-trigger:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 
+        0 16px 40px rgba(102, 126, 234, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.filter-trigger:hover::before {
+    left: 100%;
+}
+
+/* 抽屉弹窗样式 */
+.filter-drawer {
+    position: fixed;
+    top: 0;
     left: 0;
     right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
-.filter-row {
+.filter-drawer.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.filter-drawer-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 24px 24px 0 0;
+    max-height: 85vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 -10px 40px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.filter-drawer.active .filter-drawer-content {
+    transform: translateY(0);
+}
+
+/* 抽屉头部 */
+.filter-drawer-header {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    backdrop-filter: blur(20px);
+    border-radius: 24px 24px 0 0;
+    z-index: 1;
+}
+
+.filter-drawer-header::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: #cbd5e1;
+    border-radius: 2px;
+}
+
+.filter-drawer-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    text-align: center;
+    margin-top: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 70%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.filter-drawer-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f1f5f9;
+    border-radius: 50%;
+    cursor: pointer;
     display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #64748b;
+    transition: all 0.3s ease;
 }
 
+.filter-drawer-close:hover {
+    background: #e2e8f0;
+    transform: scale(1.1);
+}
+
+/* 抽屉内容区域 */
+.filter-drawer-body {
+    padding: 24px;
+}
+
+.filter-section {
+    margin-bottom: 24px;
+}
+
+.filter-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-section-title::before {
+    content: '';
+    width: 4px;
+    height: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.filter-grid.two-cols {
+    grid-template-columns: 1fr 1fr;
+}
+
+.filter-item {
+    position: relative;
+}
+
+.filter-item-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    opacity: 0.6;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.filter-input,
 .filter-select {
-    flex: 1;
-    min-width: 120px;
-    padding: 14px 18px;
+    width: 100%;
+    padding: 16px 18px 16px 48px;
     border: 2px solid #e2e8f0;
     border-radius: 16px;
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    font-size: 14px;
+    font-size: 15px;
     color: #475569;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
     box-shadow: 
         0 2px 8px rgba(0, 0, 0, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+.filter-input::placeholder {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.filter-input:focus,
 .filter-select:focus {
     border-color: #667eea;
     box-shadow: 
         0 0 0 4px rgba(102, 126, 234, 0.15),
         0 4px 16px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    background: #ffffff;
+}
+
+/* 抽屉底部按钮 */
+.filter-drawer-footer {
+    padding: 24px;
+    border-top: 1px solid #e2e8f0;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    position: sticky;
+    bottom: 0;
+    backdrop-filter: blur(20px);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.filter-btn {
+    flex: 1;
+    padding: 16px 24px;
+    border: none;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 
+        0 6px 20px rgba(102, 126, 234, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.filter-btn-primary:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 
+        0 12px 32px rgba(102, 126, 234, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.filter-btn-secondary {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+    box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.filter-btn-secondary:hover {
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* 动画效果 */
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* 隐藏原有筛选器 */
+.filters {
+    display: none !important;
 }
 
 .search-tabs {
     display: flex;
     gap: 16px;
-    margin-top: 20px;
+    margin-top: 24px;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .search-tab {
-    padding: 14px 28px;
+    padding: 16px 32px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     border-radius: 30px;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 700;
     color: white;
     cursor: pointer;
     box-shadow: 
-        0 6px 20px rgba(102, 126, 234, 0.3),
+        0 8px 24px rgba(102, 126, 234, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    min-width: 120px;
 }
 
 .search-tab::before {
@@ -384,30 +658,55 @@ body {
     transition: left 0.6s;
 }
 
+.search-tab::after {
+    content: attr(data-icon);
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
 .search-tab:hover {
-    transform: translateY(-3px) scale(1.05);
+    transform: translateY(-4px) scale(1.05);
     box-shadow: 
-        0 12px 32px rgba(102, 126, 234, 0.4),
+        0 16px 40px rgba(102, 126, 234, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
 }
 
 .search-tab:hover::before {
     left: 100%;
 }
 
+.search-tab:hover::after {
+    opacity: 1;
+    left: 12px;
+}
+
+.search-tab:hover {
+    padding-left: 40px;
+}
+
 .search-tab.secondary {
     background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
     color: #64748b;
     box-shadow: 
-        0 4px 16px rgba(0, 0, 0, 0.08),
+        0 6px 20px rgba(0, 0, 0, 0.08),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 2px solid #e2e8f0;
 }
 
 .search-tab.secondary:hover {
     background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    color: #475569;
     box-shadow: 
-        0 8px 24px rgba(0, 0, 0, 0.12),
+        0 12px 32px rgba(0, 0, 0, 0.12),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border-color: #cbd5e1;
+    transform: translateY(-4px) scale(1.05);
 }
 
 /* 内容区域 */

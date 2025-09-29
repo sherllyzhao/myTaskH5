@@ -1,0 +1,120 @@
+---
+
+---
+
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>抽屉测试</title>
+		<link rel="stylesheet" href="/common.css" />
+		<style>
+			.test-container {
+				padding: 20px;
+				max-width: 400px;
+				margin: 0 auto;
+			}
+			
+			.test-button {
+				background: #667eea;
+				color: white;
+				border: none;
+				padding: 16px 24px;
+				border-radius: 12px;
+				cursor: pointer;
+				margin: 10px;
+				font-size: 16px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="test-container">
+			<h1>抽屉测试页面</h1>
+			
+			<!-- 使用内联事件 -->
+			<button class="test-button" onclick="openDrawer()">测试按钮 1 (onclick)</button>
+			
+			<!-- 使用事件监听器 -->
+			<button class="test-button" id="testBtn2">测试按钮 2 (addEventListener)</button>
+			
+			<!-- 筛选器触发按钮 -->
+			<button class="filter-trigger" onclick="openFilterDrawer()">
+				🔍 筛选条件
+			</button>
+		</div>
+
+		<!-- 筛选器抽屉 -->
+		<div class="filter-drawer" id="filterDrawer" onclick="closeFilterDrawer(event)">
+			<div class="filter-drawer-content" onclick="event.stopPropagation()">
+				<div class="filter-drawer-header">
+					<h3 class="filter-drawer-title">🎯 筛选条件</h3>
+					<button class="filter-drawer-close" onclick="closeFilterDrawer()">✕</button>
+				</div>
+				
+				<div class="filter-drawer-body">
+					<h4>测试内容</h4>
+					<p>如果你能看到这个抽屉，说明功能正常！</p>
+				</div>
+
+				<div class="filter-drawer-footer">
+					<div class="filter-actions">
+						<button class="filter-btn filter-btn-secondary" onclick="closeFilterDrawer()">
+							关闭
+						</button>
+						<button class="filter-btn filter-btn-primary" onclick="closeFilterDrawer()">
+							确定
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			function openDrawer() {
+				alert('按钮1点击成功！');
+				openFilterDrawer();
+			}
+
+			function openFilterDrawer() {
+				console.log('尝试打开抽屉...');
+				const drawer = document.getElementById('filterDrawer');
+				console.log('抽屉元素:', drawer);
+				
+				if (drawer) {
+					drawer.classList.add('active');
+					document.body.style.overflow = 'hidden';
+					console.log('抽屉应该已显示');
+				} else {
+					console.error('找不到抽屉元素！');
+				}
+			}
+
+			function closeFilterDrawer(event) {
+				if (event && event.target !== event.currentTarget) return;
+				const drawer = document.getElementById('filterDrawer');
+				if (drawer) {
+					drawer.classList.remove('active');
+					document.body.style.overflow = '';
+				}
+			}
+
+			// 第二个按钮的事件监听器
+			document.addEventListener('DOMContentLoaded', function() {
+				const btn2 = document.getElementById('testBtn2');
+				if (btn2) {
+					btn2.addEventListener('click', function() {
+						alert('按钮2点击成功！');
+						openFilterDrawer();
+					});
+				}
+			});
+
+			// ESC键关闭抽屉
+			document.addEventListener('keydown', function(event) {
+				if (event.key === 'Escape') {
+					closeFilterDrawer();
+				}
+			});
+		</script>
+	</body>
+</html>
