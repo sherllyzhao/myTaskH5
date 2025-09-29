@@ -2,15 +2,226 @@
 
 ---
 
-<html lang="en">
+<html lang="zh-CN">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+		<title>任务管理</title>
+		<link rel="stylesheet" href="/common.css" />
+		<style>
+			/* 任务大厅特有样式 */
+			.task-card {
+				position: relative;
+			}
+			
+			.task-badge {
+				position: absolute;
+				top: 16px;
+				right: 16px;
+				background: #f56c6c;
+				color: white;
+				padding: 4px 8px;
+				border-radius: 4px;
+				font-size: 12px;
+			}
+			
+			.task-title {
+				font-size: 16px;
+				font-weight: bold;
+				margin-bottom: 12px;
+				padding-right: 60px;
+			}
+			
+			.task-info {
+				margin-bottom: 8px;
+			}
+			
+			.task-info-row {
+				display: flex;
+				justify-content: space-between;
+				margin-bottom: 8px;
+				font-size: 14px;
+			}
+			
+			.task-info-label {
+				color: #666;
+			}
+			
+			.task-info-value {
+				color: #333;
+			}
+			
+			.task-salary {
+				display: flex;
+				justify-content: space-between;
+				margin: 12px 0;
+				font-size: 14px;
+			}
+			
+			.salary-item {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+			
+			.salary-label {
+				color: #666;
+				margin-bottom: 4px;
+			}
+			
+			.salary-value {
+				font-weight: bold;
+				color: #f56c6c;
+			}
+			
+			.task-actions {
+				display: flex;
+				gap: 12px;
+				margin-top: 16px;
+			}
+			
+			.task-actions .btn {
+				flex: 1;
+				padding: 10px;
+				font-size: 14px;
+			}
+		</style>
 	</head>
 	<body>
-		<h1>Astro</h1>
+		<div class="container">
+			<div class="header">
+				<div class="nav-tabs">
+					<div class="nav-tab active">任务大厅</div>
+					<div class="nav-tab" onclick="window.location.href='/my-tasks'">我的任务</div>
+					<div class="nav-tab" onclick="window.location.href='/my-commission'">我的佣金</div>
+				</div>
+				
+				<div class="profile-section">
+					<img src="/favicon.svg" alt="用户头像" class="avatar" />
+					<button class="profile-btn">👤 个人主页</button>
+				</div>
+			</div>
+			
+			<div class="stats-grid">
+				<div class="stat-card">
+					<div class="stat-title">本月检单数</div>
+					<div class="stat-value">0</div>
+					<div class="stat-detail">项目：0 任务：7</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-title">本月佣金金额</div>
+					<div class="stat-value">2050.00元</div>
+					<div class="stat-detail">项目：0 任务：0</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-title">本月完结单数</div>
+					<div class="stat-value">0</div>
+					<div class="stat-detail">项目：0 任务：0</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-title">本月完结金额</div>
+					<div class="stat-value">0元</div>
+					<div class="stat-detail">项目：0 任务：0</div>
+				</div>
+			</div>
+			
+			<div class="filters">
+				<div class="filter-row">
+					<select class="filter-select">
+						<option>全部项目和任务</option>
+					</select>
+					<select class="filter-select">
+						<option>开始金额</option>
+					</select>
+					<select class="filter-select">
+						<option>结束金额</option>
+					</select>
+				</div>
+				<div class="filter-row">
+					<select class="filter-select">
+						<option>发布时间-开始时间</option>
+					</select>
+					<select class="filter-select">
+						<option>发布时间-结束时间</option>
+					</select>
+				</div>
+				<div class="filter-row">
+					<select class="filter-select">
+						<option>截止时间-开始时间</option>
+					</select>
+					<select class="filter-select">
+						<option>截止时间-结束时间</option>
+					</select>
+				</div>
+				<div class="filter-row">
+					<select class="filter-select">
+						<option>接单时间-开始时间</option>
+					</select>
+					<select class="filter-select">
+						<option>接单时间-结束时间</option>
+					</select>
+				</div>
+				
+				<div class="search-tabs">
+					<button class="search-tab active">搜索</button>
+					<button class="search-tab">重置</button>
+				</div>
+			</div>
+			
+			<div class="content">
+				<div class="task-card card">
+					<div class="task-badge status-待接单">待接单</div>
+					<div class="task-title">搜取后可项目日金额</div>
+					
+					<div class="task-info">
+						<div class="task-info-row">
+							<span class="task-info-label">任务类型:</span>
+							<span class="task-info-value">前端开发</span>
+						</div>
+						<div class="task-info-row">
+							<span class="task-info-label">任务工期:</span>
+							<span class="task-info-value">开始日期: 2025-09-26</span>
+						</div>
+						<div class="task-info-row">
+							<span></span>
+							<span class="task-info-value">截止日期: 2025-01-09</span>
+						</div>
+						<div class="task-info-row">
+							<span></span>
+							<span class="task-info-value">工期: 0个工作日</span>
+						</div>
+					</div>
+					
+					<div class="task-salary">
+						<div class="salary-item">
+							<div class="salary-label">金额:</div>
+							<div class="salary-value">¥ 4550.00</div>
+						</div>
+						<div class="salary-item">
+							<div class="salary-label">基础佣金:</div>
+							<div class="salary-value">¥ 4550.00</div>
+						</div>
+					</div>
+					
+					<div class="task-info-row">
+						<span class="task-info-label">备注:</span>
+						<span class="task-info-value">小程序 多店铺商城 二开</span>
+					</div>
+					
+					<div class="task-actions">
+						<button class="btn btn-primary">接取</button>
+						<button class="btn btn-secondary">详情</button>
+					</div>
+				</div>
+				
+				<div class="pagination">
+					共 1 条
+					<button class="page-btn">1</button>
+					9 条/页
+				</div>
+			</div>
+		</div>
 	</body>
 </html>

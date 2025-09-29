@@ -1,0 +1,291 @@
+---
+
+---
+
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="generator" content={Astro.generator} />
+		<title>我的佣金</title>
+		<link rel="stylesheet" href="/common.css" />
+		<style>
+			/* 我的佣金页面特有样式 */
+			.commission-stats {
+				padding: 16px;
+				background: white;
+				border-bottom: 1px solid #eee;
+			}
+			
+			.commission-grid {
+				display: grid;
+				grid-template-columns: repeat(5, 1fr);
+				gap: 12px;
+				text-align: center;
+			}
+			
+			.commission-item {
+				padding: 12px 8px;
+			}
+			
+			.commission-label {
+				font-size: 11px;
+				color: #666;
+				margin-bottom: 6px;
+			}
+			
+			.commission-value {
+				font-size: 14px;
+				font-weight: bold;
+				color: #333;
+			}
+			
+			.commission-card {
+				margin-bottom: 16px;
+			}
+			
+			.commission-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 12px;
+			}
+			
+			.apply-time {
+				font-size: 12px;
+				color: #666;
+			}
+			
+			.commission-status {
+				padding: 4px 8px;
+				border-radius: 4px;
+				font-size: 11px;
+				font-weight: bold;
+			}
+			
+			.commission-details {
+				display: grid;
+				grid-template-columns: 1fr 1fr 1fr;
+				gap: 12px;
+				margin-bottom: 12px;
+			}
+			
+			.detail-item {
+				text-align: center;
+				padding: 8px;
+				background: #f8f9fa;
+				border-radius: 4px;
+			}
+			
+			.detail-label {
+				font-size: 10px;
+				color: #666;
+				margin-bottom: 4px;
+			}
+			
+			.detail-value {
+				font-size: 12px;
+				font-weight: bold;
+				color: #333;
+			}
+			
+			.project-name {
+				font-size: 13px;
+				color: #333;
+				margin-bottom: 8px;
+				font-weight: 500;
+			}
+			
+			.payment-time {
+				font-size: 11px;
+				color: #666;
+				text-align: right;
+			}
+			
+			.action-link {
+				color: #409eff;
+				text-decoration: none;
+				font-size: 12px;
+				text-align: center;
+				display: block;
+				padding: 8px;
+				border: 1px solid #409eff;
+				border-radius: 4px;
+				margin-top: 8px;
+			}
+			
+			@media (max-width: 768px) {
+				.commission-grid {
+					grid-template-columns: repeat(3, 1fr);
+					gap: 8px;
+				}
+				
+				.commission-details {
+					grid-template-columns: 1fr;
+					gap: 8px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="header">
+				<div class="nav-tabs">
+					<div class="nav-tab" onclick="window.location.href='/'">任务大厅</div>
+					<div class="nav-tab" onclick="window.location.href='/my-tasks'">我的任务</div>
+					<div class="nav-tab active">我的佣金</div>
+				</div>
+				
+				<div class="profile-section">
+					<img src="/favicon.svg" alt="用户头像" class="avatar" />
+					<button class="profile-btn">👤 个人主页</button>
+				</div>
+			</div>
+			
+			<div class="stats-grid">
+				<div class="stat-card">
+					<div class="stat-title">本月检单数</div>
+					<div class="stat-value">0</div>
+					<div class="stat-detail">项目：0 任务：0</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-title">本月佣金金额</div>
+					<div class="stat-value">0元</div>
+					<div class="stat-detail">项目：0 任务：0</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-title">本月完结单数</div>
+					<div class="stat-value">0</div>
+					<div class="stat-detail">项目：0 任务：0</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-title">本月完结金额</div>
+					<div class="stat-value">0元</div>
+					<div class="stat-detail">项目：0 任务：0</div>
+				</div>
+			</div>
+			
+			<div class="commission-stats">
+				<div class="commission-grid">
+					<div class="commission-item">
+						<div class="commission-label">累计提单佣金</div>
+						<div class="commission-value">1,243.51</div>
+					</div>
+					<div class="commission-item">
+						<div class="commission-label">未完结项目佣金</div>
+						<div class="commission-value">99.61</div>
+					</div>
+					<div class="commission-item">
+						<div class="commission-label">待打款佣金</div>
+						<div class="commission-value">30</div>
+					</div>
+					<div class="commission-item">
+						<div class="commission-label">本日已打款佣金</div>
+						<div class="commission-value">0</div>
+					</div>
+					<div class="commission-item">
+						<div class="commission-label">已完佣金</div>
+						<div class="commission-value">0</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="filters">
+				<div class="filter-row">
+					<input type="text" class="filter-select" placeholder="请输入项目编号" />
+					<select class="filter-select">
+						<option>全部打款状态</option>
+					</select>
+					<select class="filter-select">
+						<option>申请时间-开始时间</option>
+					</select>
+					<select class="filter-select">
+						<option>申请时间-结束时间</option>
+					</select>
+				</div>
+				<div class="filter-row">
+					<select class="filter-select">
+						<option>打款时间-开始时间</option>
+					</select>
+					<select class="filter-select">
+						<option>打款时间-结束时间</option>
+					</select>
+					<select class="filter-select">
+						<option>开始金额</option>
+					</select>
+					<select class="filter-select">
+						<option>结束金额</option>
+					</select>
+				</div>
+				
+				<div class="search-tabs">
+					<button class="search-tab">搜索</button>
+					<button class="search-tab secondary">重置</button>
+				</div>
+			</div>
+			
+			<div class="content">
+				<div class="commission-card card">
+					<div class="commission-header">
+						<div class="apply-time">2024-04-30 09:37:30</div>
+						<div class="commission-status status-已打款">已打款</div>
+					</div>
+					
+					<div class="project-name">测试民款（003）</div>
+					
+					<div class="commission-details">
+						<div class="detail-item">
+							<div class="detail-label">申请时间</div>
+							<div class="detail-value">04-30</div>
+						</div>
+						<div class="detail-item">
+							<div class="detail-label">佣金金额</div>
+							<div class="detail-value amount">¥0.80</div>
+						</div>
+						<div class="detail-item">
+							<div class="detail-label">打款时间</div>
+							<div class="detail-value">08-13</div>
+						</div>
+					</div>
+					
+					<div class="payment-time">2024-08-13 15:31:43</div>
+					
+					<a href="#" class="action-link">任务详情</a>
+				</div>
+				
+				<div class="commission-card card">
+					<div class="commission-header">
+						<div class="apply-time">2024-04-30 09:09:56</div>
+						<div class="commission-status status-未打款">未打款</div>
+					</div>
+					
+					<div class="project-name">测试民款（003）</div>
+					
+					<div class="commission-details">
+						<div class="detail-item">
+							<div class="detail-label">申请时间</div>
+							<div class="detail-value">04-30</div>
+						</div>
+						<div class="detail-item">
+							<div class="detail-label">佣金金额</div>
+							<div class="detail-value amount">¥0.00</div>
+						</div>
+						<div class="detail-item">
+							<div class="detail-label">状态</div>
+							<div class="detail-value">未打款</div>
+						</div>
+					</div>
+					
+					<a href="#" class="action-link">任务详情</a>
+				</div>
+				
+				<div class="pagination">
+					共 6 条
+					<button class="page-btn">1</button>
+					10 条/页
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
