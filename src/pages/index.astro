@@ -14,78 +14,266 @@
 			/* 任务大厅特有样式 */
 			.task-card {
 				position: relative;
+				overflow: hidden;
 			}
 			
 			.task-badge {
 				position: absolute;
-				top: 16px;
-				right: 16px;
-				background: #f56c6c;
+				top: 20px;
+				right: 20px;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 				color: white;
-				padding: 4px 8px;
-				border-radius: 4px;
+				padding: 8px 16px;
+				border-radius: 25px;
 				font-size: 12px;
+				font-weight: 700;
+				letter-spacing: 0.5px;
+				text-transform: uppercase;
+				box-shadow: 
+					0 4px 12px rgba(102, 126, 234, 0.3),
+					inset 0 1px 0 rgba(255, 255, 255, 0.3);
+				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+				animation: pulse-glow 3s ease-in-out infinite;
+			}
+			
+			@keyframes pulse-glow {
+				0%, 100% {
+					box-shadow: 
+						0 4px 12px rgba(102, 126, 234, 0.3),
+						inset 0 1px 0 rgba(255, 255, 255, 0.3);
+				}
+				50% {
+					box-shadow: 
+						0 6px 20px rgba(102, 126, 234, 0.5),
+						inset 0 1px 0 rgba(255, 255, 255, 0.4),
+						0 0 20px rgba(102, 126, 234, 0.2);
+				}
 			}
 			
 			.task-title {
-				font-size: 16px;
-				font-weight: bold;
-				margin-bottom: 12px;
-				padding-right: 60px;
+				font-size: 18px;
+				font-weight: 700;
+				margin-bottom: 16px;
+				padding-right: 80px;
+				color: #1e293b;
+				line-height: 1.4;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 70%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
 			}
 			
 			.task-info {
-				margin-bottom: 8px;
+				margin-bottom: 16px;
+				background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+				border-radius: 12px;
+				padding: 16px;
+				border: 1px solid #e2e8f0;
 			}
 			
 			.task-info-row {
 				display: flex;
 				justify-content: space-between;
-				margin-bottom: 8px;
+				margin-bottom: 12px;
 				font-size: 14px;
+				align-items: center;
+			}
+			
+			.task-info-row:last-child {
+				margin-bottom: 0;
 			}
 			
 			.task-info-label {
-				color: #666;
+				color: #64748b;
+				font-weight: 600;
+				min-width: 80px;
 			}
 			
 			.task-info-value {
-				color: #333;
+				color: #1e293b;
+				font-weight: 500;
+				text-align: right;
+				flex: 1;
 			}
 			
 			.task-salary {
-				display: flex;
-				justify-content: space-between;
-				margin: 12px 0;
-				font-size: 14px;
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 16px;
+				margin: 20px 0;
+				padding: 20px;
+				background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
+				border-radius: 16px;
+				border: 2px solid #e9d5ff;
+				position: relative;
+				overflow: hidden;
+			}
+			
+			.task-salary::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 3px;
+				background: linear-gradient(90deg, #c084fc, #a855f7, #9333ea);
 			}
 			
 			.salary-item {
 				display: flex;
 				flex-direction: column;
 				align-items: center;
+				text-align: center;
+				position: relative;
+			}
+			
+			.salary-item::after {
+				content: '';
+				position: absolute;
+				top: -10px;
+				left: 50%;
+				transform: translateX(-50%);
+				width: 4px;
+				height: 4px;
+				background: #a855f7;
+				border-radius: 50%;
+				opacity: 0.6;
 			}
 			
 			.salary-label {
-				color: #666;
-				margin-bottom: 4px;
+				color: #7c3aed;
+				font-weight: 600;
+				margin-bottom: 8px;
+				font-size: 12px;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
 			}
 			
 			.salary-value {
-				font-weight: bold;
-				color: #f56c6c;
+				font-weight: 800;
+				font-size: 20px;
+				background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+				text-shadow: 0 2px 4px rgba(168, 85, 247, 0.2);
 			}
 			
 			.task-actions {
 				display: flex;
-				gap: 12px;
-				margin-top: 16px;
+				gap: 16px;
+				margin-top: 24px;
 			}
 			
 			.task-actions .btn {
 				flex: 1;
-				padding: 10px;
-				font-size: 14px;
+				padding: 16px 20px;
+				font-size: 15px;
+				font-weight: 600;
+				border-radius: 16px;
+				transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+				position: relative;
+				overflow: hidden;
+			}
+			
+			.task-actions .btn-primary {
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				box-shadow: 
+					0 8px 24px rgba(102, 126, 234, 0.3),
+					inset 0 1px 0 rgba(255, 255, 255, 0.2);
+			}
+			
+			.task-actions .btn-primary:hover {
+				transform: translateY(-4px) scale(1.05);
+				box-shadow: 
+					0 16px 40px rgba(102, 126, 234, 0.4),
+					inset 0 1px 0 rgba(255, 255, 255, 0.3);
+			}
+			
+			.task-actions .btn-secondary {
+				background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+				border: 2px solid #e2e8f0;
+				color: #64748b;
+				text-shadow: none;
+			}
+			
+			.task-actions .btn-secondary:hover {
+				background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+				border-color: #cbd5e1;
+				transform: translateY(-2px) scale(1.02);
+				color: #475569;
+			}
+			
+			/* 任务卡片装饰元素 */
+			.task-card::after {
+				content: '';
+				position: absolute;
+				bottom: -50%;
+				left: -50%;
+				width: 200%;
+				height: 200%;
+				background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+				transform: rotate(45deg);
+				opacity: 0;
+				transition: all 0.4s ease;
+			}
+			
+			.task-card:hover::after {
+				opacity: 1;
+				bottom: -40%;
+				left: -40%;
+			}
+			
+			/* 悬浮特效 */
+			.task-card:hover {
+				transform: translateY(-8px) scale(1.02);
+			}
+			
+			.task-card:hover .task-title {
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+			}
+			
+			.task-card:hover .salary-value {
+				animation: number-glow 2s ease-in-out infinite;
+			}
+			
+			@keyframes number-glow {
+				0%, 100% {
+					transform: scale(1);
+				}
+				50% {
+					transform: scale(1.05);
+				}
+			}
+			
+			/* 工期信息特殊样式 */
+			.task-info-row .task-info-value[class*="工作日"] {
+				background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+				font-weight: 700;
+			}
+			
+			/* 备注区域样式 */
+			.task-info-row:last-child {
+				background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+				padding: 12px;
+				border-radius: 8px;
+				border-left: 4px solid #f59e0b;
+				margin-top: 8px;
+			}
+			
+			.task-info-row:last-child .task-info-label {
+				color: #92400e;
+			}
+			
+			.task-info-row:last-child .task-info-value {
+				color: #78350f;
+				font-style: italic;
 			}
 		</style>
 	</head>
