@@ -163,6 +163,8 @@
 				display: flex;
 				gap: 16px;
 				margin-top: 24px;
+				position: relative;
+				z-index: 10;
 			}
 			
 			.task-actions .btn {
@@ -195,6 +197,10 @@
 				border: 2px solid #e2e8f0;
 				color: #64748b;
 				text-shadow: none;
+				text-decoration: none;
+				display: flex;
+				align-items: center;
+				justify-content: center;
 			}
 			
 			.task-actions .btn-secondary:hover {
@@ -216,6 +222,7 @@
 				transform: rotate(45deg);
 				opacity: 0;
 				transition: all 0.4s ease;
+				z-index: 1;
 			}
 			
 			.task-card:hover::after {
@@ -278,36 +285,36 @@
 		</style>
 	</head>
 	<body>
-		<script>
+		<script is:inline>
 			// 全局函数定义，确保在HTML元素之前加载
-			window.openFilterDrawer = function() {
+			function openFilterDrawer() {
 				const drawer = document.getElementById('filterDrawer');
 				if (drawer) {
 					drawer.classList.add('active');
 					document.body.style.overflow = 'hidden';
 				}
-			};
+			}
 
-			window.closeFilterDrawer = function(event) {
+			function closeFilterDrawer(event) {
 				if (event && event.target !== event.currentTarget) return;
 				const drawer = document.getElementById('filterDrawer');
 				if (drawer) {
 					drawer.classList.remove('active');
 					document.body.style.overflow = '';
 				}
-			};
+			}
 
-			window.resetFilters = function() {
+			function resetFilters() {
 				const selects = document.querySelectorAll('.filter-select');
 				const inputs = document.querySelectorAll('.filter-input');
 				
 				selects.forEach(select => select.selectedIndex = 0);
 				inputs.forEach(input => input.value = '');
-			};
+			}
 
-			window.applyFilters = function() {
+			function applyFilters() {
 				closeFilterDrawer();
-			};
+			}
 
 			// ESC键关闭抽屉
 			document.addEventListener('keydown', function(event) {
@@ -493,7 +500,7 @@
 					
 					<div class="task-actions">
 						<button class="btn btn-primary">🚀 立即接取</button>
-						<button class="btn btn-secondary">👁️ 查看详情</button>
+						<a href="/task/003/" class="btn btn-secondary">👁️ 查看详情</a>
 					</div>
 				</div>
 				
