@@ -101,10 +101,60 @@
 			}
 			
 			.profile-skills {
+				position: relative;
+				margin-bottom: 16px;
+			}
+			
+			.skills-container {
 				display: flex;
 				flex-wrap: wrap;
 				gap: 8px;
-				margin-bottom: 16px;
+				overflow: hidden;
+				transition: all 0.3s ease;
+				max-height: 72px;
+			}
+			
+			.skills-container.expanded {
+				max-height: none;
+			}
+			
+			.skills-container::after {
+				content: '';
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				height: 20px;
+				background: linear-gradient(transparent, white);
+				opacity: 1;
+				transition: opacity 0.3s ease;
+				pointer-events: none;
+			}
+			
+			.skills-container.expanded::after {
+				opacity: 0;
+			}
+			
+			.skills-toggle {
+				position: absolute;
+				bottom: -8px;
+				right: 0;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				color: white;
+				border: none;
+				padding: 4px 12px;
+				border-radius: 12px;
+				font-size: 11px;
+				font-weight: 500;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				z-index: 10;
+				box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+			}
+			
+			.skills-toggle:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 			}
 			
 			.skill-tag {
@@ -301,6 +351,27 @@
 		</style>
 	</head>
 	<body>
+		<script>
+			function toggleSkills() {
+				const container = document.getElementById('skillsContainer');
+				const toggle = document.getElementById('skillsToggle');
+				
+				if (container.classList.contains('expanded')) {
+					container.classList.remove('expanded');
+					toggle.textContent = '展开';
+				} else {
+					container.classList.add('expanded');
+					toggle.textContent = '收起';
+				}
+			}
+			
+			document.addEventListener('DOMContentLoaded', function() {
+				const toggle = document.getElementById('skillsToggle');
+				if (toggle) {
+					toggle.addEventListener('click', toggleSkills);
+				}
+			});
+		</script>
 		<div class="container">
 			<div class="profile-header">
 				<a href="/" class="back-button">
@@ -316,16 +387,19 @@
 						<div class="profile-name">资海云</div>
 						<div class="profile-intro">个人简介：资海云的个人简介1</div>
 						<div class="profile-skills">
-							<span class="skill-tag highlight">产品经理 <span class="star-rating">⭐</span></span>
-							<span class="skill-tag highlight">web前端 <span class="star-rating">⭐</span></span>
-							<span class="skill-tag highlight">电商产品经理 <span class="star-rating">⭐</span></span>
-							<span class="skill-tag highlight">数据产品经理 <span class="star-rating">⭐⭐</span></span>
-							<span class="skill-tag highlight">移动产品经理 <span class="star-rating">⭐⭐</span></span>
-							<span class="skill-tag highlight">C++ <span class="star-rating">⭐</span></span>
-							<span class="skill-tag highlight">Python <span class="star-rating">⭐</span></span>
-							<span class="skill-tag highlight">功能测试 <span class="star-rating">⭐⭐</span></span>
-							<span class="skill-tag highlight">新媒体运营 <span class="star-rating">⭐</span></span>
-							<span class="skill-tag highlight">网站编程 <span class="star-rating">⭐</span></span>
+							<div class="skills-container" id="skillsContainer">
+								<span class="skill-tag highlight">产品经理 <span class="star-rating">⭐</span></span>
+								<span class="skill-tag highlight">web前端 <span class="star-rating">⭐</span></span>
+								<span class="skill-tag highlight">电商产品经理 <span class="star-rating">⭐</span></span>
+								<span class="skill-tag highlight">数据产品经理 <span class="star-rating">⭐⭐</span></span>
+								<span class="skill-tag highlight">移动产品经理 <span class="star-rating">⭐⭐</span></span>
+								<span class="skill-tag highlight">C++ <span class="star-rating">⭐</span></span>
+								<span class="skill-tag highlight">Python <span class="star-rating">⭐</span></span>
+								<span class="skill-tag highlight">功能测试 <span class="star-rating">⭐⭐</span></span>
+								<span class="skill-tag highlight">新媒体运营 <span class="star-rating">⭐</span></span>
+								<span class="skill-tag highlight">网站编程 <span class="star-rating">⭐</span></span>
+							</div>
+							<button class="skills-toggle" id="skillsToggle">展开</button>
 						</div>
 					</div>
 				</div>
