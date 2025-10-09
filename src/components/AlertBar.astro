@@ -1,0 +1,106 @@
+---
+interface Props {
+  id?: string;
+  type?: 'success' | 'error';
+  autoClose?: boolean; // 是否自动关闭
+  duration?: number;   // 自动关闭延时（毫秒）
+}
+const {
+  id,
+  type = 'success',
+  autoClose = false,
+  duration = 3000,
+} = Astro.props as Props;
+const defaultId = id ?? (type === 'error' ? 'errorBar' : 'successBar');
+---
+<div
+  id={defaultId}
+  class={`alert-bar alert-${type}`}
+  role={type === 'error' ? 'alert' : 'status'}
+  aria-live="polite"
+  data-auto-close={autoClose ? 'true' : 'false'}
+  data-duration={String(duration)}
+>
+  <span class="alert-text"><slot /></span>
+</div>
+
+<style>
+  .alert-bar {
+    display: none;
+    margin: 12px 16px 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+  .alert-success {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+  }
+  .alert-error {
+    background: #fef3f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const el = document.currentScript && document.currentScript.previousElementSibling;
+    if (!el) return;
+    const textEl = el.querySelector('.alert-text');
+
+    // 元素方法
+    const setText = (msg) => {
+      if (textEl) textEl.textContent = String(msg ?? '');
+    };
+    const show = (msg) => {
+      if (msg !== undefined) setText(msg);
+      el.style.display = 'block';
+    };
+    const hide = () => {
+      el.style.display = 'none';
+    };
+
+    // 绑定到元素实例
+    try {
+      // @ts-ignore
+      el.setText = setText;
+      // @ts-ignore
+      el.show = show;
+      // @ts-ignore
+      el.hide = hide;
+    } catch {}
+
+    // 也暴露到 window.AlertBar[id]
+    try {
+      const gid = el.id || 'anonymous';
+      const g = window;
+      // @ts-ignore
+      g.AlertBar = g.AlertBar || {};
+      // @ts-ignore
+      g.AlertBar[gid] = { show, hide, setText };
+    } catch {}
+
+    // 自动关闭逻辑
+    let timer = null;
+    const startTimer = () => {
+      if (el.dataset.autoClose !== 'true') return;
+      const ms = Number(el.dataset.duration || '3000');
+      if (timer) { clearTimeout(timer); timer = null; }
+      timer = setTimeout(() => { hide(); }, Number.isNaN(ms) ? 3000 : ms);
+    };
+    const stopTimer = () => {
+      if (timer) { clearTimeout(timer); timer = null; }
+    };
+    const handleVisibility = () => {
+      const visible = window.getComputedStyle(el).display !== 'none';
+      if (visible) startTimer();
+      else stopTimer();
+    };
+    const obs = new MutationObserver(handleVisibility);
+    obs.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
+    handleVisibility();
+    window.addEventListener('beforeunload', () => { stopTimer(); obs.disconnect(); });
+  })();
+</script>

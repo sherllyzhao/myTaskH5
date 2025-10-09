@@ -1,0 +1,202 @@
+---
+import AlertBar from '../components/AlertBar.astro';
+
+const redirect = Astro.url.searchParams.get('redirect');
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>登录</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/common.css" />
+    <style>
+      /* 与首页统一的移动端风格与主色细节 */
+      body { background: #f6f8fa; }
+      .login-page { min-height: 100vh; display: flex; flex-direction: column; }
+
+      /* 顶部区块与间距体系：左右16px，段落间14px */
+      .login-header {
+        padding: 20px 16px 8px;
+        display: flex; align-items: center; gap: 10px;
+      }
+      .login-logo { width: 28px; height: 28px; border-radius: 8px; }
+      .login-title { font-size: 20px; font-weight: 800; color: #0f172a; }
+      .login-subtitle { padding: 0 16px 16px; font-size: 16px; color: #0f172a; font-weight: 700; line-height: 1.7; letter-spacing: .2px; }
+
+      /* 卡片与内边距：与全站 card 统一，仅做内边距控制 */
+      .login-card { margin: 0 16px; padding: 18px 16px; border-radius: 16px; }
+
+      /* 固定输入区域宽度：320px，确保在小屏下不超出两侧边距 */
+      .form-fixed {
+        width: 320px;
+        max-width: calc(100vw - 32px);
+        margin: 0 auto;
+        position: relative;
+        z-index: 99;
+      }
+
+      /* 表单行与输入框 */
+      .form-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+      .form-label { font-size: 12px; color: #64748b; font-weight: 600; }
+      .input-wrap { position: relative; }
+      .form-input {
+        width: 100%; height: 48px; padding: 10px 12px; padding-right: 44px;
+        border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;
+        font-size: 14px; color: #0f172a; outline: none; transition: all .2s ease;
+      }
+      .form-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+
+      /* 密码可见切换按钮 */
+      .toggle-eye {
+        position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+        height: 32px; min-width: 32px; padding: 0 8px;
+        border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;
+        color: #475569; font-size: 12px; cursor: pointer;
+      }
+
+      /* 按钮主色、尺寸和阴影（对齐首页） */
+      .actions { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+      .btn.btn-primary {
+        display: inline-flex; align-items: center; justify-content: center;
+        height: 48px; padding: 0 20px;
+        font-size: 15px; font-weight: 700; letter-spacing: .3px;
+        border-radius: 16px; border: none; color: #fff;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow:
+          0 8px 24px rgba(102,126,234,0.30),
+          inset 0 1px 0 rgba(255,255,255,0.20);
+        transition: transform .15s ease, box-shadow .2s ease;
+      }
+      .btn.btn-primary:active {
+        transform: translateY(1px);
+        box-shadow:
+          0 6px 18px rgba(102,126,234,0.28),
+          inset 0 1px 0 rgba(255,255,255,0.20);
+      }
+      .btn[disabled] { opacity: .7; cursor: not-allowed; }
+
+      /* 底部说明与链接，增强可读性 */
+      .login-footer {
+        margin: 12px 16px 24px; display: flex; justify-content: flex-end; font-size: 12px; color: #64748b;
+      }
+      .link { color: #667eea; text-decoration: none; }
+
+      .error-bar {
+        display: none;
+        margin: 12px 16px 0; padding: 10px 12px; border-radius: 12px;
+        background: #fef3f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13px;
+      }
+      .hint {
+        margin: 12px 16px 16px; padding: 12px; border-radius: 12px;
+        background: #ffffff; border: 1px solid #e2e8f0; color: #334155; font-size: 13px; line-height: 1.6;
+      }
+      .redirect {
+        margin-top: 6px; word-break: break-all; color: #0f172a;
+        background: #fff; border: 1px dashed #e2e8f0; border-radius: 8px; padding: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-page">
+      <div class="login-header">
+        <img src="/favicon.svg" class="login-logo" alt="logo" />
+        <div class="login-title">欢迎登录</div>
+      </div>
+      <div class="login-subtitle">请使用账号与密码登录后继续访问</div>
+
+      <div class="login-card card">
+        <div class="form-fixed">
+          <form id="loginForm" method="post">
+            <div class="form-row">
+              <label class="form-label" for="account">账号</label>
+              <div class="input-wrap">
+                <input class="form-input" id="account" name="account" placeholder="请输入账号" autocomplete="username" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label" for="password">密码</label>
+              <div class="input-wrap">
+                <input class="form-input" id="password" type="password" name="password" placeholder="请输入密码" autocomplete="current-password" />
+              </div>
+            </div>
+
+            <input type="hidden" name="redirect" value={redirect ?? '/'} />
+            <div class="actions">
+              <button class="btn btn-primary" id="submitBtn">登录</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <AlertBar type="error" id="errorBar" autoClose={true} />
+      <AlertBar type="success" id="successBar" autoClose={true} />
+
+      <div class="login-footer">
+        <a href="javascript:void(0)" class="link" onclick="history.back()">返回</a>
+      </div>
+
+      <div class="hint">
+        提示：这是示例登录页。请在 /api/login 实现认证，成功后设置 Cookie：token 或 employee_token。
+        <div class="redirect">登录成功后将跳转：{redirect ?? '/'}</div>
+      </div>
+    </div>
+
+    <script is:inline>
+      const $ = (s) => document.querySelector(s);
+
+      const pwd = $('#password');
+      const errorBar = $('#errorBar');
+      const successBar = $('#successBar');
+      const submitBtn = $('#submitBtn');
+
+      // 显示/隐藏方法由 AlertBar 组件提供：
+      // (errorBar)?.show?.(msg) / (errorBar)?.hide?.()
+      // (successBar)?.show?.(msg) / (successBar)?.hide?.()
+
+      // 如果 URL 上有 ?error=1，则显示错误提示
+      try {
+        const params = new URLSearchParams(location.search);
+        if (params.get('error') === '1') {
+          (errorBar)?.show?.('账号或密码错误');
+        }
+      } catch {}
+      submitBtn?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        (errorBar)?.hide?.();
+        const account = $('#account')?.value?.trim();
+        const password = $('#password')?.value;
+        const redirectValue = document.querySelector('input[name="redirect"]')?.value || '/';
+
+        if (!account) {
+          (errorBar)?.show?.('请输入账号');
+          return;
+        }
+        if (!password) {
+          (errorBar)?.show?.('请输入密码');
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/login/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ account, password, redirect: redirectValue }),
+          });
+          const data = await res.json().catch(() => ({}));
+          console.info("🚀 ~ data:", data)
+          if (data?.code === 200) {
+            (successBar)?.show?.('登录成功，正在跳转…');
+            setTimeout(() => { location.href = redirectValue; }, 4000);
+          } else {
+            (errorBar)?.show?.(data?.message || data?.msg || '登录失败，请重试');
+          }
+        } catch {
+          (errorBar)?.show?.('网络异常，请稍后再试');
+        }
+      });
+    </script>
+  </body>
+</html>

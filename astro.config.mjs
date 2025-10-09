@@ -1,8 +1,11 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import node from '@astrojs/node';
 
 // https://astro.build/config
 export default defineConfig({
+  output: 'server',
+  adapter: node({ mode: 'standalone' }),
   // 使用 Vite 配置来设置代理
   vite: {
     server: {
@@ -11,7 +14,7 @@ export default defineConfig({
         // 将 /api 开头的请求代理到目标服务器
         '/api': {
           // 目标服务器地址
-          target: 'https://api.example.com',
+          target: import.meta.env.PUBLIC_API_BASE_URL,
           // 修改请求头中的 host 值，以匹配目标URL的主机名
           changeOrigin: true,
           // 重写路径，去掉 /api 前缀

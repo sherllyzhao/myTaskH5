@@ -4,12 +4,14 @@
  */
 
 // 请求配置接口
-export interface RequestConfig extends RequestInit {
+export interface RequestConfig extends Omit<RequestInit, 'headers'> {
   // 自定义超时时间（毫秒）
   timeout?: number;
   // 是否自动处理错误响应（4xx, 5xx）
   handleErrorResponse?: boolean;
-  // 自定义请求头
+  // 请求头（覆盖 RequestInit 的 HeadersInit，使用可索引的字典）
+  headers?: Record<string, string>;
+  // 自定义请求头（在本工具额外合并使用）
   customHeaders?: Record<string, string>;
   // 是否携带凭证（cookies）
   withCredentials?: boolean;
@@ -215,6 +217,9 @@ export const http = {
   
   // 设置全局请求头（如认证令牌）
   setGlobalHeader: (key: string, value: string | null) => {
+    if (!DEFAULT_CONFIG.headers) {
+      DEFAULT_CONFIG.headers = {};
+    }
     if (value === null) {
       delete DEFAULT_CONFIG.headers[key];
     } else {
