@@ -1,517 +1,610 @@
 ---
-const { PUBLIC_API_BASE_URL } = import.meta.env;
+import http from "../utils/http";
 
+/* 获取任务大厅列表 */
+const employeeToken = Astro.cookies.get("employee_token")?.value;
+console.log("🔑 Token:", employeeToken ? `${employeeToken.substring(0, 20)}...` : "未找到 token");
 
+// 使用和浏览器端一样的最小化请求数据
+const postData = {
+  page: 1,
+  limit: 10,
+  tokens: employeeToken,
+  enterpriseSide: "pc",
+};
+
+// SSR 模式：通过 Astro API 代理路由
+const proxyUrl = `${Astro.url.origin}/api/proxy`;
+console.log("🔍 Proxy URL:", proxyUrl);
+console.log("📤 Request data:", JSON.stringify(postData, null, 2));
+
+http.setToken(employeeToken || "");
+
+let taskListResData: any = {
+  list: [],
+  total: 0,
+};
+
+try {
+  console.log("🚀 [SSR] 开始调用代理...");
+  console.log("📍 [SSR] Proxy URL:", proxyUrl);
+  console.log("📦 [SSR] Post Data:", postData);
+
+  // 使用代理路由
+  const taskListRes = await http.post(proxyUrl, postData);
+
+  console.log("📨 [SSR] 收到响应:", taskListRes);
+  taskListResData = taskListRes.data;
+  console.info("✅ SSR Success:", JSON.stringify(taskListResData).substring(0, 200));
+} catch (error: any) {
+  console.error("❌ SSR Error:", error);
+  console.error("Error message:", error.message);
+  console.error("Error details:", JSON.stringify(error, null, 2));
+  taskListResData = {
+    list: [],
+    total: 0,
+    error: error.message || "请求失败",
+  };
+}
+
+console.log("🏁 [SSR] 处理完成，任务列表长度:", (taskListResData?.list || taskListResData?.rows || []).length);
+
+const taskList = taskListResData?.list || taskListResData?.rows || [];
+const total = taskListResData?.total || taskListResData?.count || 0;
 ---
 
 <html lang="zh-CN">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content={Astro.generator} />
-		<title>任务管理</title>
-		<link rel="stylesheet" href="/common.css" />
-		<style>
-			/* 任务大厅特有样式 */
-			.task-card {
-				position: relative;
-				overflow: hidden;
-			}
-			
-			.task-badge {
-				position: absolute;
-				top: 20px;
-				right: 20px;
-				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-				color: white;
-				padding: 8px 16px;
-				border-radius: 25px;
-				font-size: 12px;
-				font-weight: 700;
-				letter-spacing: 0.5px;
-				text-transform: uppercase;
-				box-shadow: 
-					0 4px 12px rgba(102, 126, 234, 0.3),
-					inset 0 1px 0 rgba(255, 255, 255, 0.3);
-				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-				animation: pulse-glow 3s ease-in-out infinite;
-			}
-			
-			@keyframes pulse-glow {
-				0%, 100% {
-					box-shadow: 
-						0 4px 12px rgba(102, 126, 234, 0.3),
-						inset 0 1px 0 rgba(255, 255, 255, 0.3);
-				}
-				50% {
-					box-shadow: 
-						0 6px 20px rgba(102, 126, 234, 0.5),
-						inset 0 1px 0 rgba(255, 255, 255, 0.4),
-						0 0 20px rgba(102, 126, 234, 0.2);
-				}
-			}
-			
-			.task-title {
-				font-size: 18px;
-				font-weight: 700;
-				margin-bottom: 16px;
-				padding-right: 80px;
-				color: #1e293b;
-				line-height: 1.4;
-				background: linear-gradient(135deg, #667eea 0%, #764ba2 70%);
-				-webkit-background-clip: text;
-				-webkit-text-fill-color: transparent;
-				background-clip: text;
-			}
-			
-			.task-info {
-				margin-bottom: 16px;
-				background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-				border-radius: 12px;
-				padding: 16px;
-				border: 1px solid #e2e8f0;
-			}
-			
-			.task-info-row {
-				display: flex;
-				justify-content: space-between;
-				margin-bottom: 12px;
-				font-size: 14px;
-				align-items: center;
-			}
-			
-			.task-info-row:last-child {
-				margin-bottom: 0;
-			}
-			
-			.task-info-label {
-				color: #64748b;
-				font-weight: 600;
-				min-width: 80px;
-			}
-			
-			.task-info-value {
-				color: #1e293b;
-				font-weight: 500;
-				text-align: right;
-				flex: 1;
-			}
-			
-			.task-salary {
-				display: grid;
-				grid-template-columns: 1fr 1fr;
-				gap: 16px;
-				margin: 20px 0;
-				padding: 20px;
-				background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
-				border-radius: 16px;
-				border: 2px solid #e9d5ff;
-				position: relative;
-				overflow: hidden;
-			}
-			
-			.task-salary::before {
-				content: '';
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				height: 3px;
-				background: linear-gradient(90deg, #c084fc, #a855f7, #9333ea);
-			}
-			
-			.salary-item {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				text-align: center;
-				position: relative;
-			}
-			
-			.salary-item::after {
-				content: '';
-				position: absolute;
-				top: -10px;
-				left: 50%;
-				transform: translateX(-50%);
-				width: 4px;
-				height: 4px;
-				background: #a855f7;
-				border-radius: 50%;
-				opacity: 0.6;
-			}
-			
-			.salary-label {
-				color: #7c3aed;
-				font-weight: 600;
-				margin-bottom: 8px;
-				font-size: 12px;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-			}
-			
-			.salary-value {
-				font-weight: 800;
-				font-size: 20px;
-				background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%);
-				-webkit-background-clip: text;
-				-webkit-text-fill-color: transparent;
-				background-clip: text;
-				text-shadow: 0 2px 4px rgba(168, 85, 247, 0.2);
-			}
-			
-			.task-actions {
-				display: flex;
-				gap: 16px;
-				margin-top: 24px;
-				position: relative;
-				z-index: 10;
-			}
-			
-			.task-actions .btn {
-				flex: 1;
-				padding: 16px 20px;
-				font-size: 15px;
-				font-weight: 600;
-				border-radius: 16px;
-				transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-				position: relative;
-				overflow: hidden;
-			}
-			
-			.task-actions .btn-primary {
-				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-				box-shadow: 
-					0 8px 24px rgba(102, 126, 234, 0.3),
-					inset 0 1px 0 rgba(255, 255, 255, 0.2);
-			}
-			
-			.task-actions .btn-primary:hover {
-				transform: translateY(-4px) scale(1.05);
-				box-shadow: 
-					0 16px 40px rgba(102, 126, 234, 0.4),
-					inset 0 1px 0 rgba(255, 255, 255, 0.3);
-			}
-			
-			.task-actions .btn-secondary {
-				background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-				border: 2px solid #e2e8f0;
-				color: #64748b;
-				text-shadow: none;
-				text-decoration: none;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-			}
-			
-			.task-actions .btn-secondary:hover {
-				background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
-				border-color: #cbd5e1;
-				transform: translateY(-2px) scale(1.02);
-				color: #475569;
-			}
-			
-			/* 任务卡片装饰元素 */
-			.task-card::after {
-				content: '';
-				position: absolute;
-				bottom: -50%;
-				left: -50%;
-				width: 200%;
-				height: 200%;
-				background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
-				transform: rotate(45deg);
-				opacity: 0;
-				transition: all 0.4s ease;
-				z-index: 1;
-			}
-			
-			.task-card:hover::after {
-				opacity: 1;
-				bottom: -40%;
-				left: -40%;
-			}
-			
-			/* 悬浮特效 */
-			.task-card:hover {
-				transform: translateY(-8px) scale(1.02);
-			}
-			
-			.task-card:hover .task-title {
-				background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-				-webkit-background-clip: text;
-				-webkit-text-fill-color: transparent;
-				background-clip: text;
-			}
-			
-			.task-card:hover .salary-value {
-				animation: number-glow 2s ease-in-out infinite;
-			}
-			
-			@keyframes number-glow {
-				0%, 100% {
-					transform: scale(1);
-				}
-				50% {
-					transform: scale(1.05);
-				}
-			}
-			
-			/* 工期信息特殊样式 */
-			.task-info-row .task-info-value[class*="工作日"] {
-				background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-				-webkit-background-clip: text;
-				-webkit-text-fill-color: transparent;
-				background-clip: text;
-				font-weight: 700;
-			}
-			
-			/* 备注区域样式 */
-			.task-info-row:last-child {
-				background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-				padding: 12px;
-				border-radius: 8px;
-				border-left: 4px solid #f59e0b;
-				margin-top: 8px;
-			}
-			
-			.task-info-row:last-child .task-info-label {
-				color: #92400e;
-			}
-			
-			.task-info-row:last-child .task-info-value {
-				color: #78350f;
-				font-style: italic;
-			}
-		</style>
-	</head>
-	<body>
-		<script is:inline>
-			// 全局函数定义，确保在HTML元素之前加载
-			function openFilterDrawer() {
-				const drawer = document.getElementById('filterDrawer');
-				if (drawer) {
-					drawer.classList.add('active');
-					document.body.style.overflow = 'hidden';
-				}
-			}
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>任务管理</title>
+    <link rel="stylesheet" href="/common.css" />
+    <style>
+      /* 任务大厅特有样式 */
+      .task-card {
+        position: relative;
+        overflow: hidden;
+      }
 
-			function closeFilterDrawer(event) {
-				if (event && event.target !== event.currentTarget) return;
-				const drawer = document.getElementById('filterDrawer');
-				if (drawer) {
-					drawer.classList.remove('active');
-					document.body.style.overflow = '';
-				}
-			}
+      .task-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        box-shadow:
+          0 4px 12px rgba(102, 126, 234, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        animation: pulse-glow 3s ease-in-out infinite;
+      }
 
-			function resetFilters() {
-				const selects = document.querySelectorAll('.filter-select');
-				const inputs = document.querySelectorAll('.filter-input');
-				
-				selects.forEach(select => select.selectedIndex = 0);
-				inputs.forEach(input => input.value = '');
-			}
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          box-shadow:
+            0 4px 12px rgba(102, 126, 234, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        50% {
+          box-shadow:
+            0 6px 20px rgba(102, 126, 234, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            0 0 20px rgba(102, 126, 234, 0.2);
+        }
+      }
 
-			function applyFilters() {
-				closeFilterDrawer();
-			}
+      .task-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        padding-right: 80px;
+        color: #1e293b;
+        line-height: 1.4;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 70%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
 
-			// ESC键关闭抽屉
-			document.addEventListener('keydown', function(event) {
-				if (event.key === 'Escape') {
-					closeFilterDrawer();
-				}
-			});
-		</script>
-		<div class="container">
-			<div class="header">
-				<div class="nav-tabs">
-					<div class="nav-tab active">任务大厅</div>
-					<div class="nav-tab" onclick="window.location.href='/my-tasks'">我的任务</div>
-					<div class="nav-tab" onclick="window.location.href='/my-commission'">我的佣金</div>
-				</div>
-				
-				<div class="profile-section">
-					<img src="/favicon.svg" alt="用户头像" class="avatar" />
-					<a href="/profile" class="profile-btn">👤 个人主页</a>
-				</div>
-			</div>
-			
-			<div class="stats-grid">
-				<div class="stat-card">
-					<div class="stat-title">本月检单数</div>
-					<div class="stat-value">0</div>
-					<div class="stat-detail">项目：0 任务：7</div>
-				</div>
-				<div class="stat-card">
-					<div class="stat-title">本月佣金金额</div>
-					<div class="stat-value">2050.00元</div>
-					<div class="stat-detail">项目：0 任务：0</div>
-				</div>
-				<div class="stat-card">
-					<div class="stat-title">本月完结单数</div>
-					<div class="stat-value">0</div>
-					<div class="stat-detail">项目：0 任务：0</div>
-				</div>
-				<div class="stat-card">
-					<div class="stat-title">本月完结金额</div>
-					<div class="stat-value">0元</div>
-					<div class="stat-detail">项目：0 任务：0</div>
-				</div>
-			</div>
-			
-			<!-- 筛选器触发按钮 -->
-			<button class="filter-trigger" onclick="openFilterDrawer()">
-				🔍 筛选条件
-			</button>
+      .task-info {
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #e2e8f0;
+      }
 
-			<!-- 筛选器抽屉 -->
-			<div class="filter-drawer" id="filterDrawer" onclick="closeFilterDrawer(event)">
-				<div class="filter-drawer-content" onclick="event.stopPropagation()">
-					<div class="filter-drawer-header">
-						<h3 class="filter-drawer-title">🎯 筛选条件</h3>
-						<button class="filter-drawer-close" onclick="closeFilterDrawer()">✕</button>
-					</div>
-					
-					<div class="filter-drawer-body">
-						<!-- 基础筛选 -->
-						<div class="filter-section">
-							<h4 class="filter-section-title">基础筛选</h4>
-							<div class="filter-grid two-cols">
-								<div class="filter-item">
-									<span class="filter-item-icon">📋</span>
-									<select class="filter-select">
-										<option>全部项目和任务</option>
-									</select>
-								</div>
-								<div class="filter-item">
-									<span class="filter-item-icon">💰</span>
-									<select class="filter-select">
-										<option>开始金额</option>
-									</select>
-								</div>
-							</div>
-							<div class="filter-grid" style="margin-top: 12px;">
-								<div class="filter-item">
-									<span class="filter-item-icon">💵</span>
-									<select class="filter-select">
-										<option>结束金额</option>
-									</select>
-								</div>
-							</div>
-						</div>
+      .task-info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 14px;
+        align-items: center;
+      }
 
-						<!-- 时间筛选 -->
-						<div class="filter-section">
-							<h4 class="filter-section-title">时间筛选</h4>
-							<div class="filter-grid">
-								<div class="filter-item">
-									<span class="filter-item-icon">📅</span>
-									<select class="filter-select">
-										<option>发布时间-开始时间</option>
-									</select>
-								</div>
-								<div class="filter-item">
-									<span class="filter-item-icon">📅</span>
-									<select class="filter-select">
-										<option>发布时间-结束时间</option>
-									</select>
-								</div>
-								<div class="filter-item">
-									<span class="filter-item-icon">⏰</span>
-									<select class="filter-select">
-										<option>截止时间-开始时间</option>
-									</select>
-								</div>
-								<div class="filter-item">
-									<span class="filter-item-icon">⏰</span>
-									<select class="filter-select">
-										<option>截止时间-结束时间</option>
-									</select>
-								</div>
-								<div class="filter-item">
-									<span class="filter-item-icon">🤝</span>
-									<select class="filter-select">
-										<option>接单时间-开始时间</option>
-									</select>
-								</div>
-								<div class="filter-item">
-									<span class="filter-item-icon">🤝</span>
-									<select class="filter-select">
-										<option>接单时间-结束时间</option>
-									</select>
-								</div>
-							</div>
-						</div>
-					</div>
+      .task-info-row:last-child {
+        margin-bottom: 0;
+      }
 
-					<div class="filter-drawer-footer">
-						<div class="filter-actions">
-							<button class="filter-btn filter-btn-secondary" onclick="resetFilters()">
-								🔄 重置
-							</button>
-							<button class="filter-btn filter-btn-primary" onclick="applyFilters()">
-								🔍 应用筛选
-							</button>
-						</div>
-					</div>
-				</div>
-			</div>
+      .task-info-label {
+        color: #64748b;
+        font-weight: 600;
+        min-width: 80px;
+      }
 
-			<div class="content">
-				<div class="task-card card">
-					<div class="task-badge status-待接单">💼 待接单</div>
-					<div class="task-title">搜取后可项目日金额</div>
-					
-					<div class="task-info">
-						<div class="task-info-row">
-							<span class="task-info-label">📋 任务类型</span>
-							<span class="task-info-value">前端开发</span>
-						</div>
-						<div class="task-info-row">
-							<span class="task-info-label">📅 开始日期</span>
-							<span class="task-info-value">2025-09-26</span>
-						</div>
-						<div class="task-info-row">
-							<span class="task-info-label">⏰ 截止日期</span>
-							<span class="task-info-value">2025-01-09</span>
-						</div>
-						<div class="task-info-row">
-							<span class="task-info-label">⚡ 工期</span>
-							<span class="task-info-value">0个工作日</span>
-						</div>
-					</div>
-					
-					<div class="task-salary">
-						<div class="salary-item">
-							<div class="salary-label">💰 项目金额</div>
-							<div class="salary-value">¥ 4,550.00</div>
-						</div>
-						<div class="salary-item">
-							<div class="salary-label">🎯 基础佣金</div>
-							<div class="salary-value">¥ 4,550.00</div>
-						</div>
-					</div>
-					
-					<div class="task-info-row">
-						<span class="task-info-label">💡 备注</span>
-						<span class="task-info-value">小程序 多店铺商城 二开</span>
-					</div>
-					
-					<div class="task-actions">
-						<button class="btn btn-primary">🚀 立即接取</button>
-						<a href="/task/003/" class="btn btn-secondary">👁️ 查看详情</a>
-					</div>
-				</div>
-				
-				<div class="pagination">
-					📊 共 1 条记录
-					<button class="page-btn">1</button>
-					每页 9 条
-				</div>
-			</div>
-		</div>
-	</body>
+      .task-info-value {
+        color: #1e293b;
+        font-weight: 500;
+        text-align: right;
+        flex: 1;
+      }
+
+      .task-salary {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin: 20px 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
+        border-radius: 16px;
+        border: 2px solid #e9d5ff;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .task-salary::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #c084fc, #a855f7, #9333ea);
+      }
+
+      .salary-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        position: relative;
+      }
+
+      .salary-item::after {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        background: #a855f7;
+        border-radius: 50%;
+        opacity: 0.6;
+      }
+
+      .salary-label {
+        color: #7c3aed;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .salary-value {
+        font-weight: 800;
+        font-size: 20px;
+        background: linear-gradient(
+          135deg,
+          #c084fc 0%,
+          #a855f7 50%,
+          #9333ea 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 2px 4px rgba(168, 85, 247, 0.2);
+      }
+
+      .task-actions {
+        display: flex;
+        gap: 16px;
+        margin-top: 24px;
+        position: relative;
+        z-index: 10;
+      }
+
+      .task-actions .btn {
+        flex: 1;
+        padding: 16px 20px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 16px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .task-actions .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow:
+          0 8px 24px rgba(102, 126, 234, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .task-actions .btn-primary:hover {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow:
+          0 16px 40px rgba(102, 126, 234, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .task-actions .btn-secondary {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border: 2px solid #e2e8f0;
+        color: #64748b;
+        text-shadow: none;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .task-actions .btn-secondary:hover {
+        background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+        border-color: #cbd5e1;
+        transform: translateY(-2px) scale(1.02);
+        color: #475569;
+      }
+
+      /* 任务卡片装饰元素 */
+      .task-card::after {
+        content: "";
+        position: absolute;
+        bottom: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          circle,
+          rgba(102, 126, 234, 0.05) 0%,
+          transparent 70%
+        );
+        transform: rotate(45deg);
+        opacity: 0;
+        transition: all 0.4s ease;
+        z-index: 1;
+      }
+
+      .task-card:hover::after {
+        opacity: 1;
+        bottom: -40%;
+        left: -40%;
+      }
+
+      /* 悬浮特效 */
+      .task-card:hover {
+        transform: translateY(-8px) scale(1.02);
+      }
+
+      .task-card:hover .task-title {
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 50%,
+          #f093fb 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .task-card:hover .salary-value {
+        animation: number-glow 2s ease-in-out infinite;
+      }
+
+      @keyframes number-glow {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      /* 工期信息特殊样式 */
+      .task-info-row .task-info-value[class*="工作日"] {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+      }
+
+      /* 备注区域样式 */
+      .task-info-row:last-child {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        padding: 12px;
+        border-radius: 8px;
+        border-left: 4px solid #f59e0b;
+        margin-top: 8px;
+      }
+
+      .task-info-row:last-child .task-info-label {
+        color: #92400e;
+      }
+
+      .task-info-row:last-child .task-info-value {
+        color: #78350f;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <script is:inline>
+      // 全局函数定义，确保在HTML元素之前加载
+      function openFilterDrawer() {
+        const drawer = document.getElementById("filterDrawer");
+        if (drawer) {
+          drawer.classList.add("active");
+          document.body.style.overflow = "hidden";
+        }
+      }
+
+      function closeFilterDrawer(event) {
+        if (event && event.target !== event.currentTarget) return;
+        const drawer = document.getElementById("filterDrawer");
+        if (drawer) {
+          drawer.classList.remove("active");
+          document.body.style.overflow = "";
+        }
+      }
+
+      function resetFilters() {
+        const selects = document.querySelectorAll(".filter-select");
+        const inputs = document.querySelectorAll(".filter-input");
+
+        selects.forEach((select) => (select.selectedIndex = 0));
+        inputs.forEach((input) => (input.value = ""));
+      }
+
+      function applyFilters() {
+        closeFilterDrawer();
+      }
+
+      // ESC键关闭抽屉
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closeFilterDrawer();
+        }
+      });
+    </script>
+    <div class="container">
+      <div class="header">
+        <div class="nav-tabs">
+          <div class="nav-tab active">任务大厅</div>
+          <div class="nav-tab" onclick="window.location.href='/my-tasks'">
+            我的任务
+          </div>
+          <div class="nav-tab" onclick="window.location.href='/my-commission'">
+            我的佣金
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <img src="/favicon.svg" alt="用户头像" class="avatar" />
+          <a href="/profile" class="profile-btn">👤 个人主页</a>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-title">本月检单数</div>
+          <div class="stat-value">0</div>
+          <div class="stat-detail">项目：0 任务：7</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">本月佣金金额</div>
+          <div class="stat-value">2050.00元</div>
+          <div class="stat-detail">项目：0 任务：0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">本月完结单数</div>
+          <div class="stat-value">0</div>
+          <div class="stat-detail">项目：0 任务：0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">本月完结金额</div>
+          <div class="stat-value">0元</div>
+          <div class="stat-detail">项目：0 任务：0</div>
+        </div>
+      </div>
+
+      <!-- 筛选器触发按钮 -->
+      <button class="filter-trigger" onclick="openFilterDrawer()">
+        🔍 筛选条件
+      </button>
+
+      <!-- 筛选器抽屉 -->
+      <div
+        class="filter-drawer"
+        id="filterDrawer"
+        onclick="closeFilterDrawer(event)"
+      >
+        <div class="filter-drawer-content" onclick="event.stopPropagation()">
+          <div class="filter-drawer-header">
+            <h3 class="filter-drawer-title">🎯 筛选条件</h3>
+            <button class="filter-drawer-close" onclick="closeFilterDrawer()"
+              >✕</button
+            >
+          </div>
+
+          <div class="filter-drawer-body">
+            <!-- 基础筛选 -->
+            <div class="filter-section">
+              <h4 class="filter-section-title">基础筛选</h4>
+              <div class="filter-grid two-cols">
+                <div class="filter-item">
+                  <span class="filter-item-icon">📋</span>
+                  <select class="filter-select">
+                    <option>全部项目和任务</option>
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <span class="filter-item-icon">💰</span>
+                  <select class="filter-select">
+                    <option>开始金额</option>
+                  </select>
+                </div>
+              </div>
+              <div class="filter-grid" style="margin-top: 12px;">
+                <div class="filter-item">
+                  <span class="filter-item-icon">💵</span>
+                  <select class="filter-select">
+                    <option>结束金额</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 时间筛选 -->
+            <div class="filter-section">
+              <h4 class="filter-section-title">时间筛选</h4>
+              <div class="filter-grid">
+                <div class="filter-item">
+                  <span class="filter-item-icon">📅</span>
+                  <select class="filter-select">
+                    <option>发布时间-开始时间</option>
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <span class="filter-item-icon">📅</span>
+                  <select class="filter-select">
+                    <option>发布时间-结束时间</option>
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <span class="filter-item-icon">⏰</span>
+                  <select class="filter-select">
+                    <option>截止时间-开始时间</option>
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <span class="filter-item-icon">⏰</span>
+                  <select class="filter-select">
+                    <option>截止时间-结束时间</option>
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <span class="filter-item-icon">🤝</span>
+                  <select class="filter-select">
+                    <option>接单时间-开始时间</option>
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <span class="filter-item-icon">🤝</span>
+                  <select class="filter-select">
+                    <option>接单时间-结束时间</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-drawer-footer">
+            <div class="filter-actions">
+              <button
+                class="filter-btn filter-btn-secondary"
+                onclick="resetFilters()"
+              >
+                🔄 重置
+              </button>
+              <button
+                class="filter-btn filter-btn-primary"
+                onclick="applyFilters()"
+              >
+                🔍 应用筛选
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        {taskList.length === 0 ? (
+          <div style="text-align: center; padding: 40px; color: #64748b;">
+            {taskListResData.error ? `❌ ${taskListResData.error}` : '📭 暂无任务'}
+          </div>
+        ) : (
+          <>
+            {taskList.map((task: any) => (
+              <div class="task-card card">
+                <div class={`task-badge status-${task.status || '待接单'}`}>💼 {task.status || '待接单'}</div>
+                <div class="task-title">{task.name || task.title || '未命名任务'}</div>
+
+                <div class="task-info">
+                  <div class="task-info-row">
+                    <span class="task-info-label">📋 任务类型</span>
+                    <span class="task-info-value">{task.type || task.hall_type || '-'}</span>
+                  </div>
+                  <div class="task-info-row">
+                    <span class="task-info-label">📅 开始日期</span>
+                    <span class="task-info-value">{task.start_time || task.ordertime || '-'}</span>
+                  </div>
+                  <div class="task-info-row">
+                    <span class="task-info-label">⏰ 截止日期</span>
+                    <span class="task-info-value">{task.end_time || task.enddatatime || '-'}</span>
+                  </div>
+                  <div class="task-info-row">
+                    <span class="task-info-label">⚡ 工期</span>
+                    <span class="task-info-value">{task.workdays || task.duration || '0'}个工作日</span>
+                  </div>
+                </div>
+
+                <div class="task-salary">
+                  <div class="salary-item">
+                    <div class="salary-label">💰 项目金额</div>
+                    <div class="salary-value">¥ {(task.money || task.amount || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                  </div>
+                  <div class="salary-item">
+                    <div class="salary-label">🎯 基础佣金</div>
+                    <div class="salary-value">¥ {(task.commission || task.base_commission || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                  </div>
+                </div>
+
+                {(task.remark || task.remarks) && (
+                  <div class="task-info-row">
+                    <span class="task-info-label">💡 备注</span>
+                    <span class="task-info-value">{task.remark || task.remarks}</span>
+                  </div>
+                )}
+
+                <div class="task-actions">
+                  <button class="btn btn-primary">🚀 立即接取</button>
+                  <a href={`/task/${task.id}/`} class="btn btn-secondary">👁️ 查看详情</a>
+                </div>
+              </div>
+            ))}
+
+            <div class="pagination">
+              📊 共 {total} 条记录
+              <button class="page-btn">1</button>
+              每页 {taskList.length} 条
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  </body>
 </html>

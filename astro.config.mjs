@@ -24,11 +24,18 @@ export default defineConfig({
           // 配置 WebSocket 代理
           ws: true,
         },
-        // 可以添加多个代理配置
-        // '/other-api': {
-        //   target: 'https://other-api.example.com',
-        //   changeOrigin: true,
-        // },
+        '/taskApi': {
+          // 目标服务器地址
+          target: 'https://flexible.china9.cn/api',
+          // 修改请求头中的 host 值，以匹配目标URL的主机名
+          changeOrigin: true,
+          // 重写路径，去掉 /api 前缀
+          rewrite: (path) => path.replace(/^\/taskApi/, ''),
+          // 配置安全选项，如果目标服务器使用自签名证书
+          secure: true,
+          // 配置 WebSocket 代理
+          ws: true,
+        },
       },
     },
   },

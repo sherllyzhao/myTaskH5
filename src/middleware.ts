@@ -6,9 +6,10 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
 
-  // 放行的路径：登录页与常见静态资源
+  // 放行的路径：登录页、API路由与常见静态资源
   const allow = (path: string) => {
     if (path === '/login') return true;
+    if (path.startsWith('/api/')) return true; // 放行所有 API 路由
     if (path.startsWith('/assets')) return true;
     if (path.startsWith('/_image')) return true;
     if (path.startsWith('/favicon')) return true;

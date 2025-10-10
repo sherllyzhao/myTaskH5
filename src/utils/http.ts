@@ -36,15 +36,54 @@ const DEFAULT_CONFIG: RequestConfig = {
   withCredentials: true,
 };
 
-// 获取完整URL（处理相对路径）
+/**
+ * 获取完整URL（处理相对路径，避免重复前缀并兼容 SSR）
+ * - 已是绝对地址直接返回
+ * - 若 url 已以 baseUrl 开头，直接返回（避免重复）
+ * - 否则拼接 baseUrl 与路径
+ * - SSR 下若为相对地址，且配置了 import.meta.env.SITE，则转为绝对 URL
+ */
 const getFullUrl = (url: string): string => {
-  if (url.startsWith('http')) {
+  // 绝对地址
+  if (/^https?:\/\//i.test(url)) {
     return url;
   }
-  
-  // 根据环境配置基础URL
-  const baseUrl = import.meta.env.PUBLIC_API_BASE_URL || '/api';
-  return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
+
+  // 基础 URL，去掉尾部斜杠
+  const configured = import.meta.env.PUBLIC_API_BASE_URL || '/api';
+  const base = String(configured).replace(/\/+$/, '');
+
+  // 如果传入的 url 已经以 base 开头，避免重复
+  if (url === base || url.startsWith(`${base}/`)) {
+    // SSR 下将相对路径转换为绝对 URL（若 SITE 可用）
+    if (typeof window === 'undefined' && url.startsWith('/')) {
+      const site = import.meta.env.SITE;
+      if (site) {
+        return new URL(url, site).toString();
+      }
+    }
+    return url;
+  }
+
+  // 规范路径前导斜杠并拼接
+  const path = url.startsWith('/') ? url : `/${url}`;
+  const combined = `${base}${path}`;
+
+  // 若 base 为绝对地址，直接返回
+  if (/^https?:\/\//i.test(base)) {
+    return combined;
+  }
+
+  // SSR 下将相对路径转换为绝对 URL（若 SITE 可用）
+  if (typeof window === 'undefined') {
+    const site = import.meta.env.SITE;
+    if (site) {
+      return new URL(combined, site).toString();
+    }
+  }
+
+  // 浏览器环境保持相对路径
+  return combined;
 };
 
 // 处理请求超时
@@ -61,13 +100,35 @@ const handleResponse = async <T>(response: Response): Promise<ApiResponse<T>> =>
   // 获取响应数据
   const contentType = response.headers.get('content-type');
   let data: any;
-  
+
+  // 先获取原始文本，用于调试
+  const rawText = await response.text();
+
   if (contentType?.includes('application/json')) {
-    data = await response.json();
+    try {
+      data = JSON.parse(rawText);
+    } catch (e) {
+      console.error('❌ JSON 解析失败，原始响应:', rawText.substring(0, 500));
+      throw {
+        code: -1,
+        data: null,
+        message: `JSON 解析失败: ${rawText.substring(0, 200)}`,
+        success: false,
+      };
+    }
   } else if (contentType?.includes('text/')) {
-    data = await response.text();
+    data = rawText;
+    // 如果返回的是 HTML 错误页面，打印出来
+    if (rawText.includes('Fatal error') || rawText.includes('ErrorException')) {
+      console.error('❌ 后端返回错误页面:', rawText.substring(0, 1000));
+    }
   } else {
-    data = await response.blob();
+    // 尝试解析为 JSON，如果失败则当作文本
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = rawText;
+    }
   }
   
   // 处理HTTP状态码
@@ -143,6 +204,22 @@ const createRequest = (method: string) => {
         // POST, PUT, PATCH 等方法
         if (mergedConfig.headers?.['Content-Type'] === 'application/json') {
           mergedConfig.body = JSON.stringify(data);
+        } else if (mergedConfig.headers?.['Content-Type'] === 'application/x-www-form-urlencoded') {
+          // 将对象转换为URLSearchParams格式
+          const formData = new URLSearchParams();
+          Object.entries(data).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              if (Array.isArray(value)) {
+                // 数组按 PHP 格式：key[0]=value0&key[1]=value1
+                value.forEach((item, index) => {
+                  formData.append(`${key}[${index}]`, String(item));
+                });
+              } else {
+                formData.append(key, String(value));
+              }
+            }
+          });
+          mergedConfig.body = formData.toString();
         } else if (data instanceof FormData) {
           mergedConfig.body = data;
           // 使用FormData时，让浏览器自动设置Content-Type
@@ -162,9 +239,10 @@ const createRequest = (method: string) => {
       const fetchPromise = fetch(fullUrl, mergedConfig);
       
       // 处理超时
+      const timeoutMs = mergedConfig.timeout ?? DEFAULT_CONFIG.timeout ?? 30000;
       const response = await Promise.race([
         fetchPromise,
-        timeoutPromise(mergedConfig.timeout || DEFAULT_CONFIG.timeout),
+        timeoutPromise(timeoutMs),
       ]);
       
       // 处理响应
@@ -229,7 +307,7 @@ export const http = {
   
   // 设置认证令牌的便捷方法
   setToken: (token: string | null) => {
-    http.setGlobalHeader('Authorization', token ? `Bearer ${token}` : null);
+    http.setGlobalHeader('Tokens', token || null);
   },
 };
 
