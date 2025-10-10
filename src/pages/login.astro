@@ -1,7 +1,5 @@
 ---
 import AlertBar from '../components/AlertBar.astro';
-
-const redirect = Astro.url.searchParams.get('redirect');
 ---
 
 <html lang="zh-CN">
@@ -123,7 +121,6 @@ const redirect = Astro.url.searchParams.get('redirect');
               </div>
             </div>
 
-            <input type="hidden" name="redirect" value={redirect ?? '/'} />
             <div class="actions">
               <button class="btn btn-primary" id="submitBtn">登录</button>
             </div>
@@ -134,20 +131,10 @@ const redirect = Astro.url.searchParams.get('redirect');
       <AlertBar type="error" id="errorBar" autoClose={true} />
       <AlertBar type="success" id="successBar" autoClose={true} />
 
-      <div class="login-footer">
-        <a href="javascript:void(0)" class="link" onclick="history.back()">返回</a>
-      </div>
-
-      <div class="hint">
-        提示：这是示例登录页。请在 /api/login 实现认证，成功后设置 Cookie：token 或 employee_token。
-        <div class="redirect">登录成功后将跳转：{redirect ?? '/'}</div>
-      </div>
-    </div>
-
+    <script is:inline src="/public/js/cookies.js"></script>
     <script is:inline>
       const $ = (s) => document.querySelector(s);
 
-      const pwd = $('#password');
       const errorBar = $('#errorBar');
       const successBar = $('#successBar');
       const submitBtn = $('#submitBtn');
@@ -183,13 +170,27 @@ const redirect = Astro.url.searchParams.get('redirect');
           const res = await fetch('/api/login/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ account, password, redirect: redirectValue }),
+            body: JSON.stringify({ user_name: account, password, redirect: redirectValue, type: 'company', enterpriseSide: 'pc' }),
           });
           const data = await res.json().catch(() => ({}));
-          console.info("🚀 ~ data:", data)
           if (data?.code === 200) {
             (successBar)?.show?.('登录成功，正在跳转…');
-            setTimeout(() => { location.href = redirectValue; }, 4000);
+            
+            if(data?.data){
+              Cookies.set('token', data?.data?.token, {
+                expires: data?.data?.expires_in,
+                path: '/',
+                domain: window.location.hostname
+              })
+              if(data?.data?.user){
+                Cookies.set('employee_token', data?.data?.user?.token, {
+                  expires: data?.data?.user?.expires_in,
+                  path: '/',
+                  domain: window.location.hostname
+                })
+              }
+            }
+            setTimeout(() => { location.href = '/'; }, 4000);
           } else {
             (errorBar)?.show?.(data?.message || data?.msg || '登录失败，请重试');
           }

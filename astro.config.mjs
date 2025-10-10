@@ -14,7 +14,7 @@ export default defineConfig({
         // 将 /api 开头的请求代理到目标服务器
         '/api': {
           // 目标服务器地址
-          target: import.meta.env.PUBLIC_API_BASE_URL,
+          target: 'https://api.china9.cn/api',
           // 修改请求头中的 host 值，以匹配目标URL的主机名
           changeOrigin: true,
           // 重写路径，去掉 /api 前缀
