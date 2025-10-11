@@ -4,9 +4,8 @@
  */
 import type { APIRoute } from 'astro';
 
-// 测试 GET 路由
+  // 测试 GET 路由
 export const GET: APIRoute = async () => {
-  console.log('🧪 [Proxy] GET 测试路由被调用');
   return new Response(JSON.stringify({ status: 'ok', message: 'Proxy route is working' }), {
     status: 200,
     headers: {
@@ -15,18 +14,21 @@ export const GET: APIRoute = async () => {
   });
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   console.log('🎯 [Proxy] POST 路由被调用！');
 
   try {
     // 获取请求体
     const body = await request.json();
 
-    // 构造完整的后端 URL
-    const targetUrl = 'https://flexible.china9.cn/api/taskorder/orderindex';
+    // 基础 URL（固定部分）
+    const baseUrl = 'https://flexible.china9.cn/api';
 
-    console.log('🔄 [Proxy] 转发请求:', targetUrl);
-    console.log('📤 [Proxy] 请求数据:', JSON.stringify(body, null, 2));
+    // 从请求体中获取目标路径（可选，默认为 /taskorder/orderindex）
+    const path = body.path || '/taskorder/orderindex';
+
+    // 构造完整的后端 URL
+    const targetUrl = `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
 
     // 构造请求头，完全模拟浏览器请求
     const headers: Record<string, string> = {
@@ -37,26 +39,34 @@ export const POST: APIRoute = async ({ request }) => {
       // 不设置 Origin 和 Referer，避免 CORS 问题
     };
 
+    // 准备请求体，移除代理专用参数
+    let requestBody = { ...body };
+
+    // 移除 path 参数（这是给代理用的，不发送给后端）
+    delete requestBody.path;
+
     // 添加 tokens 到请求头（如果存在）
     if (body.tokens) {
       headers['Tokens'] = body.tokens;
+      // 从请求体中移除 tokens，只通过请求头发送
+      delete requestBody.tokens;
     }
 
-    console.log('📋 [Proxy] 请求头:', JSON.stringify(headers, null, 2));
+    // 转发所有 Cookie 到后端
+    const cookieHeader = request.headers.get('cookie');
+    if (cookieHeader) {
+      headers['Cookie'] = cookieHeader;
+    }
 
     // 转发请求到后端
     const response = await fetch(targetUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify(body),
+      body: JSON.stringify(requestBody),
     });
-
-    console.log('📡 [Proxy] 响应状态:', response.status);
-    console.log('📋 [Proxy] 响应头:', JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2));
 
     // 获取响应文本
     const responseText = await response.text();
-    console.log('📝 [Proxy] 原始响应:', responseText.substring(0, 500));
 
     // 尝试解析为 JSON
     let data;

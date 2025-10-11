@@ -148,7 +148,7 @@ const handleResponse = async <T>(response: Response): Promise<ApiResponse<T>> =>
     if ('code' in data && 'data' in data && 'message' in data) {
       return {
         ...data,
-        success: data.code === 200 || data.code === 0, // 根据业务约定调整
+        success: data.code === 200 || data.code === 1, // 根据业务约定调整
       };
     }
     

@@ -7,6 +7,7 @@ console.log("🔑 Token:", employeeToken ? `${employeeToken.substring(0, 20)}...
 
 // 使用和浏览器端一样的最小化请求数据
 const postData = {
+  path: '/taskorder/orderindex',  // 指定要调用的后端路径
   page: 1,
   limit: 10,
   tokens: employeeToken,
@@ -14,9 +15,7 @@ const postData = {
 };
 
 // SSR 模式：通过 Astro API 代理路由
-const proxyUrl = `${Astro.url.origin}/api/proxy`;
-console.log("🔍 Proxy URL:", proxyUrl);
-console.log("📤 Request data:", JSON.stringify(postData, null, 2));
+const proxyUrl = `${Astro.url.origin}/proxy`;
 
 http.setToken(employeeToken || "");
 
@@ -26,20 +25,24 @@ let taskListResData: any = {
 };
 
 try {
-  console.log("🚀 [SSR] 开始调用代理...");
-  console.log("📍 [SSR] Proxy URL:", proxyUrl);
-  console.log("📦 [SSR] Post Data:", postData);
+  // 直接使用 fetch 调用代理路由，不经过 http 工具
+  const response = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': Astro.request.headers.get('cookie') || '',
+    },
+    body: JSON.stringify(postData),
+  });
 
-  // 使用代理路由
-  const taskListRes = await http.post(proxyUrl, postData);
+  const taskListRes = await response.json();
+  console.info("🚀 ~ taskListRes:", taskListRes)
 
-  console.log("📨 [SSR] 收到响应:", taskListRes);
-  taskListResData = taskListRes.data;
-  console.info("✅ SSR Success:", JSON.stringify(taskListResData).substring(0, 200));
+  if(taskListRes.code === 1){
+    taskListResData = taskListRes.data || taskListRes;
+  }
 } catch (error: any) {
   console.error("❌ SSR Error:", error);
-  console.error("Error message:", error.message);
-  console.error("Error details:", JSON.stringify(error, null, 2));
   taskListResData = {
     list: [],
     total: 0,
@@ -47,9 +50,7 @@ try {
   };
 }
 
-console.log("🏁 [SSR] 处理完成，任务列表长度:", (taskListResData?.list || taskListResData?.rows || []).length);
-
-const taskList = taskListResData?.list || taskListResData?.rows || [];
+const taskList = taskListResData?.data || [];
 const total = taskListResData?.total || taskListResData?.count || 0;
 ---
 
