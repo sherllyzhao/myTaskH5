@@ -1014,3 +1014,34 @@ body {
 .card:hover .stat-value {
     animation: pulse 2s infinite;
 }
+
+/* ===== 任务卡片通用：标签与状态徽章（从 index.astro 抽离） ===== */
+
+/* 标记样式 */
+.task-tags { margin: 6px 0 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+.tag { padding: 2px 8px; border-radius: 12px; font-size: 12px; line-height: 18px; font-weight: 600; }
+.tag-overdue { background: #ffeaea; color: #c62828; border: 1px solid #ffcdd2; }
+.tag-pending { background: #fff4e5; color: #ef6c00; border: 1px solid #ffe0b2; }
+.tag-pending-2d { background: #fdecea; color: #d32f2f; border: 1px solid #f5c6cb; }
+
+/* 状态徽章按状态上色（覆盖默认样式） */
+.task-badge.status-待接单 {
+  background: linear-gradient(135deg, #ffb74d 0%, #fb8c00 100%);
+}
+.task-badge.status-已接单,
+.task-badge.status-进行中 {
+  background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
+}
+.task-badge.status-已逾期,
+.task-badge.status-逾期 {
+  background: linear-gradient(135deg, #ef5350 0%, #d32f2f 100%);
+}
+.task-badge.status-已完成,
+.task-badge.status-完成 {
+  background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+}
+.task-badge.status-已取消,
+.task-badge.status-取消 {
+  background: linear-gradient(135deg, #cfd8dc 0%, #90a4ae 100%);
+  color: #263238;
+}

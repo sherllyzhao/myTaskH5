@@ -1,0 +1,86 @@
+---
+const { task } = Astro.props as { task: any };
+---
+
+
+<div class="task-card card">
+  <div class={`task-badge status-${task.statusInfo || '待接单'}`}>💼 {task.statusInfo || '待接单'}</div>
+  <div class="task-title">接取后可见项目全称</div>
+
+  <div class="task-tags">
+    {(() => {
+      const status = task.statusInfo || '待接单';
+      const now = Date.now();
+      const parseTs = (v: any) => (v ? new Date(v as any).getTime() : NaN);
+      const dueTs = parseTs(task.end_time || task.enddatatime);
+      const createTs = parseTs(task.ordertime || task.start_time);
+      const msPerDay = 86400000;
+
+      const overdueDays =
+        Number.isFinite(dueTs) && now > (dueTs as number)
+          ? Math.floor((now - (dueTs as number)) / msPerDay)
+          : 0;
+
+      const unacceptedDays =
+        status === '待接单' && Number.isFinite(createTs)
+          ? Math.floor((now - (createTs as number)) / msPerDay)
+          : 0;
+
+      return (
+        <>
+          {overdueDays > 0 && (
+            <span class="tag tag-overdue">逾期{overdueDays}天</span>
+          )}
+          {unacceptedDays > 0 && (
+            <span class="tag tag-pending">未接单超{unacceptedDays}天</span>
+          )}
+          {unacceptedDays >= 2 && (
+            <span class="tag tag-pending-2d">已超2天未接</span>
+          )}
+        </>
+      );
+    })()}
+  </div>
+
+  <div class="task-info">
+    <div class="task-info-row">
+      <span class="task-info-label">📋 任务类型</span>
+      <span class="task-info-value">{task.type || task.hall_type || '-'}</span>
+    </div>
+    <div class="task-info-row">
+      <span class="task-info-label">📅 开始日期</span>
+      <span class="task-info-value">{task.start_time || task.ordertime || '-'}</span>
+    </div>
+    <div class="task-info-row">
+      <span class="task-info-label">⏰ 截止日期</span>
+      <span class="task-info-value">{task.end_time || task.enddatatime || '-'}</span>
+    </div>
+    <div class="task-info-row">
+      <span class="task-info-label">⚡ 工期</span>
+      <span class="task-info-value">{task.workdays || task.duration || '0'}个工作日</span>
+    </div>
+  </div>
+
+  <div class="task-salary">
+    <div class="salary-item">
+      <div class="salary-label">💰 项目金额</div>
+      <div class="salary-value">¥ {(task.money || task.amount || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+    </div>
+    <div class="salary-item">
+      <div class="salary-label">🎯 基础佣金</div>
+      <div class="salary-value">¥ {(task.commission || task.base_commission || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+    </div>
+  </div>
+
+  {(task.remark || task.remarks) && (
+    <div class="task-info-row">
+      <span class="task-info-label">💡 备注</span>
+      <span class="task-info-value">{task.remark || task.remarks}</span>
+    </div>
+  )}
+
+  <div class="task-actions">
+    <button class="btn btn-primary">🚀 立即接取</button>
+    <a href={`/task/${task.id}/`} class="btn btn-secondary">👁️ 查看详情</a>
+  </div>
+</div>
