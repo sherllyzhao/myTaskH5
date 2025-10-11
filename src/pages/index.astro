@@ -5,7 +5,6 @@ import TaskCard from "../components/TaskCard.astro";
 
 /* 获取任务大厅列表 */
 const employeeToken = Astro.cookies.get("employee_token")?.value;
-console.log("🔑 Token:", employeeToken ? `${employeeToken.substring(0, 20)}...` : "未找到 token");
 
 // 使用和浏览器端一样的最小化请求数据
 const postData = {
@@ -38,7 +37,6 @@ try {
   });
 
   const taskListRes = await response.json();
-  console.info("🚀 ~ taskListRes:", taskListRes)
 
   if(taskListRes.code === 1){
     taskListResData = taskListRes.data || taskListRes;

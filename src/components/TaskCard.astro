@@ -1,5 +1,6 @@
 ---
 const { task } = Astro.props as { task: any };
+import { getTypeName } from '../utils/map';
 ---
 
 
@@ -7,45 +8,21 @@ const { task } = Astro.props as { task: any };
   <div class={`task-badge status-${task.statusInfo || '待接单'}`}>💼 {task.statusInfo || '待接单'}</div>
   <div class="task-title">接取后可见项目全称</div>
 
-  <div class="task-tags">
-    {(() => {
-      const status = task.statusInfo || '待接单';
-      const now = Date.now();
-      const parseTs = (v: any) => (v ? new Date(v as any).getTime() : NaN);
-      const dueTs = parseTs(task.end_time || task.enddatatime);
-      const createTs = parseTs(task.ordertime || task.start_time);
-      const msPerDay = 86400000;
-
-      const overdueDays =
-        Number.isFinite(dueTs) && now > (dueTs as number)
-          ? Math.floor((now - (dueTs as number)) / msPerDay)
-          : 0;
-
-      const unacceptedDays =
-        status === '待接单' && Number.isFinite(createTs)
-          ? Math.floor((now - (createTs as number)) / msPerDay)
-          : 0;
-
-      return (
-        <>
-          {overdueDays > 0 && (
-            <span class="tag tag-overdue">逾期{overdueDays}天</span>
-          )}
-          {unacceptedDays > 0 && (
-            <span class="tag tag-pending">未接单超{unacceptedDays}天</span>
-          )}
-          {unacceptedDays >= 2 && (
-            <span class="tag tag-pending-2d">已超2天未接</span>
-          )}
-        </>
-      );
-    })()}
+  <div class="task-tags">    
+    {
+      task.button_info && (
+        <span class={`tag tag-overdue tag-overdue-${task.button_color}`}>{task.button_info}</span>
+      )
+    }
+    {
+        task.timeout && <span class="tag tag-pending-2d">{task.timeout}</span>
+    }    
   </div>
 
   <div class="task-info">
     <div class="task-info-row">
-      <span class="task-info-label">📋 任务类型</span>
-      <span class="task-info-value">{task.type || task.hall_type || '-'}</span>
+      <span class="task-info-label">📋 {getTypeName(task.orderType)}类型</span>
+      <span class="task-info-value">{task.hallTypeTitle || '-'}</span>
     </div>
     <div class="task-info-row">
       <span class="task-info-label">📅 开始日期</span>

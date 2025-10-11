@@ -72,7 +72,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     let data;
     try {
       data = JSON.parse(responseText);
-      console.log('✅ [Proxy] 响应成功 - Code:', data.code);
     } catch (e) {
       console.error('❌ [Proxy] JSON 解析失败，返回原始文本');
       data = {
