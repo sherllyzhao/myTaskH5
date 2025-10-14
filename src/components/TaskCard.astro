@@ -1,6 +1,7 @@
 ---
 const { task } = Astro.props as { task: any };
 import { getTypeName } from '../utils/map';
+import { removeTime } from '../utils/tool';
 ---
 
 
@@ -8,7 +9,7 @@ import { getTypeName } from '../utils/map';
   <div class={`task-badge status-${task.statusInfo || '待接单'}`}>💼 {task.statusInfo || '待接单'}</div>
   <div class="task-title">接取后可见项目全称</div>
 
-  <div class="task-tags">    
+  <div class="task-tags">
     {
       task.button_info && (
         <span class={`tag tag-overdue tag-overdue-${task.button_color}`}>{task.button_info}</span>
@@ -16,7 +17,7 @@ import { getTypeName } from '../utils/map';
     }
     {
         task.timeout && <span class="tag tag-pending-2d">{task.timeout}</span>
-    }    
+    }
   </div>
 
   <div class="task-info">
@@ -26,11 +27,17 @@ import { getTypeName } from '../utils/map';
     </div>
     <div class="task-info-row">
       <span class="task-info-label">📅 开始日期</span>
-      <span class="task-info-value">{task.start_time || task.ordertime || '-'}</span>
+      <span class="task-info-value">{removeTime(task.ordertime) || '-'}</span>
     </div>
+    {
+      task.status > 1 && <div class="task-info-row">
+        <span class="task-info-label">📅 接单日期</span>
+        <span class="task-info-value">{removeTime(task.performtime) || '-'}</span>
+      </div>
+    }
     <div class="task-info-row">
       <span class="task-info-label">⏰ 截止日期</span>
-      <span class="task-info-value">{task.end_time || task.enddatatime || '-'}</span>
+      <span class="task-info-value">{task.enddatatime || '-'}</span>
     </div>
     <div class="task-info-row">
       <span class="task-info-label">⚡ 工期</span>
