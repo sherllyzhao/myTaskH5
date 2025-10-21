@@ -36,11 +36,32 @@ try {
     body: JSON.stringify(postData),
   });
 
-  const taskListRes = await response.json();
+  // 检查HTTP状态码401
+  if (response.status === 401) {
+    // 在SSR环境下无法直接跳转，返回空数据让前端处理
+    taskListResData = {
+      list: [],
+      total: 0,
+      error: '未授权，请重新登录',
+      code: 401
+    };
+  } else {
+    const taskListRes = await response.json();
 
-  if(taskListRes.code === 1){
-    taskListResData = taskListRes.data || taskListRes;
+    // 检查业务状态码401
+    if (taskListRes.code === 401) {
+      taskListResData = {
+        list: [],
+        total: 0,
+        error: '未授权，请重新登录',
+        code: 401
+      };
+    } else if(taskListRes.code === 1){
+      taskListResData = taskListRes.data || taskListRes;
+    }
   }
+
+
 } catch (error: any) {
   console.error("❌ SSR Error:", error);
   taskListResData = {
@@ -63,6 +84,7 @@ const total = taskListResData?.total || taskListResData?.count || 0;
     <meta name="generator" content={Astro.generator} />
     <title>任务管理</title>
     <link rel="stylesheet" href="/common.css" />
+    <script src="/js/auth.js" defer></script>
     <style is:global>
       /* 任务大厅特有样式 */
       .task-card {
@@ -526,7 +548,13 @@ const total = taskListResData?.total || taskListResData?.count || 0;
 
       <div class="content">
         <Debug data={taskList} />
-        {taskList.length === 0 ? (
+        {taskListResData.code === 401 ? (
+          <div style="text-align: center; padding: 40px; color: #ef4444;">
+            <div style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">🔐 登录已过期</div>
+            <div style="margin-bottom: 20px;">请重新登录以继续使用</div>
+            <a href="/login" style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">重新登录</a>
+          </div>
+        ) : taskList.length === 0 ? (
           <div style="text-align: center; padding: 40px; color: #64748b;">
             {taskListResData.error ? `❌ ${taskListResData.error}` : '📭 暂无任务'}
           </div>

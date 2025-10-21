@@ -10,20 +10,21 @@
 		<meta name="generator" content={Astro.generator} />
 		<title>我的任务</title>
 		<link rel="stylesheet" href="/common.css" />
+		<script src="/js/auth.js" defer></script>
 		<style>
 			/* 我的任务页面特有样式 */
 			.task-card {
 				position: relative;
 				overflow: hidden;
 			}
-			
+
 			.task-header {
 				display: flex;
 				justify-content: space-between;
 				align-items: flex-start;
 				margin-bottom: 16px;
 			}
-			
+
 			.task-title {
 				font-size: 17px;
 				font-weight: 700;
@@ -36,7 +37,7 @@
 				-webkit-text-fill-color: transparent;
 				background-clip: text;
 			}
-			
+
 			.task-status {
 				padding: 8px 16px;
 				border-radius: 25px;
@@ -45,12 +46,12 @@
 				white-space: nowrap;
 				letter-spacing: 0.5px;
 				text-transform: uppercase;
-				box-shadow: 
+				box-shadow:
 					0 4px 12px rgba(0, 0, 0, 0.15),
 					inset 0 1px 0 rgba(255, 255, 255, 0.3);
 				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 			}
-			
+
 			.task-meta {
 				display: grid;
 				grid-template-columns: 1fr 1fr;
@@ -61,11 +62,11 @@
 				border-radius: 12px;
 				border: 1px solid #e2e8f0;
 			}
-			
+
 			.meta-item {
 				text-align: center;
 			}
-			
+
 			.meta-label {
 				color: #64748b;
 				font-weight: 600;
@@ -74,7 +75,7 @@
 				text-transform: uppercase;
 				letter-spacing: 0.5px;
 			}
-			
+
 			.meta-value {
 				color: #1e293b;
 				font-weight: 700;
@@ -84,7 +85,7 @@
 				-webkit-text-fill-color: transparent;
 				background-clip: text;
 			}
-			
+
 			.task-dates {
 				background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
 				padding: 16px;
@@ -94,7 +95,7 @@
 				position: relative;
 				overflow: hidden;
 			}
-			
+
 			.task-dates::before {
 				content: '';
 				position: absolute;
@@ -104,7 +105,7 @@
 				height: 3px;
 				background: linear-gradient(90deg, #f59e0b, #d97706, #b45309);
 			}
-			
+
 			.dates-row {
 				display: flex;
 				justify-content: space-between;
@@ -112,23 +113,23 @@
 				margin-bottom: 8px;
 				align-items: center;
 			}
-			
+
 			.dates-row:last-child {
 				margin-bottom: 0;
 			}
-			
+
 			.date-label {
 				color: #92400e;
 				font-weight: 600;
 				min-width: 80px;
 			}
-			
+
 			.date-value {
 				color: #78350f;
 				font-weight: 700;
 				text-align: right;
 			}
-			
+
 			.task-amounts {
 				display: grid;
 				grid-template-columns: 1fr 1fr 1fr;
@@ -141,7 +142,7 @@
 				position: relative;
 				overflow: hidden;
 			}
-			
+
 			.task-amounts::before {
 				content: '';
 				position: absolute;
@@ -151,12 +152,12 @@
 				height: 3px;
 				background: linear-gradient(90deg, #c084fc, #a855f7, #9333ea);
 			}
-			
+
 			.amount-item {
 				text-align: center;
 				position: relative;
 			}
-			
+
 			.amount-item::after {
 				content: '';
 				position: absolute;
@@ -169,7 +170,7 @@
 				border-radius: 50%;
 				opacity: 0.6;
 			}
-			
+
 			.amount-label {
 				font-size: 10px;
 				color: #7c3aed;
@@ -178,7 +179,7 @@
 				text-transform: uppercase;
 				letter-spacing: 0.5px;
 			}
-			
+
 			.amount-value {
 				font-size: 14px;
 				font-weight: 800;
@@ -187,7 +188,7 @@
 				-webkit-text-fill-color: transparent;
 				background-clip: text;
 			}
-			
+
 			.task-remarks {
 				font-size: 13px;
 				color: #475569;
@@ -200,7 +201,7 @@
 				font-style: italic;
 				position: relative;
 			}
-			
+
 			.task-remarks::before {
 				content: '💬';
 				position: absolute;
@@ -208,15 +209,15 @@
 				left: 12px;
 				font-size: 16px;
 			}
-			
+
 			.task-remarks {
 				padding-left: 40px;
 			}
-			
+
 			.task-action {
 				text-align: center;
 			}
-			
+
 			.task-action .action-btn {
 				width: 100%;
 				padding: 16px 20px;
@@ -224,14 +225,14 @@
 				font-weight: 600;
 				border-radius: 16px;
 				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-				box-shadow: 
+				box-shadow:
 					0 8px 24px rgba(102, 126, 234, 0.3),
 					inset 0 1px 0 rgba(255, 255, 255, 0.2);
 				transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 				position: relative;
 				overflow: hidden;
 			}
-			
+
 			.task-action .action-btn::before {
 				content: '';
 				position: absolute;
@@ -242,18 +243,18 @@
 				background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
 				transition: left 0.6s;
 			}
-			
+
 			.task-action .action-btn:hover {
 				transform: translateY(-3px) scale(1.05);
-				box-shadow: 
+				box-shadow:
 					0 16px 40px rgba(102, 126, 234, 0.4),
 					inset 0 1px 0 rgba(255, 255, 255, 0.3);
 			}
-			
+
 			.task-action .action-btn:hover::before {
 				left: 100%;
 			}
-			
+
 			/* 卡片装饰元素 */
 			.task-card::after {
 				content: '';
@@ -267,28 +268,28 @@
 				opacity: 0;
 				transition: all 0.4s ease;
 			}
-			
+
 			.task-card:hover::after {
 				opacity: 1;
 				bottom: -40%;
 				left: -40%;
 			}
-			
+
 			.task-card:hover {
 				transform: translateY(-8px) scale(1.02);
 			}
-			
+
 			.task-card:hover .task-title {
 				background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
 				-webkit-background-clip: text;
 				-webkit-text-fill-color: transparent;
 				background-clip: text;
 			}
-			
+
 			.task-card:hover .amount-value {
 				animation: number-glow 2s ease-in-out infinite;
 			}
-			
+
 			@keyframes number-glow {
 				0%, 100% { transform: scale(1); }
 				50% { transform: scale(1.05); }
@@ -303,13 +304,13 @@
 					<div class="nav-tab active">我的任务</div>
 					<div class="nav-tab" onclick="window.location.href='/my-commission'">我的佣金</div>
 				</div>
-				
+
 				<div class="profile-section">
 					<img src="/favicon.svg" alt="用户头像" class="avatar" />
 					<button class="profile-btn">👤 个人主页</button>
 				</div>
 			</div>
-			
+
 			<div class="stats-grid">
 				<div class="stat-card">
 					<div class="stat-title">本月检单数</div>
@@ -332,7 +333,7 @@
 					<div class="stat-detail">项目：0 任务：0</div>
 				</div>
 			</div>
-			
+
 			<div class="filters">
 				<div class="filter-content">
 					<div class="filter-row">
@@ -402,7 +403,7 @@
 							</select>
 						</div>
 					</div>
-				
+
 					<div class="search-tabs">
 						<button class="search-tab" data-icon="🔍">搜索</button>
 						<button class="search-tab secondary" data-icon="🔄">重置</button>
@@ -410,14 +411,14 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="content">
 				<div class="task-card card">
 					<div class="task-header">
 						<div class="task-title">尽经理收管出浩果平妖数据</div>
 						<div class="task-status status-剩余天">⏱️ 剩余天</div>
 					</div>
-					
+
 					<div class="task-meta">
 						<div class="meta-item">
 							<div class="meta-label">📋 任务类型</div>
@@ -428,7 +429,7 @@
 							<div class="meta-value">5工作日</div>
 						</div>
 					</div>
-					
+
 					<div class="task-dates">
 						<div class="dates-row">
 							<span class="date-label">📅 开始日期</span>
@@ -443,7 +444,7 @@
 							<span class="date-value">2025-10-11</span>
 						</div>
 					</div>
-					
+
 					<div class="task-amounts">
 						<div class="amount-item">
 							<div class="amount-label">💰 总佣金</div>
@@ -458,24 +459,24 @@
 							<div class="amount-value">¥0.00</div>
 						</div>
 					</div>
-					
+
 					<div class="task-remarks">
 						1、处理日督查出浩果平妖数据<br/>
 						2、备片样审-收益片按排<br/>
 						增加判断环录请查查需的各片状...
 					</div>
-					
+
 					<div class="task-action">
 						<button class="action-btn">🔍 查看详情</button>
 					</div>
 				</div>
-				
+
 				<div class="task-card card">
 					<div class="task-header">
 						<div class="task-title">建站道问题处理及优化0901-0910</div>
 						<div class="task-status status-逾期天">⚠️ 逾期天</div>
 					</div>
-					
+
 					<div class="task-meta">
 						<div class="meta-item">
 							<div class="meta-label">📋 任务类型</div>
@@ -486,7 +487,7 @@
 							<div class="meta-value">0工作日</div>
 						</div>
 					</div>
-					
+
 					<div class="task-dates">
 						<div class="dates-row">
 							<span class="date-label">📅 开始日期</span>
@@ -501,7 +502,7 @@
 							<span class="date-value">2025-09-25</span>
 						</div>
 					</div>
-					
+
 					<div class="task-amounts">
 						<div class="amount-item">
 							<div class="amount-label">💰 总佣金</div>
@@ -516,16 +517,16 @@
 							<div class="amount-value">¥0.00</div>
 						</div>
 					</div>
-					
+
 					<div class="task-remarks">
 						建站道问题处理及优化0901-0910
 					</div>
-					
+
 					<div class="task-action">
 						<button class="action-btn">🔍 查看详情</button>
 					</div>
 				</div>
-				
+
 				<div class="pagination">
 					📊 共 6 条记录
 					<button class="page-btn">1</button>

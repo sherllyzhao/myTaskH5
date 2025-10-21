@@ -65,6 +65,25 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       body: JSON.stringify(requestBody),
     });
 
+    // 检查HTTP状态码401
+    if (response.status === 401) {
+      console.log('🔐 [Proxy] 检测到401未授权状态码，准备跳转到登录页');
+      // 返回401状态码，让前端处理跳转
+      return new Response(
+        JSON.stringify({
+          code: 401,
+          message: '未授权，请重新登录',
+          data: null,
+        }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+
     // 获取响应文本
     const responseText = await response.text();
 
@@ -79,6 +98,25 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         message: 'JSON解析失败',
         data: responseText,
       };
+    }
+
+    // 检查业务状态码401
+    if (data && data.code === 401) {
+      console.log('🔐 [Proxy] 检测到业务状态码401未授权，准备跳转到登录页');
+      // 返回401状态码，让前端处理跳转
+      return new Response(
+        JSON.stringify({
+          code: 401,
+          message: '未授权，请重新登录',
+          data: null,
+        }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
     }
 
     // 返回响应

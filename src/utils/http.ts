@@ -130,9 +130,24 @@ const handleResponse = async <T>(response: Response): Promise<ApiResponse<T>> =>
       data = rawText;
     }
   }
-  
+
   // 处理HTTP状态码
   if (!response.ok) {
+    // 处理401未授权状态码
+    if (response.status === 401) {
+      // 清除本地存储的token
+      if (typeof window !== 'undefined') {
+        // 清除cookie中的token
+        document.cookie = 'employee_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+        // 跳转到登录页
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 100);
+      }
+    }
+
     const error: ApiResponse = {
       code: response.status,
       data: null,
@@ -141,17 +156,32 @@ const handleResponse = async <T>(response: Response): Promise<ApiResponse<T>> =>
     };
     throw error;
   }
-  
+
   // 处理业务状态码（假设后端返回格式为 {code, data, message}）
   if (typeof data === 'object' && data !== null) {
     // 如果后端已经返回了标准格式
     if ('code' in data && 'data' in data && 'message' in data) {
+      // 处理业务状态码401未授权
+      if (data.code === 401) {
+        // 清除本地存储的token
+        if (typeof window !== 'undefined') {
+          // 清除cookie中的token
+          document.cookie = 'employee_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+          // 跳转到登录页
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 100);
+        }
+      }
+
       return {
         ...data,
         success: data.code === 200 || data.code === 1, // 根据业务约定调整
       };
     }
-    
+
     // 后端返回的不是标准格式，进行包装
     return {
       code: 200,
@@ -160,7 +190,7 @@ const handleResponse = async <T>(response: Response): Promise<ApiResponse<T>> =>
       success: true,
     };
   }
-  
+
   // 非对象数据直接返回
   return {
     code: 200,
@@ -184,7 +214,7 @@ const createRequest = (method: string) => {
         ...config.customHeaders,
       },
     };
-    
+
     // 处理请求体
     if (data) {
       if (method === 'GET' || method === 'DELETE') {
@@ -195,7 +225,7 @@ const createRequest = (method: string) => {
             queryParams.append(key, String(value));
           }
         });
-        
+
         const queryString = queryParams.toString();
         if (queryString) {
           url = `${url}${url.includes('?') ? '&' : '?'}${queryString}`;
@@ -227,24 +257,24 @@ const createRequest = (method: string) => {
         }
       }
     }
-    
+
     // 处理凭证
     if (mergedConfig.withCredentials) {
       mergedConfig.credentials = 'include';
     }
-    
+
     try {
       // 创建请求
       const fullUrl = getFullUrl(url);
       const fetchPromise = fetch(fullUrl, mergedConfig);
-      
+
       // 处理超时
       const timeoutMs = mergedConfig.timeout ?? DEFAULT_CONFIG.timeout ?? 30000;
       const response = await Promise.race([
         fetchPromise,
         timeoutPromise(timeoutMs),
       ]);
-      
+
       // 处理响应
       return await handleResponse<T>(response);
     } catch (error) {
@@ -270,12 +300,12 @@ export const http = {
   put: createRequest('PUT'),
   delete: createRequest('DELETE'),
   patch: createRequest('PATCH'),
-  
+
   // 上传文件的便捷方法
   upload: async <T = any>(url: string, file: File | Blob, fieldName = 'file', extraData?: Record<string, any>, config?: RequestConfig): Promise<ApiResponse<T>> => {
     const formData = new FormData();
     formData.append(fieldName, file);
-    
+
     if (extraData) {
       Object.entries(extraData).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -283,7 +313,7 @@ export const http = {
         }
       });
     }
-    
+
     return http.post<T>(url, formData, {
       ...config,
       headers: {
@@ -292,7 +322,7 @@ export const http = {
       },
     });
   },
-  
+
   // 设置全局请求头（如认证令牌）
   setGlobalHeader: (key: string, value: string | null) => {
     if (!DEFAULT_CONFIG.headers) {
@@ -304,7 +334,7 @@ export const http = {
       DEFAULT_CONFIG.headers[key] = value;
     }
   },
-  
+
   // 设置认证令牌的便捷方法
   setToken: (token: string | null) => {
     http.setGlobalHeader('Tokens', token || null);

@@ -10,6 +10,7 @@
 		<meta name="generator" content={Astro.generator} />
 		<title>个人主页</title>
 		<link rel="stylesheet" href="/common.css" />
+		<script src="/js/auth.js" defer></script>
 		<style>
 			/* 个人主页特有样式 */
 			.profile-header {
@@ -18,7 +19,7 @@
 				position: relative;
 				z-index: 10;
 			}
-			
+
 			.back-button {
 				display: inline-flex;
 				align-items: center;
@@ -35,25 +36,25 @@
 				border: 1px solid rgba(255, 255, 255, 0.2);
 				margin-bottom: 20px;
 			}
-			
+
 			.back-button:hover {
 				background: rgba(255, 255, 255, 0.25);
 				transform: translateX(-2px);
 			}
-			
+
 			.profile-main {
 				background: white;
 				border-radius: 20px;
 				padding: 24px;
 				margin: -10px 24px 20px;
-				box-shadow: 
+				box-shadow:
 					0 8px 32px rgba(0, 0, 0, 0.08),
 					0 2px 8px rgba(0, 0, 0, 0.04);
 				border: 1px solid rgba(0, 0, 0, 0.06);
 				position: relative;
 				z-index: 10;
 			}
-			
+
 			.profile-main::before {
 				content: '';
 				position: absolute;
@@ -64,14 +65,14 @@
 				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 				border-radius: 20px 20px 0 0;
 			}
-			
+
 			.profile-info {
 				display: flex;
 				align-items: flex-start;
 				gap: 16px;
 				margin-bottom: 24px;
 			}
-			
+
 			.profile-avatar {
 				width: 80px;
 				height: 80px;
@@ -80,11 +81,11 @@
 				border: 4px solid #e2e8f0;
 				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 			}
-			
+
 			.profile-details {
 				flex: 1;
 			}
-			
+
 			.profile-name {
 				font-size: 20px;
 				font-weight: 600;
@@ -92,19 +93,19 @@
 				margin-bottom: 8px;
 				letter-spacing: 0.3px;
 			}
-			
+
 			.profile-intro {
 				color: #64748b;
 				font-size: 14px;
 				line-height: 1.5;
 				margin-bottom: 16px;
 			}
-			
+
 			.profile-skills {
 				position: relative;
 				margin-bottom: 16px;
 			}
-			
+
 			.skills-container {
 				display: flex;
 				flex-wrap: wrap;
@@ -113,11 +114,11 @@
 				transition: all 0.3s ease;
 				max-height: 72px;
 			}
-			
+
 			.skills-container.expanded {
 				max-height: none;
 			}
-			
+
 			.skills-container::after {
 				content: '';
 				position: absolute;
@@ -130,11 +131,11 @@
 				transition: opacity 0.3s ease;
 				pointer-events: none;
 			}
-			
+
 			.skills-container.expanded::after {
 				opacity: 0;
 			}
-			
+
 			.skills-toggle {
 				position: absolute;
 				bottom: -8px;
@@ -151,12 +152,12 @@
 				z-index: 10;
 				box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 			}
-			
+
 			.skills-toggle:hover {
 				transform: translateY(-1px);
 				box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 			}
-			
+
 			.skill-tag {
 				display: inline-flex;
 				align-items: center;
@@ -169,26 +170,26 @@
 				color: #475569;
 				font-weight: 500;
 			}
-			
+
 			.skill-tag.highlight {
 				background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
 				border-color: #e9d5ff;
 				color: #7c3aed;
 			}
-			
+
 			.star-rating {
 				color: #f59e0b;
 				font-size: 14px;
 				margin-left: 4px;
 			}
-			
+
 			.profile-stats {
 				display: grid;
 				grid-template-columns: repeat(4, 1fr);
 				gap: 12px;
 				margin: 24px 0;
 			}
-			
+
 			.stat-item {
 				text-align: center;
 				padding: 16px 12px;
@@ -196,14 +197,14 @@
 				border-radius: 12px;
 				border: 1px solid #e2e8f0;
 			}
-			
+
 			.stat-value {
 				font-size: 18px;
 				font-weight: 600;
 				color: #1e293b;
 				margin-bottom: 4px;
 			}
-			
+
 			.stat-label {
 				font-size: 11px;
 				color: #64748b;
@@ -211,22 +212,22 @@
 				text-transform: uppercase;
 				letter-spacing: 0.5px;
 			}
-			
+
 			.content-section {
 				padding: 0 24px 24px;
 			}
-			
+
 			.section-card {
 				background: white;
 				border-radius: 16px;
 				padding: 20px;
 				margin-bottom: 16px;
-				box-shadow: 
+				box-shadow:
 					0 4px 16px rgba(0, 0, 0, 0.06),
 					0 1px 4px rgba(0, 0, 0, 0.04);
 				border: 1px solid rgba(0, 0, 0, 0.06);
 			}
-			
+
 			.section-title {
 				font-size: 16px;
 				font-weight: 600;
@@ -237,95 +238,95 @@
 				gap: 8px;
 				letter-spacing: 0.3px;
 			}
-			
+
 			.location-info {
 				color: #64748b;
 				font-size: 14px;
 				line-height: 1.5;
 			}
-			
+
 			.experience-item {
 				padding: 16px 0;
 				border-bottom: 1px solid #e2e8f0;
 			}
-			
+
 			.experience-item:last-child {
 				border-bottom: none;
 				padding-bottom: 0;
 			}
-			
+
 			.experience-header {
 				display: flex;
 				justify-content: space-between;
 				align-items: flex-start;
 				margin-bottom: 8px;
 			}
-			
+
 			.experience-period {
 				font-size: 14px;
 				font-weight: 500;
 				color: #1e293b;
 			}
-			
+
 			.experience-company {
 				font-size: 13px;
 				color: #64748b;
 				text-align: right;
 			}
-			
+
 			.experience-role {
 				font-size: 13px;
 				color: #475569;
 				margin-bottom: 4px;
 			}
-			
+
 			.experience-desc {
 				font-size: 14px;
 				color: #64748b;
 				line-height: 1.5;
 			}
-			
+
 			.project-item {
 				padding: 16px 0;
 				border-bottom: 1px solid #e2e8f0;
 			}
-			
+
 			.project-item:last-child {
 				border-bottom: none;
 				padding-bottom: 0;
 			}
-			
+
 			.project-header {
 				display: flex;
 				justify-content: space-between;
 				align-items: flex-start;
 				margin-bottom: 8px;
 			}
-			
+
 			.project-period {
 				font-size: 14px;
 				font-weight: 500;
 				color: #1e293b;
 			}
-			
+
 			.project-name {
 				font-size: 13px;
 				color: #64748b;
 				text-align: right;
 			}
-			
+
 			.project-role {
 				font-size: 13px;
 				color: #475569;
 				margin-bottom: 4px;
 			}
-			
+
 			.project-desc {
 				font-size: 14px;
 				color: #64748b;
 				line-height: 1.5;
 			}
-			
+
 			.edit-btn {
 				position: absolute;
 				top: 20px;
@@ -341,7 +342,7 @@
 				transition: all 0.3s ease;
 				backdrop-filter: blur(10px);
 			}
-			
+
 			.edit-btn:hover {
 				background: white;
 				border-color: #667eea;
@@ -355,7 +356,7 @@
 			function toggleSkills() {
 				const container = document.getElementById('skillsContainer');
 				const toggle = document.getElementById('skillsToggle');
-				
+
 				if (container.classList.contains('expanded')) {
 					container.classList.remove('expanded');
 					toggle.textContent = '展开';
@@ -364,7 +365,7 @@
 					toggle.textContent = '收起';
 				}
 			}
-			
+
 			document.addEventListener('DOMContentLoaded', function() {
 				const toggle = document.getElementById('skillsToggle');
 				if (toggle) {
@@ -379,7 +380,7 @@
 				</a>
 				<a href="#" class="edit-btn">编辑</a>
 			</div>
-			
+
 			<div class="profile-main">
 				<div class="profile-info">
 					<img src="/favicon.svg" alt="用户头像" class="profile-avatar" />
@@ -403,7 +404,7 @@
 						</div>
 					</div>
 				</div>
-				
+
 				<div class="profile-stats">
 					<div class="stat-item">
 						<div class="stat-value">167</div>
@@ -423,18 +424,18 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="content-section">
 				<!-- 所在地区 -->
 				<div class="section-card">
 					<div class="section-title">📍 所在地区</div>
 					<div class="location-info">山西省 / 太原市 / 小店区</div>
 				</div>
-				
+
 				<!-- 工作经历 -->
 				<div class="section-card">
 					<div class="section-title">💼 工作经历</div>
-					
+
 					<div class="experience-item">
 						<div class="experience-header">
 							<div class="experience-period">2023-09-01 - 2023-10-14</div>
@@ -443,7 +444,7 @@
 						<div class="experience-role">产品经理 | 互联网</div>
 						<div class="experience-desc">资海云的工作经历介绍</div>
 					</div>
-					
+
 					<div class="experience-item">
 						<div class="experience-header">
 							<div class="experience-period">2023-10-08 - 2023-10-29</div>
@@ -453,11 +454,11 @@
 						<div class="experience-desc">工作经历2</div>
 					</div>
 				</div>
-				
+
 				<!-- 项目经历 -->
 				<div class="section-card">
 					<div class="section-title">🚀 项目经历</div>
-					
+
 					<div class="project-item">
 						<div class="project-header">
 							<div class="project-period">2023-09-16 - 2023-09-30</div>
@@ -466,7 +467,7 @@
 						<div class="project-role">产品经理 | 互联网</div>
 						<div class="project-desc">资海云的项目经历介绍</div>
 					</div>
-					
+
 					<div class="project-item">
 						<div class="project-header">
 							<div class="project-period">2023-10-28 - 2023-10-29</div>

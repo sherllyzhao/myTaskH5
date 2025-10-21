@@ -1,6 +1,6 @@
 ---
 const { task } = Astro.props as { task: any };
-import { getTypeName } from '../utils/map';
+import { getTypeName, getTotalMoney, getBaseCommission } from '../utils/map';
 import { removeTime } from '../utils/tool';
 ---
 
@@ -41,25 +41,29 @@ import { removeTime } from '../utils/tool';
     </div>
     <div class="task-info-row">
       <span class="task-info-label">⚡ 工期</span>
-      <span class="task-info-value">{task.workdays || task.duration || '0'}个工作日</span>
+      <span class="task-info-value">{task.hall_duration || '0'}个工作日</span>
     </div>
   </div>
 
   <div class="task-salary">
     <div class="salary-item">
-      <div class="salary-label">💰 项目金额</div>
-      <div class="salary-value">¥ {(task.money || task.amount || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+      <div class="salary-label">💰 总佣金</div>
+      <div class="salary-value">¥ {getTotalMoney(task)}</div>
     </div>
     <div class="salary-item">
-      <div class="salary-label">🎯 基础佣金</div>
-      <div class="salary-value">¥ {(task.commission || task.base_commission || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+      <div class="salary-label">💰 基础佣金</div>
+      <div class="salary-value">¥ {getBaseCommission(task)}</div>
+    </div>
+    <div class="salary-item">
+      <div class="salary-label">💰 加价佣金</div>
+      <div class="salary-value">¥ {Number(task.hall_money).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
     </div>
   </div>
 
-  {(task.remark || task.remarks) && (
+  {task.description && (
     <div class="task-info-row">
       <span class="task-info-label">💡 备注</span>
-      <span class="task-info-value">{task.remark || task.remarks}</span>
+      <span class="task-info-value">{task.description}</span>
     </div>
   )}
 
