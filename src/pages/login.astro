@@ -11,8 +11,26 @@ import AlertBar from '../components/AlertBar.astro';
     <link rel="stylesheet" href="/common.css" />
     <style>
       /* 与首页统一的移动端风格与主色细节 */
-      body { background: #f6f8fa; }
-      .login-page { min-height: 100vh; display: flex; flex-direction: column; }
+      body {
+        background:
+          linear-gradient(135deg, #667eea 0%, #764ba2 30%, #f093fb 70%, #f5576c 100%),
+          radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.25) 0%, transparent 50%);
+        background-blend-mode: overlay, screen, screen, screen;
+        position: relative;
+        overflow-x: hidden;
+      }
+      .login-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        max-width: 400px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+        padding: 20px 16px;
+      }
 
       /* 顶部区块与间距体系：左右16px，段落间14px */
       .login-header {
@@ -20,11 +38,22 @@ import AlertBar from '../components/AlertBar.astro';
         display: flex; align-items: center; gap: 10px;
       }
       .login-logo { width: 28px; height: 28px; border-radius: 8px; }
-      .login-title { font-size: 20px; font-weight: 800; color: #0f172a; }
-      .login-subtitle { padding: 0 16px 16px; font-size: 16px; color: #0f172a; font-weight: 700; line-height: 1.7; letter-spacing: .2px; }
+      .login-title { font-size: 20px; font-weight: 800; color: #ffffff; }
+      .login-subtitle { padding: 0 16px 16px; font-size: 16px; color: #ffffff; font-weight: 700; line-height: 1.7; letter-spacing: .2px; }
 
       /* 卡片与内边距：与全站 card 统一，仅做内边距控制 */
-      .login-card { margin: 0 16px; padding: 18px 16px; border-radius: 16px; }
+      .login-card {
+        margin: 0;
+        padding: 18px 16px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
 
       /* 固定输入区域宽度：320px，确保在小屏下不超出两侧边距 */
       .form-fixed {
@@ -175,7 +204,7 @@ import AlertBar from '../components/AlertBar.astro';
           const data = await res.json().catch(() => ({}));
           if (data?.code === 200) {
             (successBar)?.show?.('登录成功，正在跳转…');
-            
+
             if(data?.data){
               Cookies.set('token', data?.data?.token, {
                 expires: data?.data?.expires_in,

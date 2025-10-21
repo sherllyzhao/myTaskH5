@@ -7,13 +7,113 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background:
+        linear-gradient(135deg, #667eea 0%, #764ba2 30%, #f093fb 70%, #f5576c 100%),
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.25) 0%, transparent 50%);
+    background-blend-mode: overlay, screen, screen, screen;
     color: #2c3e50;
     font-size: 14px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* 动态粒子背景效果 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+        radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 3px, transparent 3px);
+    background-size: 50px 50px, 30px 30px, 80px 80px;
+    animation: float 20s infinite linear;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* 浮动几何形状 */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(30deg, transparent 49%, rgba(255, 255, 255, 0.03) 50%, rgba(255, 255, 255, 0.03) 51%, transparent 52%),
+        linear-gradient(150deg, transparent 49%, rgba(255, 255, 255, 0.03) 50%, rgba(255, 255, 255, 0.03) 51%, transparent 52%);
+    background-size: 60px 60px;
+    animation: gridMove 40s infinite linear;
+    pointer-events: none;
+    z-index: -1;
+}
+
+@keyframes float {
+    0% {
+        transform: translate(0, 0);
+    }
+    25% {
+        transform: translate(-5px, 5px);
+    }
+    50% {
+        transform: translate(-10px, -5px);
+    }
+    75% {
+        transform: translate(5px, -10px);
+    }
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes gridMove {
+    0% {
+        background-position: 0 0, 0 0;
+    }
+    100% {
+        background-position: 60px 60px, 30px 30px;
+    }
+}
+
+/* 为容器添加玻璃态效果增强 */
+.container {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    margin: 20px auto;
+    max-width: 1200px;
+    position: relative;
+    z-index: 1;
+}
+
+/* 响应式背景调整 */
+@media (max-width: 768px) {
+    body {
+        background:
+            linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 80%),
+            radial-gradient(circle at 10% 90%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+    }
+
+    .container {
+        margin: 10px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.9);
+    }
 }
 
 /* 容器布局 */
@@ -66,7 +166,7 @@ body {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 30px;
     padding: 6px;
-    box-shadow: 
+    box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.12),
         inset 0 1px 0 rgba(255, 255, 255, 0.3),
         inset 0 -1px 0 rgba(0, 0, 0, 0.1);
@@ -102,7 +202,7 @@ body {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 24px;
     z-index: -1;
-    box-shadow: 
+    box-shadow:
         0 4px 16px rgba(255, 255, 255, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
@@ -123,7 +223,7 @@ body {
 .nav-tab.active::before {
     opacity: 1;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
-    box-shadow: 
+    box-shadow:
         0 6px 20px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.8),
         inset 0 -1px 0 rgba(0, 0, 0, 0.05);
@@ -144,7 +244,7 @@ body {
     border-radius: 50%;
     margin-right: 16px;
     border: 4px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 
+    box-shadow:
         0 8px 24px rgba(0, 0, 0, 0.2),
         0 0 0 1px rgba(255, 255, 255, 0.1);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -153,7 +253,7 @@ body {
 
 .avatar:hover {
     transform: scale(1.08) rotate(5deg);
-    box-shadow: 
+    box-shadow:
         0 12px 32px rgba(0, 0, 0, 0.25),
         0 0 0 1px rgba(255, 255, 255, 0.2);
 }
@@ -167,7 +267,7 @@ body {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 
+    box-shadow:
         0 6px 20px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -192,7 +292,7 @@ body {
 
 .profile-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 
+    box-shadow:
         0 12px 32px rgba(0, 0, 0, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.4);
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.25) 100%);
@@ -218,7 +318,7 @@ body {
     border-radius: 20px;
     padding: 24px 20px;
     text-align: center;
-    box-shadow: 
+    box-shadow:
         0 10px 40px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.8),
         inset 0 -1px 0 rgba(0, 0, 0, 0.05);
@@ -257,7 +357,7 @@ body {
 
 .stat-card:hover {
     transform: translateY(-6px) scale(1.02);
-    box-shadow: 
+    box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.9),
         inset 0 -1px 0 rgba(0, 0, 0, 0.05);
@@ -310,7 +410,7 @@ body {
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 
+    box-shadow:
         0 8px 24px rgba(102, 126, 234, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -339,7 +439,7 @@ body {
 
 .filter-trigger:hover {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 
+    box-shadow:
         0 16px 40px rgba(102, 126, 234, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
@@ -381,7 +481,7 @@ body {
     overflow-y: auto;
     transform: translateY(100%);
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 
+    box-shadow:
         0 -10px 40px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
@@ -512,7 +612,7 @@ body {
     color: #475569;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
-    box-shadow: 
+    box-shadow:
         0 2px 8px rgba(0, 0, 0, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
@@ -525,7 +625,7 @@ body {
 .filter-input:focus,
 .filter-select:focus {
     border-color: #667eea;
-    box-shadow: 
+    box-shadow:
         0 0 0 4px rgba(102, 126, 234, 0.15),
         0 4px 16px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -564,7 +664,7 @@ body {
 .filter-btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    box-shadow: 
+    box-shadow:
         0 6px 20px rgba(102, 126, 234, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -572,7 +672,7 @@ body {
 
 .filter-btn-primary:hover {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 
+    box-shadow:
         0 12px 32px rgba(102, 126, 234, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
@@ -581,7 +681,7 @@ body {
     background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
     color: #64748b;
     border: 2px solid #e2e8f0;
-    box-shadow: 
+    box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
@@ -589,7 +689,7 @@ body {
 .filter-btn-secondary:hover {
     background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
     transform: translateY(-2px);
-    box-shadow: 
+    box-shadow:
         0 8px 24px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
@@ -637,7 +737,7 @@ body {
     font-weight: 700;
     color: white;
     cursor: pointer;
-    box-shadow: 
+    box-shadow:
         0 8px 24px rgba(102, 126, 234, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -673,7 +773,7 @@ body {
 
 .search-tab:hover {
     transform: translateY(-4px) scale(1.05);
-    box-shadow: 
+    box-shadow:
         0 16px 40px rgba(102, 126, 234, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
     background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
@@ -695,7 +795,7 @@ body {
 .search-tab.secondary {
     background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
     color: #64748b;
-    box-shadow: 
+    box-shadow:
         0 6px 20px rgba(0, 0, 0, 0.08),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
     border: 2px solid #e2e8f0;
@@ -704,7 +804,7 @@ body {
 .search-tab.secondary:hover {
     background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
     color: #475569;
-    box-shadow: 
+    box-shadow:
         0 12px 32px rgba(0, 0, 0, 0.12),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
     border-color: #cbd5e1;
@@ -723,7 +823,7 @@ body {
     border-radius: 20px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 
+    box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.08),
         inset 0 1px 0 rgba(255, 255, 255, 0.8),
         inset 0 -1px 0 rgba(0, 0, 0, 0.05);
@@ -760,7 +860,7 @@ body {
 
 .card:hover {
     transform: translateY(-6px) scale(1.02);
-    box-shadow: 
+    box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.12),
         inset 0 1px 0 rgba(255, 255, 255, 0.9),
         inset 0 -1px 0 rgba(0, 0, 0, 0.05);
@@ -808,14 +908,14 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 14px 24px;
-    box-shadow: 
+    box-shadow:
         0 6px 20px rgba(102, 126, 234, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .btn-primary:hover {
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 
+    box-shadow:
         0 12px 32px rgba(102, 126, 234, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
@@ -825,7 +925,7 @@ body {
     color: #64748b;
     padding: 14px 24px;
     border: 2px solid #e2e8f0;
-    box-shadow: 
+    box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
     text-shadow: none;
@@ -835,7 +935,7 @@ body {
     background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
     border-color: #cbd5e1;
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 
+    box-shadow:
         0 8px 24px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
@@ -849,7 +949,7 @@ body {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 
+    box-shadow:
         0 6px 20px rgba(102, 126, 234, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -858,7 +958,7 @@ body {
 
 .action-btn:hover {
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 
+    box-shadow:
         0 12px 32px rgba(102, 126, 234, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
@@ -872,7 +972,7 @@ body {
     white-space: nowrap;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    box-shadow: 
+    box-shadow:
         0 4px 12px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -938,7 +1038,7 @@ body {
     margin: 0 8px;
     cursor: pointer;
     font-weight: 600;
-    box-shadow: 
+    box-shadow:
         0 6px 20px rgba(102, 126, 234, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -947,7 +1047,7 @@ body {
 
 .page-btn:hover {
     transform: translateY(-3px) scale(1.1);
-    box-shadow: 
+    box-shadow:
         0 12px 32px rgba(102, 126, 234, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
@@ -967,25 +1067,25 @@ body {
     .filter-row {
         flex-direction: column;
     }
-    
+
     .filter-select {
         width: 100%;
         margin-bottom: 12px;
     }
-    
+
     .search-tabs {
         justify-content: center;
         flex-wrap: wrap;
     }
-    
+
     .search-tab {
         margin-bottom: 12px;
     }
-    
+
     .stats-grid {
         gap: 12px;
     }
-    
+
     .container {
         box-shadow: none;
     }
