@@ -15,8 +15,6 @@ export const GET: APIRoute = async () => {
 };
 
 export const POST: APIRoute = async ({ request, cookies }) => {
-  console.log('🎯 [Proxy] POST 路由被调用！');
-
   try {
     // 获取请求体
     const body = await request.json();
@@ -41,7 +39,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // 准备请求体，移除代理专用参数
     let requestBody = { ...body };
-    console.log("🚀 ~ POST ~ requestBody:", requestBody)
 
     // 移除 path 参数（这是给代理用的，不发送给后端）
     delete requestBody.path;
@@ -66,18 +63,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       body: JSON.stringify(requestBody),
     });
 
-    // 检查HTTP状态码401
-    if (response.status === 401) {
-      console.log('🔐 [Proxy] 检测到401未授权状态码，准备跳转到登录页');
-      // 返回401状态码，让前端处理跳转
+    // 检查HTTP状态码101
+    if (response.status === 101) {
+      console.log('🔐 [Proxy] 检测到101未授权状态码，准备跳转到登录页');
+      // 返回101状态码，让前端处理跳转
       return new Response(
         JSON.stringify({
-          code: 401,
+          code: 101,
           message: '未授权，请重新登录',
           data: null,
         }),
         {
-          status: 401,
+          status: 101,
           headers: {
             'Content-Type': 'application/json',
           },
@@ -101,18 +98,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       };
     }
 
-    // 检查业务状态码401
-    if (data && data.code === 401) {
-      console.log('🔐 [Proxy] 检测到业务状态码401未授权，准备跳转到登录页');
-      // 返回401状态码，让前端处理跳转
+    // 检查业务状态码101
+    if (data && data.code === 101) {
+      console.log('🔐 [Proxy] 检测到业务状态码101未授权，准备跳转到登录页');
+      // 返回101状态码，让前端处理跳转
       return new Response(
         JSON.stringify({
-          code: 401,
+          code: 101,
           message: '未授权，请重新登录',
           data: null,
         }),
         {
-          status: 401,
+          status: 101,
           headers: {
             'Content-Type': 'application/json',
           },

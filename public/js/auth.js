@@ -1,9 +1,9 @@
 /**
  * 全局认证处理脚本
- * 处理401未授权状态码，自动跳转到登录页
+ * 处理101未授权状态码，自动跳转到登录页
  */
 
-// 全局401状态码处理器
+// 全局101状态码处理器
 class AuthHandler {
     constructor() {
         this.init();
@@ -16,10 +16,10 @@ class AuthHandler {
         // 监听页面加载完成
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                this.checkFor401();
+                this.checkFor101();
             });
         } else {
-            this.checkFor401();
+            this.checkFor101();
         }
     }
 
@@ -31,18 +31,18 @@ class AuthHandler {
             try {
                 const response = await originalFetch.apply(window, args);
 
-                // 检查HTTP状态码401
-                if (response.status === 401) {
+                // 检查HTTP状态码101
+                if (response.status === 101) {
                     this.handleUnauthorized();
                     return response;
                 }
 
-                // 检查响应体中的业务状态码401
+                // 检查响应体中的业务状态码101
                 if (response.headers.get('content-type')?.includes('application/json')) {
                     const clone = response.clone();
                     try {
                         const data = await clone.json();
-                        if (data && data.code === 401) {
+                        if (data && data.code === 101) {
                             this.handleUnauthorized();
                         }
                     } catch (e) {
@@ -58,27 +58,27 @@ class AuthHandler {
         };
     }
 
-    // 检查页面中是否存在401错误信息
-    checkFor401() {
+    // 检查页面中是否存在101错误信息
+    checkFor101() {
         // 检查URL参数
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('error') === '401') {
+        if (urlParams.get('error') === '101') {
             this.handleUnauthorized();
             return;
         }
 
-        // 检查页面中的401错误信息
-        const errorElements = document.querySelectorAll('[class*="error"], [class*="401"]');
+        // 检查页面中的101错误信息
+        const errorElements = document.querySelectorAll('[class*="error"], [class*="101"]');
         for (const element of errorElements) {
             const text = element.textContent || '';
-            if (text.includes('401') || text.includes('未授权') || text.includes('登录过期')) {
+            if (text.includes('101') || text.includes('未授权') || text.includes('登录过期')) {
                 this.handleUnauthorized();
                 break;
             }
         }
 
         // 检查特定的错误容器
-        const errorContainer = document.querySelector('[data-error="401"]');
+        const errorContainer = document.querySelector('[data-error="101"]');
         if (errorContainer) {
             this.handleUnauthorized();
         }

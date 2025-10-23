@@ -392,6 +392,11 @@ body::after {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.stat-value i {
+    font-size: 14px;
+    font-style: normal;
+}
+
 .stat-detail {
     font-size: 11px;
     color: #94a3b8;

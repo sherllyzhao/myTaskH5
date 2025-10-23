@@ -1,6 +1,5 @@
 ---
 import { Debug } from "astro:components";
-import http from "../utils/http";
 import TaskCard from "../components/TaskCard.astro";
 import LoginExpiredMessage from "../components/LoginExpiredMessage.astro";
 
@@ -12,14 +11,11 @@ const postData = {
   path: '/taskorder/orderindex',  // 指定要调用的后端路径
   page: 1,
   limit: 10,
-  tokens: employeeToken,
   enterpriseSide: "pc",
 };
 
 // SSR 模式：通过 Astro API 代理路由
 const proxyUrl = `${Astro.url.origin}/proxy`;
-
-http.setToken(employeeToken || "");
 
 let taskListResData: any = {
   list: [],
@@ -37,7 +33,7 @@ try {
     body: JSON.stringify(postData),
   });
 
-  // 检查HTTP状态码401
+  // 检查HTTP状态码101
   if (response.status === 401) {
     // 在SSR环境下无法直接跳转，返回空数据让前端处理
     taskListResData = {
@@ -49,20 +45,18 @@ try {
   } else {
     const taskListRes = await response.json();
 
-    // 检查业务状态码401
+    // 检查业务状态码101
     if (taskListRes.code === 401) {
       taskListResData = {
         list: [],
         total: 0,
         error: '未授权，请重新登录',
-        code: 401
+        code: 101
       };
     } else if(taskListRes.code === 1){
       taskListResData = taskListRes.data || taskListRes;
     }
   }
-
-
 } catch (error: any) {
   console.error("❌ SSR Error:", error);
   taskListResData = {
@@ -74,6 +68,49 @@ try {
 
 const taskList = taskListResData?.data || [];
 const total = taskListResData?.total || taskListResData?.count || 0;
+
+/* 统计 */
+let taskStatsRes: any;
+try {
+  // 统计数据
+  const statsResponse = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': Astro.request.headers.get('cookie') || '',
+    },
+    body: JSON.stringify({
+      path: '/taskorder/monthinfo',
+      enterpriseSide: "pc",
+    }),
+  });
+  // 检查HTTP状态码101
+  if (statsResponse.status === 401) {
+    // 在SSR环境下无法直接跳转，返回空数据让前端处理
+    taskListResData = {
+      list: [],
+      total: 0,
+      error: '未授权，请重新登录',
+      code: 401
+    };
+  } else {
+    const statsRes = await statsResponse.json();
+    // 检查业务状态码101
+    if (statsRes.code === 401) {
+      taskStatsRes = {
+        data: {},
+        error: '未授权，请重新登录',
+        code: 101
+      };
+    } else if(statsRes.code === 1){
+      taskStatsRes = statsRes.data || statsRes;
+    }
+  }
+} catch (error: any) {
+  console.error("❌ SSR Error:", error);
+}
+
+const taskStats = taskStatsRes || {};
 ---
 
 <html lang="zh-CN">
@@ -424,26 +461,43 @@ const total = taskListResData?.total || taskListResData?.count || 0;
         </div>
       </div>
 
+      <Debug data={taskStats} />
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-title">本月检单数</div>
-          <div class="stat-value">0</div>
-          <div class="stat-detail">项目：0 任务：7</div>
+          <div class="stat-title">本月抢单数</div>
+          <div class="stat-detail">
+            <div>
+              项目：<span class="stat-value">{taskStatsRes?.qd_num?.xmnum || 0}</span> 
+            </div>
+            <div>
+              任务：<span class="stat-value">{taskStatsRes?.qd_num?.rwnum || 0}</span> 
+            </div>
+          </div>
         </div>
         <div class="stat-card">
           <div class="stat-title">本月佣金金额</div>
-          <div class="stat-value">2050.00元</div>
-          <div class="stat-detail">项目：0 任务：0</div>
+          <div class="stat-detail">
+            <div>
+              项目：<span class="stat-value"><i>￥</i>{taskStatsRes?.qd_price?.xmprice || 0}</span> 
+            </div>
+            <div>
+              任务：<span class="stat-value"><i>￥</i>{taskStatsRes?.qd_price?.rwprice || 0}</span> 
+            </div>
+          </div>
         </div>
         <div class="stat-card">
           <div class="stat-title">本月完结单数</div>
-          <div class="stat-value">0</div>
-          <div class="stat-detail">项目：0 任务：0</div>
+          <div class="stat-detail">
+            <div>项目：<span class="stat-value">{taskStatsRes?.end_num?.xmnum || 0}</span> </div>
+            <div>任务：<span class="stat-value">{taskStatsRes?.end_num?.rwnum || 0}</span> </div>
+          </div>
         </div>
         <div class="stat-card">
           <div class="stat-title">本月完结金额</div>
-          <div class="stat-value">0元</div>
-          <div class="stat-detail">项目：0 任务：0</div>
+          <div class="stat-detail">
+            <div>项目：<span class="stat-value"><i>￥</i>{taskStatsRes?.end_price?.xmprice || 0}</span> </div>
+            <div>任务：<span class="stat-value"><i>￥</i>{taskStatsRes?.end_price?.rwprice || 0}</span> </div>
+          </div>
         </div>
       </div>
 
@@ -558,8 +612,7 @@ const total = taskListResData?.total || taskListResData?.count || 0;
       </div>
 
       <div class="content">
-        <!-- <Debug data={taskList} /> -->
-        {taskListResData.code === 401 ? (
+        {taskListResData.code === 101 ? (
           <LoginExpiredMessage />
         ) : taskList.length === 0 ? (
           <div style="text-align: center; padding: 40px; color: #64748b;">
@@ -654,14 +707,14 @@ const total = taskListResData?.total || taskListResData?.count || 0;
               }),
             });
 
-            if (response.status === 401) {
+            if (response.status === 101) {
               window.location.href = '/login';
               return;
             }
 
             const result = await response.json();
 
-            if (result.code === 401) {
+            if (result.code === 101) {
               window.location.href = '/login';
               return;
             }
