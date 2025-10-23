@@ -402,9 +402,99 @@ const taskStats = taskStatsRes || {};
           transform: rotate(360deg);
         }
       }
+      /* 移动端选择器样式 */
+      .mobile-picker-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(2px);
+        z-index: 9999;
+        display: none;
+      }
+      .mobile-picker-sheet {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        background: #fff;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+        max-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        animation: slideUp 200ms ease-out;
+      }
+      @keyframes slideUp {
+        from { transform: translateY(30%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .mobile-picker-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .mobile-picker-title {
+        font-weight: 600;
+        color: #111827;
+      }
+      .mobile-picker-list {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .mobile-picker-item {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 16px;
+      }
+      .mobile-picker-item.active {
+        color: #4f46e5;
+        background: #f5f7ff;
+      }
+      .mobile-picker-action {
+        appearance: none;
+        border: none;
+        background: #f3f4f6;
+        color: #111827;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-weight: 600;
+      }
+      .mobile-picker-action.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+      }
+      .mobile-picker-trigger {
+        width: 100%;
+        display: block;
+        text-align: left;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        font-size: 16px;
+        color: #374151;
+      }
+
     </style>
   </head>
   <body>
+    <!-- 移动端选择器弹层 -->
+    <div class="mobile-picker-overlay" id="mobilePickerOverlay">
+      <div class="mobile-picker-sheet">
+        <div class="mobile-picker-header">
+          <div class="mobile-picker-title" id="mobilePickerTitle">请选择</div>
+          <div style="display:flex; gap:8px;">
+            <button class="mobile-picker-action" onclick="closeMobilePicker()">取消</button>
+            <button class="mobile-picker-action primary" onclick="closeMobilePicker()">确定</button>
+          </div>
+        </div>
+        <div class="mobile-picker-list" id="mobilePickerList"></div>
+      </div>
+    </div>
     <script is:inline>
       // 全局函数定义，确保在HTML元素之前加载
       function openFilterDrawer() {
@@ -436,10 +526,65 @@ const taskStats = taskStatsRes || {};
         closeFilterDrawer();
       }
 
+      // 移动端选择器逻辑
+      const pickerState = {
+        current: null,
+        dataMap: {
+          projectTask: ["全部项目和任务", "仅项目", "仅任务"],
+          amountStart: ["不限", "¥100", "¥500", "¥1000"],
+          amountEnd: ["不限", "¥1000", "¥5000", "¥10000"],
+          publishStart: ["不限", "今天", "近7天", "近30天"],
+          publishEnd: ["不限", "今天", "近7天", "近30天"],
+          deadlineStart: ["不限", "今天", "近7天", "近30天"],
+          deadlineEnd: ["不限", "今天", "近7天", "近30天"],
+          orderStart: ["不限", "今天", "近7天", "近30天"],
+          orderEnd: ["不限", "今天", "近7天", "近30天"],
+        },
+      };
+
+      function openMobilePicker(key, trigger) {
+        pickerState.current = key;
+        const overlay = document.getElementById('mobilePickerOverlay');
+        const list = document.getElementById('mobilePickerList');
+        const title = document.getElementById('mobilePickerTitle');
+        const options = pickerState.dataMap[key] || ["选项1", "选项2"];
+        title.textContent = trigger?.textContent || '请选择';
+        list.innerHTML = '';
+        options.forEach((opt) => {
+          const item = document.createElement('div');
+          item.className = 'mobile-picker-item';
+          item.textContent = opt;
+          item.addEventListener('click', () => {
+            trigger.textContent = opt;
+            closeMobilePicker();
+          });
+          list.appendChild(item);
+        });
+        overlay.style.display = 'block';
+      }
+      function closeMobilePicker() {
+        const overlay = document.getElementById('mobilePickerOverlay');
+        overlay.style.display = 'none';
+      }
+      document.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('.mobile-picker-trigger') as HTMLElement | null;
+        if (btn) {
+          const key = btn.getAttribute('data-picker');
+          openMobilePicker(key, btn);
+        }
+      });
+      document.addEventListener('click', (e) => {
+        const overlay = document.getElementById('mobilePickerOverlay');
+        if (e.target === overlay) {
+          closeMobilePicker();
+        }
+      });
+
       // ESC键关闭抽屉
       document.addEventListener("keydown", function (event) {
         if (event.key === "Escape") {
           closeFilterDrawer();
+          closeMobilePicker();
         }
       });
     </script>
@@ -527,23 +672,17 @@ const taskStats = taskStatsRes || {};
               <div class="filter-grid two-cols">
                 <div class="filter-item">
                   <span class="filter-item-icon">📋</span>
-                  <select class="filter-select">
-                    <option>全部项目和任务</option>
-                  </select>
+                  <button class="mobile-picker-trigger" data-picker="projectTask">全部项目和任务</button>
                 </div>
                 <div class="filter-item">
                   <span class="filter-item-icon">💰</span>
-                  <select class="filter-select">
-                    <option>开始金额</option>
-                  </select>
+                  <button class="mobile-picker-trigger" data-picker="amountStart">开始金额</button>
                 </div>
               </div>
               <div class="filter-grid" style="margin-top: 12px;">
                 <div class="filter-item">
                   <span class="filter-item-icon">💵</span>
-                  <select class="filter-select">
-                    <option>结束金额</option>
-                  </select>
+                  <button class="mobile-picker-trigger" data-picker="amountEnd">结束金额</button>
                 </div>
               </div>
             </div>
@@ -554,39 +693,27 @@ const taskStats = taskStatsRes || {};
               <div class="filter-grid">
                 <div class="filter-item">
                   <span class="filter-item-icon">📅</span>
-                  <select class="filter-select">
-                    <option>发布时间-开始时间</option>
-                  </select>
+                  <button class="mobile-picker-trigger" data-picker="publishStart">发布时间-开始时间</button>
                 </div>
                 <div class="filter-item">
                   <span class="filter-item-icon">📅</span>
-                  <select class="filter-select">
-                    <option>发布时间-结束时间</option>
-                  </select>
+                  <button class="mobile-picker-trigger" data-picker="publishEnd">发布时间-结束时间</button>
                 </div>
                 <div class="filter-item">
                   <span class="filter-item-icon">⏰</span>
-                  <select class="filter-select">
-                    <option>截止时间-开始时间</option>
-                  </select>
+                  <button class="mobile-picker-trigger" data-picker="deadlineStart">截止时间-开始时间</button>
                 </div>
                 <div class="filter-item">
                   <span class="filter-item-icon">⏰</span>
-                  <select class="filter-select">
-                    <option>截止时间-结束时间</option>
-                  </select>
+                  <button class="mobile-picker-trigger" data-picker="deadlineEnd">截止时间-结束时间</button>
                 </div>
                 <div class="filter-item">
                   <span class="filter-item-icon">🤝</span>
-                  <select class="filter-select">
-                    <option>接单时间-开始时间</option>
-                  </select>
+                  <button class="mobile-picker-trigger" data-picker="orderStart">接单时间-开始时间</button>
                 </div>
                 <div class="filter-item">
                   <span class="filter-item-icon">🤝</span>
-                  <select class="filter-select">
-                    <option>接单时间-结束时间</option>
-                  </select>
+                  <button class="mobile-picker-trigger" data-picker="orderEnd">接单时间-结束时间</button>
                 </div>
               </div>
             </div>
