@@ -2,7 +2,7 @@
  * API 代理路由
  * 用于在 SSR 中转发请求到后端，解决 Vite 代理只对浏览器端有效的问题
  */
-import type { APIRoute } from 'astro';
+import { type APIRoute } from 'astro';
 
   // 测试 GET 路由
 export const GET: APIRoute = async () => {
@@ -41,15 +41,16 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // 准备请求体，移除代理专用参数
     let requestBody = { ...body };
+    console.log("🚀 ~ POST ~ requestBody:", requestBody)
 
     // 移除 path 参数（这是给代理用的，不发送给后端）
     delete requestBody.path;
+    requestBody.tokens = cookies.get('employee_token')?.value || requestBody.tokens;
 
     // 添加 tokens 到请求头（如果存在）
     if (body.tokens) {
       headers['Tokens'] = body.tokens;
-      // 从请求体中移除 tokens，只通过请求头发送
-      delete requestBody.tokens;
+      headers['Employee_token'] = body.employee_token;
     }
 
     // 转发所有 Cookie 到后端

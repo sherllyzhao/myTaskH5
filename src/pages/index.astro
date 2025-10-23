@@ -2,6 +2,7 @@
 import { Debug } from "astro:components";
 import http from "../utils/http";
 import TaskCard from "../components/TaskCard.astro";
+import LoginExpiredMessage from "../components/LoginExpiredMessage.astro";
 
 /* 获取任务大厅列表 */
 const employeeToken = Astro.cookies.get("employee_token")?.value;
@@ -354,6 +355,16 @@ const total = taskListResData?.total || taskListResData?.count || 0;
         color: #78350f;
         font-style: italic;
       }
+
+      /* Loading 动画 */
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
@@ -547,31 +558,191 @@ const total = taskListResData?.total || taskListResData?.count || 0;
       </div>
 
       <div class="content">
-        <Debug data={taskList} />
+        <!-- <Debug data={taskList} /> -->
         {taskListResData.code === 401 ? (
-          <div style="text-align: center; padding: 40px; color: #ef4444;">
-            <div style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">🔐 登录已过期</div>
-            <div style="margin-bottom: 20px;">请重新登录以继续使用</div>
-            <a href="/login" style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">重新登录</a>
-          </div>
+          <LoginExpiredMessage />
         ) : taskList.length === 0 ? (
           <div style="text-align: center; padding: 40px; color: #64748b;">
             {taskListResData.error ? `❌ ${taskListResData.error}` : '📭 暂无任务'}
           </div>
         ) : (
           <>
-            {taskList.map((task: any) => (
-              <TaskCard task={task} />
-            ))}
+            <div id="taskListContainer">
+              {taskList.map((task: any) => (
+                <TaskCard task={task} />
+              ))}
+            </div>
+
+            <div id="loadingIndicator" style="display: none; text-align: center; padding: 20px; color: #667eea;">
+              <div style="display: inline-block; animation: spin 1s linear infinite;">⏳</div>
+              <span style="margin-left: 10px;">加载中...</span>
+            </div>
+
+            <div id="noMoreData" style="display: none; text-align: center; padding: 20px; color: #94a3b8;">
+              📭 已加载全部任务
+            </div>
 
             <div class="pagination">
-              📊 共 {total} 条记录
-              <button class="page-btn">1</button>
-              每页 {taskList.length} 条
+              📊 共 <span id="totalCount">{total}</span> 条记录
+              已加载 <span id="loadedCount">{taskList.length}</span> 条
             </div>
           </>
         )}
       </div>
     </div>
+
+    <script :inline src="/js/cookies.js"></script>
+    <!-- 触底加载脚本 -->
+    <script>
+      import { createTaskCardHTML } from '../utils/taskCardTemplate';
+      import { getCookie } from '../utils/tool';
+
+      (function() {
+        let currentPage = 1;
+        let isLoading = false;
+        let hasMore = true;
+        const limit = 10;
+
+        
+        const clientToken = getCookie('token') || localStorage.getItem('token') || '';
+        const clientEmployeeToken = getCookie('employee_token') || localStorage.getItem('employee_token') || '';
+
+        // 获取 DOM 元素
+        const taskListContainer = document.getElementById('taskListContainer');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const noMoreData = document.getElementById('noMoreData');
+        const totalCountEl = document.getElementById('totalCount');
+        const loadedCountEl = document.getElementById('loadedCount');
+
+        // 初始化总数
+        const initialTotal = parseInt(totalCountEl?.textContent || '0');
+        let loadedCount = parseInt(loadedCountEl?.textContent || '0');
+
+        // 检查是否还有更多数据
+        if (loadedCount >= initialTotal) {
+          hasMore = false;
+        }
+
+        // 创建任务卡片 HTML - 使用共享模板函数
+        function createTaskCard(task: any) {
+          return createTaskCardHTML(task);
+        }
+
+        // 加载更多数据
+        async function loadMore() {
+          if (isLoading || !hasMore) {
+            return;
+          }
+
+          isLoading = true;
+          loadingIndicator && (loadingIndicator.style.display = 'block');
+          noMoreData && (noMoreData.style.display = 'none');
+
+          try {
+            currentPage += 1;
+
+            const response = await fetch(`/proxy`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                path: '/taskorder/orderindex',
+                page: currentPage,
+                limit: limit,
+                enterpriseSide: 'pc'
+              }),
+            });
+
+            if (response.status === 401) {
+              window.location.href = '/login';
+              return;
+            }
+
+            const result = await response.json();
+
+            if (result.code === 401) {
+              window.location.href = '/login';
+              return;
+            }
+
+            if (result.code === 1) {
+              const newTasks = result.data?.data || [];
+              const total = result.data?.total || result.data?.count || 0;
+
+              // 更新总数
+              if (totalCountEl) {
+                totalCountEl.textContent = total;
+              }
+
+              // 添加新任务到列表
+              if (newTasks.length > 0) {
+                newTasks.forEach((task: any) => {
+                  const taskHTML = createTaskCard(task);
+                  taskListContainer && taskListContainer.insertAdjacentHTML('beforeend', taskHTML);
+                });
+
+                loadedCount += newTasks.length;
+                if (loadedCountEl) {
+                  loadedCountEl.textContent = '' + loadedCount;
+                }
+              }
+
+              // 检查是否还有更多数据
+              if (loadedCount >= total || newTasks.length < limit) {
+                hasMore = false;
+                noMoreData && (noMoreData.style.display = 'block');
+              }
+            } else {
+              console.error('加载失败:', result.msg || '未知错误');
+              hasMore = false;
+            }
+          } catch (error) {
+            console.error('加载失败:', error);
+            hasMore = false;
+          } finally {
+            isLoading = false;
+            loadingIndicator && (loadingIndicator.style.display = 'none');
+          }
+        }
+
+        // 检测是否到达底部
+        function checkScrollBottom() {
+          // 获取滚动位置
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const windowHeight = window.innerHeight;
+          const documentHeight = document.documentElement.scrollHeight;
+
+          // 距离底部还有 200px 时就开始加载
+          if (scrollTop + windowHeight >= documentHeight - 200) {
+            loadMore();
+          }
+        }
+
+        // 防抖函数
+        function debounce(func: (...args: any[]) => void, wait: number) {
+          let timeout: any;
+          return function executedFunction(...args: any[]) {
+            const later = () => {
+              clearTimeout(timeout);
+              func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+          };
+        }
+
+        // 监听滚动事件（使用防抖）
+        const debouncedScroll = debounce(checkScrollBottom, 200);
+        window.addEventListener('scroll', debouncedScroll);
+
+        // 初始检查一次（如果页面很短，直接显示没有更多数据）
+        setTimeout(() => {
+          if (!hasMore) {
+            noMoreData && (noMoreData.style.display = 'block');
+          }
+        }, 100);
+      })();
+    </script>
   </body>
 </html>

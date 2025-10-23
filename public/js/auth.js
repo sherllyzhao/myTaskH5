@@ -29,7 +29,7 @@ class AuthHandler {
 
         window.fetch = async (...args) => {
             try {
-                const response = await originalFetch.apply(this, args);
+                const response = await originalFetch.apply(window, args);
 
                 // 检查HTTP状态码401
                 if (response.status === 401) {
