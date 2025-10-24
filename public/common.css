@@ -22,8 +22,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
     height: 100vh;
     position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 /* 动态粒子背景效果 */
