@@ -2,13 +2,14 @@
 import { Debug } from "astro:components";
 import TaskCard from "../components/TaskCard.astro";
 import LoginExpiredMessage from "../components/LoginExpiredMessage.astro";
+import FilterDrawer from "../components/FilterDrawer.astro";
 
 /* 获取任务大厅列表 */
 const employeeToken = Astro.cookies.get("employee_token")?.value;
 
 // 使用和浏览器端一样的最小化请求数据
 const postData = {
-  path: '/taskorder/orderindex',  // 指定要调用的后端路径
+  path: "/taskorder/orderindex", // 指定要调用的后端路径
   page: 1,
   limit: 10,
   enterpriseSide: "pc",
@@ -25,10 +26,10 @@ let taskListResData: any = {
 try {
   // 直接使用 fetch 调用代理路由，不经过 http 工具
   const response = await fetch(proxyUrl, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'Cookie': Astro.request.headers.get('cookie') || '',
+      "Content-Type": "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "",
     },
     body: JSON.stringify(postData),
   });
@@ -39,8 +40,8 @@ try {
     taskListResData = {
       list: [],
       total: 0,
-      error: '未授权，请重新登录',
-      code: 401
+      error: "未授权，请重新登录",
+      code: 401,
     };
   } else {
     const taskListRes = await response.json();
@@ -50,10 +51,10 @@ try {
       taskListResData = {
         list: [],
         total: 0,
-        error: '未授权，请重新登录',
-        code: 101
+        error: "未授权，请重新登录",
+        code: 101,
       };
-    } else if(taskListRes.code === 1){
+    } else if (taskListRes.code === 1) {
       taskListResData = taskListRes.data || taskListRes;
     }
   }
@@ -74,13 +75,13 @@ let taskStatsRes: any;
 try {
   // 统计数据
   const statsResponse = await fetch(proxyUrl, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'Cookie': Astro.request.headers.get('cookie') || '',
+      "Content-Type": "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "",
     },
     body: JSON.stringify({
-      path: '/taskorder/monthinfo',
+      path: "/taskorder/monthinfo",
       enterpriseSide: "pc",
     }),
   });
@@ -90,8 +91,8 @@ try {
     taskListResData = {
       list: [],
       total: 0,
-      error: '未授权，请重新登录',
-      code: 401
+      error: "未授权，请重新登录",
+      code: 401,
     };
   } else {
     const statsRes = await statsResponse.json();
@@ -99,10 +100,10 @@ try {
     if (statsRes.code === 401) {
       taskStatsRes = {
         data: {},
-        error: '未授权，请重新登录',
-        code: 101
+        error: "未授权，请重新登录",
+        code: 101,
       };
-    } else if(statsRes.code === 1){
+    } else if (statsRes.code === 1) {
       taskStatsRes = statsRes.data || statsRes;
     }
   }
@@ -114,7 +115,6 @@ const taskStats = taskStatsRes || {};
 ---
 
 <html lang="zh-CN">
-
   <head>
     <meta charset="utf-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -406,26 +406,34 @@ const taskStats = taskStatsRes || {};
       .mobile-picker-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.4);
+        background: rgba(0, 0, 0, 0.4);
         backdrop-filter: blur(2px);
         z-index: 9999;
         display: none;
       }
       .mobile-picker-sheet {
         position: absolute;
-        left: 0; right: 0; bottom: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         background: #fff;
         border-top-left-radius: 16px;
         border-top-right-radius: 16px;
-        box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
         max-height: 60vh;
         display: flex;
         flex-direction: column;
         animation: slideUp 200ms ease-out;
       }
       @keyframes slideUp {
-        from { transform: translateY(30%); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+        from {
+          transform: translateY(30%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
       }
       .mobile-picker-header {
         display: flex;
@@ -471,14 +479,13 @@ const taskStats = taskStatsRes || {};
         width: 100%;
         display: block;
         text-align: left;
-        padding: 12px 14px;
+        padding: 12px 14px 12px 40px;
         border-radius: 12px;
         border: 1px solid #e5e7eb;
         background: #fff;
         font-size: 16px;
         color: #374151;
       }
-
     </style>
   </head>
   <body>
@@ -488,8 +495,13 @@ const taskStats = taskStatsRes || {};
         <div class="mobile-picker-header">
           <div class="mobile-picker-title" id="mobilePickerTitle">请选择</div>
           <div style="display:flex; gap:8px;">
-            <button class="mobile-picker-action" onclick="closeMobilePicker()">取消</button>
-            <button class="mobile-picker-action primary" onclick="closeMobilePicker()">确定</button>
+            <button class="mobile-picker-action" onclick="closeMobilePicker()"
+              >取消</button
+            >
+            <button
+              class="mobile-picker-action primary"
+              onclick="closeMobilePicker()">确定</button
+            >
           </div>
         </div>
         <div class="mobile-picker-list" id="mobilePickerList"></div>
@@ -544,48 +556,55 @@ const taskStats = taskStatsRes || {};
 
       function openMobilePicker(key, trigger) {
         pickerState.current = key;
-        const overlay = document.getElementById('mobilePickerOverlay');
-        const list = document.getElementById('mobilePickerList');
-        const title = document.getElementById('mobilePickerTitle');
+        const overlay = document.getElementById("mobilePickerOverlay");
+        const list = document.getElementById("mobilePickerList");
+        const title = document.getElementById("mobilePickerTitle");
         const options = pickerState.dataMap[key] || ["选项1", "选项2"];
-        title.textContent = trigger?.textContent || '请选择';
-        list.innerHTML = '';
+        if (title) title.textContent = trigger?.textContent || "请选择";
+        if (list) list.innerHTML = "";
         options.forEach((opt) => {
-          const item = document.createElement('div');
-          item.className = 'mobile-picker-item';
+          const item = document.createElement("div");
+          item.className = "mobile-picker-item";
           item.textContent = opt;
-          item.addEventListener('click', () => {
-            trigger.textContent = opt;
+          item.addEventListener("click", () => {
+            if (trigger) trigger.textContent = opt;
             closeMobilePicker();
           });
-          list.appendChild(item);
+          list && list.appendChild(item);
         });
-        overlay.style.display = 'block';
+        if (overlay) overlay.style.display = "block";
       }
       function closeMobilePicker() {
-        const overlay = document.getElementById('mobilePickerOverlay');
-        overlay.style.display = 'none';
+        const overlay = document.getElementById("mobilePickerOverlay");
+        if (overlay) overlay.style.display = "none";
       }
-      document.addEventListener('click', (e) => {
-        const btn = (e.target as HTMLElement).closest('.mobile-picker-trigger') as HTMLElement | null;
-        if (btn) {
-          const key = btn.getAttribute('data-picker');
-          openMobilePicker(key, btn);
-        }
-      });
-      document.addEventListener('click', (e) => {
-        const overlay = document.getElementById('mobilePickerOverlay');
-        if (e.target === overlay) {
-          closeMobilePicker();
-        }
-      });
 
-      // ESC键关闭抽屉
-      document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") {
-          closeFilterDrawer();
-          closeMobilePicker();
-        }
+      window.addEventListener("load", function () {
+        document
+          .querySelectorAll(".mobile-picker-trigger")
+          .forEach(function (el) {
+            el.addEventListener("click", function (e) {
+              e.preventDefault();
+              openMobilePicker(el.getAttribute("data-picker"), el);
+              return false;
+            });
+          });
+        document.addEventListener("click", function (e) {
+          var overlay = document.getElementById("mobilePickerOverlay");
+          var target = e.target;
+          var el = target && target.nodeType === 1 ? target : null; // 1 = ELEMENT_NODE
+          if (overlay && el && el.id === "mobilePickerOverlay") {
+            closeMobilePicker();
+          }
+        });
+
+        // ESC键关闭抽屉
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeFilterDrawer();
+            closeMobilePicker();
+          }
+        });
       });
     </script>
     <div class="container">
@@ -612,10 +631,14 @@ const taskStats = taskStatsRes || {};
           <div class="stat-title">本月抢单数</div>
           <div class="stat-detail">
             <div>
-              项目：<span class="stat-value">{taskStatsRes?.qd_num?.xmnum || 0}</span> 
+              项目：<span class="stat-value"
+                >{taskStatsRes?.qd_num?.xmnum || 0}</span
+              >
             </div>
             <div>
-              任务：<span class="stat-value">{taskStatsRes?.qd_num?.rwnum || 0}</span> 
+              任务：<span class="stat-value"
+                >{taskStatsRes?.qd_num?.rwnum || 0}</span
+              >
             </div>
           </div>
         </div>
@@ -623,25 +646,45 @@ const taskStats = taskStatsRes || {};
           <div class="stat-title">本月佣金金额</div>
           <div class="stat-detail">
             <div>
-              项目：<span class="stat-value"><i>￥</i>{taskStatsRes?.qd_price?.xmprice || 0}</span> 
+              项目：<span class="stat-value"
+                ><i>￥</i>{taskStatsRes?.qd_price?.xmprice || 0}</span
+              >
             </div>
             <div>
-              任务：<span class="stat-value"><i>￥</i>{taskStatsRes?.qd_price?.rwprice || 0}</span> 
+              任务：<span class="stat-value"
+                ><i>￥</i>{taskStatsRes?.qd_price?.rwprice || 0}</span
+              >
             </div>
           </div>
         </div>
         <div class="stat-card">
           <div class="stat-title">本月完结单数</div>
           <div class="stat-detail">
-            <div>项目：<span class="stat-value">{taskStatsRes?.end_num?.xmnum || 0}</span> </div>
-            <div>任务：<span class="stat-value">{taskStatsRes?.end_num?.rwnum || 0}</span> </div>
+            <div>
+              项目：<span class="stat-value"
+                >{taskStatsRes?.end_num?.xmnum || 0}</span
+              >
+            </div>
+            <div>
+              任务：<span class="stat-value"
+                >{taskStatsRes?.end_num?.rwnum || 0}</span
+              >
+            </div>
           </div>
         </div>
         <div class="stat-card">
           <div class="stat-title">本月完结金额</div>
           <div class="stat-detail">
-            <div>项目：<span class="stat-value"><i>￥</i>{taskStatsRes?.end_price?.xmprice || 0}</span> </div>
-            <div>任务：<span class="stat-value"><i>￥</i>{taskStatsRes?.end_price?.rwprice || 0}</span> </div>
+            <div>
+              项目：<span class="stat-value"
+                ><i>￥</i>{taskStatsRes?.end_price?.xmprice || 0}</span
+              >
+            </div>
+            <div>
+              任务：<span class="stat-value"
+                ><i>￥</i>{taskStatsRes?.end_price?.rwprice || 0}</span
+              >
+            </div>
           </div>
         </div>
       </div>
@@ -651,152 +694,191 @@ const taskStats = taskStatsRes || {};
         🔍 筛选条件
       </button>
 
-      <!-- 筛选器抽屉 -->
-      <div
-        class="filter-drawer"
-        id="filterDrawer"
-        onclick="closeFilterDrawer(event)"
-      >
-        <div class="filter-drawer-content" onclick="event.stopPropagation()">
-          <div class="filter-drawer-header">
-            <h3 class="filter-drawer-title">🎯 筛选条件</h3>
-            <button class="filter-drawer-close" onclick="closeFilterDrawer()"
-              >✕</button
-            >
-          </div>
-
-          <div class="filter-drawer-body">
-            <!-- 基础筛选 -->
-            <div class="filter-section">
-              <h4 class="filter-section-title">基础筛选</h4>
-              <div class="filter-grid two-cols">
-                <div class="filter-item">
-                  <span class="filter-item-icon">📋</span>
-                  <button class="mobile-picker-trigger" data-picker="projectTask">全部项目和任务</button>
-                </div>
-                <div class="filter-item">
-                  <span class="filter-item-icon">💰</span>
-                  <button class="mobile-picker-trigger" data-picker="amountStart">开始金额</button>
-                </div>
-              </div>
-              <div class="filter-grid" style="margin-top: 12px;">
-                <div class="filter-item">
-                  <span class="filter-item-icon">💵</span>
-                  <button class="mobile-picker-trigger" data-picker="amountEnd">结束金额</button>
-                </div>
-              </div>
+      <div class="content">
+        {
+          taskListResData.code === 101 ? (
+            <LoginExpiredMessage />
+          ) : taskList.length === 0 ? (
+            <div style="text-align: center; padding: 40px; color: #64748b;">
+              {taskListResData.error
+                ? `❌ ${taskListResData.error}`
+                : "📭 暂无任务"}
             </div>
-
-            <!-- 时间筛选 -->
-            <div class="filter-section">
-              <h4 class="filter-section-title">时间筛选</h4>
-              <div class="filter-grid">
-                <div class="filter-item">
-                  <span class="filter-item-icon">📅</span>
-                  <button class="mobile-picker-trigger" data-picker="publishStart">发布时间-开始时间</button>
-                </div>
-                <div class="filter-item">
-                  <span class="filter-item-icon">📅</span>
-                  <button class="mobile-picker-trigger" data-picker="publishEnd">发布时间-结束时间</button>
-                </div>
-                <div class="filter-item">
-                  <span class="filter-item-icon">⏰</span>
-                  <button class="mobile-picker-trigger" data-picker="deadlineStart">截止时间-开始时间</button>
-                </div>
-                <div class="filter-item">
-                  <span class="filter-item-icon">⏰</span>
-                  <button class="mobile-picker-trigger" data-picker="deadlineEnd">截止时间-结束时间</button>
-                </div>
-                <div class="filter-item">
-                  <span class="filter-item-icon">🤝</span>
-                  <button class="mobile-picker-trigger" data-picker="orderStart">接单时间-开始时间</button>
-                </div>
-                <div class="filter-item">
-                  <span class="filter-item-icon">🤝</span>
-                  <button class="mobile-picker-trigger" data-picker="orderEnd">接单时间-结束时间</button>
-                </div>
+          ) : (
+            <>
+              <div id="taskListContainer">
+                {taskList.map((task: any) => (
+                  <TaskCard task={task} />
+                ))}
               </div>
+
+              <div
+                id="loadingIndicator"
+                style="display: none; text-align: center; padding: 20px; color: #667eea;"
+              >
+                <div style="display: inline-block; animation: spin 1s linear infinite;">
+                  ⏳
+                </div>
+                <span style="margin-left: 10px;">加载中...</span>
+              </div>
+
+              <div
+                id="noMoreData"
+                style="display: none; text-align: center; padding: 20px; color: #94a3b8;"
+              >
+                📭 已加载全部任务
+              </div>
+
+              <div class="pagination">
+                📊 共 <span id="totalCount">{total}</span> 条记录 已加载{" "}
+                <span id="loadedCount">{taskList.length}</span> 条
+              </div>
+            </>
+          )
+        }
+      </div>
+
+      <!-- 筛选器抽屉组件 -->
+      <FilterDrawer id="filterDrawer" title="筛选条件">
+        <Fragment slot="header">
+          <h3 class="filter-drawer-title">筛选条件</h3>
+          <button class="filter-drawer-close" onclick="closeFilterDrawer()"
+            >✕</button
+          >
+        </Fragment>
+
+        <!-- 基础筛选 -->
+        <div class="filter-section">
+          <h4 class="filter-section-title">基础筛选</h4>
+          <div class="filter-grid two-cols">
+            <div class="filter-item">
+              <span class="filter-item-icon">📋</span>
+              <button
+                class="mobile-picker-trigger"
+                type="button"
+                data-picker="projectTask">全部项目和任务</button
+              >
+            </div>
+            <div class="filter-item">
+              <span class="filter-item-icon">💰</span>
+              <button
+                class="mobile-picker-trigger"
+                type="button"
+                data-picker="amountStart">开始金额</button
+              >
             </div>
           </div>
-
-          <div class="filter-drawer-footer">
-            <div class="filter-actions">
+          <div class="filter-grid" style="margin-top: 12px;">
+            <div class="filter-item">
+              <span class="filter-item-icon">💵</span>
               <button
-                class="filter-btn filter-btn-secondary"
-                onclick="resetFilters()"
+                class="mobile-picker-trigger"
+                type="button"
+                data-picker="amountEnd">结束金额</button
               >
-                🔄 重置
-              </button>
-              <button
-                class="filter-btn filter-btn-primary"
-                onclick="applyFilters()"
-              >
-                🔍 应用筛选
-              </button>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="content">
-        {taskListResData.code === 101 ? (
-          <LoginExpiredMessage />
-        ) : taskList.length === 0 ? (
-          <div style="text-align: center; padding: 40px; color: #64748b;">
-            {taskListResData.error ? `❌ ${taskListResData.error}` : '📭 暂无任务'}
+        <!-- 时间筛选 -->
+        <div class="filter-section">
+          <h4 class="filter-section-title">时间筛选</h4>
+          <div class="filter-grid">
+            <div class="filter-item">
+              <span class="filter-item-icon">📅</span>
+              <button
+                class="mobile-picker-trigger"
+                type="button"
+                data-picker="publishStart">发布时间-开始时间</button
+              >
+            </div>
+            <div class="filter-item">
+              <span class="filter-item-icon">📅</span>
+              <button
+                class="mobile-picker-trigger"
+                type="button"
+                data-picker="publishEnd">发布时间-结束时间</button
+              >
+            </div>
+            <div class="filter-item">
+              <span class="filter-item-icon">⏰</span>
+              <button
+                class="mobile-picker-trigger"
+                type="button"
+                data-picker="deadlineStart">截止时间-开始时间</button
+              >
+            </div>
+            <div class="filter-item">
+              <span class="filter-item-icon">⏰</span>
+              <button
+                class="mobile-picker-trigger"
+                type="button"
+                data-picker="deadlineEnd">截止时间-结束时间</button
+              >
+            </div>
+            <div class="filter-item">
+              <span class="filter-item-icon">🤝</span>
+              <button
+                class="mobile-picker-trigger"
+                type="button"
+                data-picker="orderStart">接单时间-开始时间</button
+              >
+            </div>
+            <div class="filter-item">
+              <span class="filter-item-icon">🤝</span>
+              <button
+                class="mobile-picker-trigger"
+                type="button"
+                data-picker="orderEnd">接单时间-结束时间</button
+              >
+            </div>
           </div>
-        ) : (
-          <>
-            <div id="taskListContainer">
-              {taskList.map((task: any) => (
-                <TaskCard task={task} />
-              ))}
-            </div>
+        </div>
 
-            <div id="loadingIndicator" style="display: none; text-align: center; padding: 20px; color: #667eea;">
-              <div style="display: inline-block; animation: spin 1s linear infinite;">⏳</div>
-              <span style="margin-left: 10px;">加载中...</span>
-            </div>
-
-            <div id="noMoreData" style="display: none; text-align: center; padding: 20px; color: #94a3b8;">
-              📭 已加载全部任务
-            </div>
-
-            <div class="pagination">
-              📊 共 <span id="totalCount">{total}</span> 条记录
-              已加载 <span id="loadedCount">{taskList.length}</span> 条
-            </div>
-          </>
-        )}
-      </div>
+        <Fragment slot="footer">
+          <div class="filter-actions">
+            <button
+              class="filter-btn filter-btn-secondary"
+              onclick="resetFilters()">🔄 重置</button
+            >
+            <button
+              class="filter-btn filter-btn-primary"
+              onclick="applyFilters()">🔍 应用筛选</button
+            >
+          </div>
+        </Fragment>
+      </FilterDrawer>
     </div>
 
     <script :inline src="/js/cookies.js"></script>
     <!-- 触底加载脚本 -->
     <script>
-      import { createTaskCardHTML } from '../utils/taskCardTemplate';
-      import { getCookie } from '../utils/tool';
+      import { createTaskCardHTML } from "../utils/taskCardTemplate";
+      import { getCookie } from "../utils/tool";
 
-      (function() {
+      (function () {
         let currentPage = 1;
         let isLoading = false;
         let hasMore = true;
         const limit = 10;
 
-        
-        const clientToken = getCookie('token') || localStorage.getItem('token') || '';
-        const clientEmployeeToken = getCookie('employee_token') || localStorage.getItem('employee_token') || '';
+        const clientToken =
+          getCookie("token") || localStorage.getItem("token") || "";
+        const clientEmployeeToken =
+          getCookie("employee_token") ||
+          localStorage.getItem("employee_token") ||
+          "";
 
         // 获取 DOM 元素
-        const taskListContainer = document.getElementById('taskListContainer');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const noMoreData = document.getElementById('noMoreData');
-        const totalCountEl = document.getElementById('totalCount');
-        const loadedCountEl = document.getElementById('loadedCount');
+        const taskListContainer = document.getElementById("taskListContainer");
+        const loadingIndicator = document.getElementById("loadingIndicator");
+        const noMoreData = document.getElementById("noMoreData");
+        const totalCountEl = document.getElementById("totalCount");
+        const loadedCountEl = document.getElementById("loadedCount");
 
         // 初始化总数
-        const initialTotal = parseInt(totalCountEl?.textContent || '0');
-        let loadedCount = parseInt(loadedCountEl?.textContent || '0');
+        const initialTotal = parseInt(totalCountEl?.textContent || "0");
+        let loadedCount = parseInt(loadedCountEl?.textContent || "0");
 
         // 检查是否还有更多数据
         if (loadedCount >= initialTotal) {
@@ -815,34 +897,34 @@ const taskStats = taskStatsRes || {};
           }
 
           isLoading = true;
-          loadingIndicator && (loadingIndicator.style.display = 'block');
-          noMoreData && (noMoreData.style.display = 'none');
+          loadingIndicator && (loadingIndicator.style.display = "block");
+          noMoreData && (noMoreData.style.display = "none");
 
           try {
             currentPage += 1;
 
             const response = await fetch(`/proxy`, {
-              method: 'POST',
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                path: '/taskorder/orderindex',
+                path: "/taskorder/orderindex",
                 page: currentPage,
                 limit: limit,
-                enterpriseSide: 'pc'
+                enterpriseSide: "pc",
               }),
             });
 
             if (response.status === 101) {
-              window.location.href = '/login';
+              window.location.href = "/login";
               return;
             }
 
             const result = await response.json();
 
             if (result.code === 101) {
-              window.location.href = '/login';
+              window.location.href = "/login";
               return;
             }
 
@@ -859,37 +941,39 @@ const taskStats = taskStatsRes || {};
               if (newTasks.length > 0) {
                 newTasks.forEach((task: any) => {
                   const taskHTML = createTaskCard(task);
-                  taskListContainer && taskListContainer.insertAdjacentHTML('beforeend', taskHTML);
+                  taskListContainer &&
+                    taskListContainer.insertAdjacentHTML("beforeend", taskHTML);
                 });
 
                 loadedCount += newTasks.length;
                 if (loadedCountEl) {
-                  loadedCountEl.textContent = '' + loadedCount;
+                  loadedCountEl.textContent = "" + loadedCount;
                 }
               }
 
               // 检查是否还有更多数据
               if (loadedCount >= total || newTasks.length < limit) {
                 hasMore = false;
-                noMoreData && (noMoreData.style.display = 'block');
+                noMoreData && (noMoreData.style.display = "block");
               }
             } else {
-              console.error('加载失败:', result.msg || '未知错误');
+              console.error("加载失败:", result.msg || "未知错误");
               hasMore = false;
             }
           } catch (error) {
-            console.error('加载失败:', error);
+            console.error("加载失败:", error);
             hasMore = false;
           } finally {
             isLoading = false;
-            loadingIndicator && (loadingIndicator.style.display = 'none');
+            loadingIndicator && (loadingIndicator.style.display = "none");
           }
         }
 
         // 检测是否到达底部
         function checkScrollBottom() {
           // 获取滚动位置
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const scrollTop =
+            window.pageYOffset || document.documentElement.scrollTop;
           const windowHeight = window.innerHeight;
           const documentHeight = document.documentElement.scrollHeight;
 
@@ -914,12 +998,12 @@ const taskStats = taskStatsRes || {};
 
         // 监听滚动事件（使用防抖）
         const debouncedScroll = debounce(checkScrollBottom, 200);
-        window.addEventListener('scroll', debouncedScroll);
+        window.addEventListener("scroll", debouncedScroll);
 
         // 初始检查一次（如果页面很短，直接显示没有更多数据）
         setTimeout(() => {
           if (!hasMore) {
-            noMoreData && (noMoreData.style.display = 'block');
+            noMoreData && (noMoreData.style.display = "block");
           }
         }, 100);
       })();

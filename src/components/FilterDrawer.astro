@@ -1,0 +1,25 @@
+---
+interface Props {
+  id?: string;
+  title?: string;
+}
+const { id = 'filterDrawer', title = '筛选条件' } = Astro.props as Props;
+---
+<div class="filter-drawer" id={id} onclick="closeFilterDrawer(event)">
+  <div class="filter-drawer-content" onclick="event.stopPropagation()">
+    <div class="filter-drawer-header">
+      <slot name="header">
+        <h3 class="filter-drawer-title">{title}</h3>
+        <button class="filter-drawer-close" onclick="closeFilterDrawer()">✕</button>
+      </slot>
+    </div>
+
+    <div class="filter-drawer-body">
+      <slot />
+    </div>
+
+    <div class="filter-drawer-footer">
+      <slot name="footer" />
+    </div>
+  </div>
+</div>

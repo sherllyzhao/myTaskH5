@@ -5,6 +5,8 @@
     box-sizing: border-box;
 }
 
+html { min-height: 100%; }
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background:
@@ -18,8 +20,9 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
+    height: 100vh;
     position: relative;
+    overflow-y: auto;
     overflow-x: hidden;
 }
 
@@ -99,6 +102,9 @@ body::after {
     max-width: 1200px;
     position: relative;
     z-index: 1;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* 响应式背景调整 */
@@ -121,10 +127,9 @@ body::after {
     max-width: 414px;
     margin: 0 auto;
     background: #ffffff;
-    min-height: 100vh;
+    height: 100%;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.15);
     position: relative;
-    overflow: hidden;
 }
 
 .container::before {
@@ -456,18 +461,14 @@ body::after {
 /* 抽屉弹窗样式 */
 .filter-drawer {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0; /* top, right, bottom, left: 0 */
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.3s ease, visibility 0.3s ease; /* 避免与子元素 transform 冲突 */
     pointer-events: none;
-    height: 100vh;
 }
 
 .filter-drawer.active {
@@ -477,7 +478,7 @@ body::after {
 }
 
 .filter-drawer-content {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
@@ -490,8 +491,14 @@ body::after {
     box-shadow:
         0 -10px 40px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
+.filter-drawer.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
 .filter-drawer.active .filter-drawer-content {
     transform: translateY(0);
 }
@@ -602,7 +609,7 @@ body::after {
     position: absolute;
     left: 14px;
     top: 50%;
-    transform: translateY(-80%);
+    transform: translateY(-50%);
     font-size: 16px;
     opacity: 0.6;
     pointer-events: none;

@@ -1,5 +1,5 @@
 ---
-
+import FilterDrawer from "../components/FilterDrawer.astro";
 ---
 
 <html lang="zh-CN">
@@ -45,15 +45,14 @@
 				🔍 筛选条件
 			</button>
 
-			<!-- 筛选器抽屉 -->
-			<div class="filter-drawer" id="filterDrawer" onclick="closeFilterDrawer(event)">
-				<div class="filter-drawer-content" onclick="event.stopPropagation()">
-					<div class="filter-drawer-header">
-						<h3 class="filter-drawer-title">🎯 筛选条件</h3>
-						<button class="filter-drawer-close" onclick="closeFilterDrawer()">✕</button>
-					</div>
+			<!-- 筛选器抽屉组件 -->
+			<FilterDrawer id="filterDrawer" title="🎯 筛选条件">
+				<Fragment slot="header">
+					<h3 class="filter-drawer-title">🎯 筛选条件</h3>
+					<button class="filter-drawer-close" onclick="closeFilterDrawer()">✕</button>
+				</Fragment>
 
-					<div class="filter-drawer-body">
+				<!-- 抽屉主体内容（插槽） -->
 						<!-- 基础筛选 -->
 						<div class="filter-section">
 							<h4 class="filter-section-title">基础筛选</h4>
@@ -123,20 +122,14 @@
 								</div>
 							</div>
 						</div>
-					</div>
 
-					<div class="filter-drawer-footer">
-						<div class="filter-actions">
-							<button class="filter-btn filter-btn-secondary" onclick="resetFilters()">
-								🔄 重置
-							</button>
-							<button class="filter-btn filter-btn-primary" onclick="applyFilters()">
-								🔍 应用筛选
-							</button>
-						</div>
+				<Fragment slot="footer">
+					<div class="filter-actions">
+						<button class="filter-btn filter-btn-secondary" onclick="resetFilters()">🔄 重置</button>
+						<button class="filter-btn filter-btn-primary" onclick="applyFilters()">🔍 应用筛选</button>
 					</div>
-				</div>
-			</div>
+				</Fragment>
+			</FilterDrawer>
 
 			<div class="content">
 				<div class="task-card card">
