@@ -1,0 +1,205 @@
+---
+interface Props {
+  // 组件不需要外部props，因为逻辑是全局的
+}
+---
+
+<!-- 移动端选择器弹层组件 -->
+<div class="mobile-picker-overlay" id="mobilePickerOverlay">
+  <div class="mobile-picker-sheet">
+    <div class="mobile-picker-header">
+      <div class="mobile-picker-title" id="mobilePickerTitle">请选择</div>
+      <div style="display:flex; gap:8px;">
+        <button class="mobile-picker-action" onclick="closeMobilePicker()">取消</button>
+        <button class="mobile-picker-action primary" onclick="closeMobilePicker()">确定</button>
+      </div>
+    </div>
+    <div class="mobile-picker-list" id="mobilePickerList"></div>
+  </div>
+</div>
+
+<style is:global>
+  /* 移动端选择器样式 */
+  .mobile-picker-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .mobile-picker-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+  }
+
+  .mobile-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .mobile-picker-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .mobile-picker-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 60vh;
+  }
+
+  .mobile-picker-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 16px;
+    color: #374151;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .mobile-picker-item:hover {
+    background: #f9fafb;
+  }
+
+  .mobile-picker-item:last-child {
+    border-bottom: none;
+  }
+
+  .mobile-picker-action {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+
+  .mobile-picker-action.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+  }
+
+  .mobile-picker-trigger {
+    width: 100%;
+    display: block;
+    text-align: left;
+    padding: 12px 14px 12px 40px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    font-size: 16px;
+    color: #374151;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-picker-trigger.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #667eea;
+    font-weight: 600;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+</style>
+
+<script is:inline>
+  // 移动端选择器逻辑
+  const pickerState = {
+    current: null,
+    dataMap: {
+      projectTask: ["全部项目和任务", "仅项目", "仅任务"],
+      amountStart: ["不限", "¥100", "¥500", "¥1000"],
+      amountEnd: ["不限", "¥1000", "¥5000", "¥10000"],
+      publishStart: ["不限", "今天", "近7天", "近30天"],
+      publishEnd: ["不限", "今天", "近7天", "近30天"],
+      deadlineStart: ["不限", "今天", "近7天", "近30天"],
+      deadlineEnd: ["不限", "今天", "近7天", "近30天"],
+      orderStart: ["不限", "今天", "近7天", "近30天"],
+      orderEnd: ["不限", "今天", "近7天", "近30天"],
+    },
+  };
+
+  function openMobilePicker(key, trigger) {
+    pickerState.current = key;
+    const overlay = document.getElementById("mobilePickerOverlay");
+    const list = document.getElementById("mobilePickerList");
+    const title = document.getElementById("mobilePickerTitle");
+    const options = pickerState.dataMap[key] || ["选项1", "选项2"];
+    
+    if (title) title.textContent = trigger?.textContent || "请选择";
+    if (list) list.innerHTML = "";
+    
+    options.forEach((opt) => {
+      const item = document.createElement("div");
+      item.className = "mobile-picker-item";
+      item.textContent = opt;
+      item.addEventListener("click", () => {
+        if (trigger) {
+          trigger.textContent = opt;
+          // 添加选中状态样式
+          trigger.classList.add('selected');
+          // 移除其他按钮的选中状态
+          document.querySelectorAll('.mobile-picker-trigger').forEach(btn => {
+            if (btn !== trigger) {
+              btn.classList.remove('selected');
+            }
+          });
+        }
+        closeMobilePicker();
+      });
+      list && list.appendChild(item);
+    });
+    
+    if (overlay) overlay.style.display = "block";
+  }
+
+  function closeMobilePicker() {
+    const overlay = document.getElementById("mobilePickerOverlay");
+    if (overlay) overlay.style.display = "none";
+  }
+
+  // 初始化事件监听
+  window.addEventListener("load", function () {
+    document.querySelectorAll(".mobile-picker-trigger").forEach(function (el) {
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        openMobilePicker(el.getAttribute("data-picker"), el);
+        return false;
+      });
+    });
+
+    // 点击遮罩层关闭
+    document.addEventListener("click", function (e) {
+      const overlay = document.getElementById("mobilePickerOverlay");
+      if (e.target === overlay) {
+        closeMobilePicker();
+      }
+    });
+  });
+</script>

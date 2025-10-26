@@ -3,6 +3,7 @@ import { Debug } from "astro:components";
 import TaskCard from "../components/TaskCard.astro";
 import LoginExpiredMessage from "../components/LoginExpiredMessage.astro";
 import FilterDrawer from "../components/FilterDrawer.astro";
+import MobilePicker from "../components/MobilePicker.astro";
 
 /* 获取任务大厅列表 */
 const employeeToken = Astro.cookies.get("employee_token")?.value;
@@ -496,23 +497,7 @@ const taskStats = taskStatsRes || {};
   </head>
   <body>
     <!-- 移动端选择器弹层 -->
-    <div class="mobile-picker-overlay" id="mobilePickerOverlay">
-      <div class="mobile-picker-sheet">
-        <div class="mobile-picker-header">
-          <div class="mobile-picker-title" id="mobilePickerTitle">请选择</div>
-          <div style="display:flex; gap:8px;">
-            <button class="mobile-picker-action" onclick="closeMobilePicker()"
-              >取消</button
-            >
-            <button
-              class="mobile-picker-action primary"
-              onclick="closeMobilePicker()">确定</button
-            >
-          </div>
-        </div>
-        <div class="mobile-picker-list" id="mobilePickerList"></div>
-      </div>
-    </div>
+    <MobilePicker />
     <script is:inline>
       // 全局函数定义，确保在HTML元素之前加载
       function openFilterDrawer() {
