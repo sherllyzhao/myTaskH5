@@ -487,6 +487,12 @@ const taskStats = taskStatsRes || {};
         color: #374151;
       }
     </style>
+    <style>
+      .wrap{
+        height: 100%;
+        overflow: auto;
+      }
+    </style>
   </head>
   <body>
     <!-- 移动端选择器弹层 -->
@@ -608,134 +614,137 @@ const taskStats = taskStatsRes || {};
       });
     </script>
     <div class="container">
-      <div class="header">
-        <div class="nav-tabs">
-          <div class="nav-tab active">任务大厅</div>
-          <div class="nav-tab" onclick="window.location.href='/my-tasks'">
-            我的任务
+      <div class="wrap">
+        
+        <div class="header">
+          <div class="nav-tabs">
+            <div class="nav-tab active">任务大厅</div>
+            <div class="nav-tab" onclick="window.location.href='/my-tasks'">
+              我的任务
+            </div>
+            <div class="nav-tab" onclick="window.location.href='/my-commission'">
+              我的佣金
+            </div>
           </div>
-          <div class="nav-tab" onclick="window.location.href='/my-commission'">
-            我的佣金
+
+          <div class="profile-section">
+            <img src="/favicon.svg" alt="用户头像" class="avatar" />
+            <a href="/profile" class="profile-btn">👤 个人主页</a>
           </div>
         </div>
 
-        <div class="profile-section">
-          <img src="/favicon.svg" alt="用户头像" class="avatar" />
-          <a href="/profile" class="profile-btn">👤 个人主页</a>
-        </div>
-      </div>
-
-      <!-- <Debug data={taskStats} /> -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-title">本月抢单数</div>
-          <div class="stat-detail">
-            <div>
-              项目：<span class="stat-value"
-                >{taskStatsRes?.qd_num?.xmnum || 0}</span
-              >
-            </div>
-            <div>
-              任务：<span class="stat-value"
-                >{taskStatsRes?.qd_num?.rwnum || 0}</span
-              >
-            </div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-title">本月佣金金额</div>
-          <div class="stat-detail">
-            <div>
-              项目：<span class="stat-value"
-                ><i>￥</i>{taskStatsRes?.qd_price?.xmprice || 0}</span
-              >
-            </div>
-            <div>
-              任务：<span class="stat-value"
-                ><i>￥</i>{taskStatsRes?.qd_price?.rwprice || 0}</span
-              >
-            </div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-title">本月完结单数</div>
-          <div class="stat-detail">
-            <div>
-              项目：<span class="stat-value"
-                >{taskStatsRes?.end_num?.xmnum || 0}</span
-              >
-            </div>
-            <div>
-              任务：<span class="stat-value"
-                >{taskStatsRes?.end_num?.rwnum || 0}</span
-              >
-            </div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-title">本月完结金额</div>
-          <div class="stat-detail">
-            <div>
-              项目：<span class="stat-value"
-                ><i>￥</i>{taskStatsRes?.end_price?.xmprice || 0}</span
-              >
-            </div>
-            <div>
-              任务：<span class="stat-value"
-                ><i>￥</i>{taskStatsRes?.end_price?.rwprice || 0}</span
-              >
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 筛选器触发按钮 -->
-      <button class="filter-trigger" onclick="openFilterDrawer()">
-        🔍 筛选条件
-      </button>
-
-      <div class="content">
-        {
-          taskListResData.code === 101 ? (
-            <LoginExpiredMessage />
-          ) : taskList.length === 0 ? (
-            <div style="text-align: center; padding: 40px; color: #64748b;">
-              {taskListResData.error
-                ? `❌ ${taskListResData.error}`
-                : "📭 暂无任务"}
-            </div>
-          ) : (
-            <>
-              <div id="taskListContainer">
-                {taskList.map((task: any) => (
-                  <TaskCard task={task} />
-                ))}
+        <!-- <Debug data={taskStats} /> -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-title">本月抢单数</div>
+            <div class="stat-detail">
+              <div>
+                项目：<span class="stat-value"
+                  >{taskStatsRes?.qd_num?.xmnum || 0}</span
+                >
               </div>
+              <div>
+                任务：<span class="stat-value"
+                  >{taskStatsRes?.qd_num?.rwnum || 0}</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">本月佣金金额</div>
+            <div class="stat-detail">
+              <div>
+                项目：<span class="stat-value"
+                  ><i>￥</i>{taskStatsRes?.qd_price?.xmprice || 0}</span
+                >
+              </div>
+              <div>
+                任务：<span class="stat-value"
+                  ><i>￥</i>{taskStatsRes?.qd_price?.rwprice || 0}</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">本月完结单数</div>
+            <div class="stat-detail">
+              <div>
+                项目：<span class="stat-value"
+                  >{taskStatsRes?.end_num?.xmnum || 0}</span
+                >
+              </div>
+              <div>
+                任务：<span class="stat-value"
+                  >{taskStatsRes?.end_num?.rwnum || 0}</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">本月完结金额</div>
+            <div class="stat-detail">
+              <div>
+                项目：<span class="stat-value"
+                  ><i>￥</i>{taskStatsRes?.end_price?.xmprice || 0}</span
+                >
+              </div>
+              <div>
+                任务：<span class="stat-value"
+                  ><i>￥</i>{taskStatsRes?.end_price?.rwprice || 0}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
 
-              <div
-                id="loadingIndicator"
-                style="display: none; text-align: center; padding: 20px; color: #667eea;"
-              >
-                <div style="display: inline-block; animation: spin 1s linear infinite;">
-                  ⏳
+        <!-- 筛选器触发按钮 -->
+        <button class="filter-trigger" onclick="openFilterDrawer()">
+          🔍 筛选条件
+        </button>
+
+        <div class="content">
+          {
+            taskListResData.code === 101 ? (
+              <LoginExpiredMessage />
+            ) : taskList.length === 0 ? (
+              <div style="text-align: center; padding: 40px; color: #64748b;">
+                {taskListResData.error
+                  ? `❌ ${taskListResData.error}`
+                  : "📭 暂无任务"}
+              </div>
+            ) : (
+              <>
+                <div id="taskListContainer">
+                  {taskList.map((task: any) => (
+                    <TaskCard task={task} />
+                  ))}
                 </div>
-                <span style="margin-left: 10px;">加载中...</span>
-              </div>
 
-              <div
-                id="noMoreData"
-                style="display: none; text-align: center; padding: 20px; color: #94a3b8;"
-              >
-                📭 已加载全部任务
-              </div>
+                <div
+                  id="loadingIndicator"
+                  style="display: none; text-align: center; padding: 20px; color: #667eea;"
+                >
+                  <div style="display: inline-block; animation: spin 1s linear infinite;">
+                    ⏳
+                  </div>
+                  <span style="margin-left: 10px;">加载中...</span>
+                </div>
 
-              <div class="pagination">
-                📊 共 <span id="totalCount">{total}</span> 条记录 已加载{" "}
-                <span id="loadedCount">{taskList.length}</span> 条
-              </div>
-            </>
-          )
-        }
+                <div
+                  id="noMoreData"
+                  style="display: none; text-align: center; padding: 20px; color: #94a3b8;"
+                >
+                  📭 已加载全部任务
+                </div>
+
+                <div class="pagination">
+                  📊 共 <span id="totalCount">{total}</span> 条记录 已加载{" "}
+                  <span id="loadedCount">{taskList.length}</span> 条
+                </div>
+              </>
+            )
+          }
+        </div>
       </div>
 
       <!-- 筛选器抽屉组件 -->
@@ -750,7 +759,13 @@ const taskStats = taskStatsRes || {};
         <!-- 基础筛选 -->
         <div class="filter-section">
           <h4 class="filter-section-title">基础筛选</h4>
-          <div class="filter-grid two-cols">
+          <div class="filter-grid">
+            <div class="filter-item">
+              <span class="filter-item-icon">📋</span>
+              <input type="text" class="filter-input" placeholder="项目名称或项目编号" />
+            </div>
+          </div>
+          <div class="filter-grid two-cols" style="margin-top: 12px;">
             <div class="filter-item">
               <span class="filter-item-icon">📋</span>
               <button
