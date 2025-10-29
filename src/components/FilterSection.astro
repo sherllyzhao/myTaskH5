@@ -1,0 +1,166 @@
+---
+// 筛选项类型定义
+interface FilterItem {
+  type: 'input' | 'picker' | 'date-time-picker';
+  icon: string;
+  name: string;
+  placeholder?: string;
+  width?: 'full' | 'half';
+  pickerKey?: string;
+  defaultValue?: string;
+}
+
+// 筛选组配置
+interface FilterGroup {
+  title: string;
+  items: FilterItem[];
+}
+
+interface Props {
+  groups: FilterGroup[];
+}
+
+const { groups } = Astro.props;
+---
+
+<!-- 可配置的筛选组件 -->
+<div class="filter-container">
+  {groups.map((group) => (
+    <div class="filter-section">
+      <h4 class="filter-section-title">{group.title}</h4>
+      <div class={`filter-grid ${group.items.some((item: FilterItem) => item.width === 'half') ? 'two-cols' : ''}`}>
+        {group.items.map((item, index) => {
+          const itemClass = `filter-item ${item.width === 'half' ? 'half-width' : 'full-width'}`;
+          
+          return (
+            <div class={itemClass} key={index}>
+              <span class="filter-item-icon">{item.icon}</span>
+              
+              {item.type === 'input' ? (
+                <input 
+                  type="text" 
+                  class="filter-input" 
+                  name={item.name} 
+                  placeholder={item.placeholder || ''}
+                  value={item.defaultValue || ''}
+                />
+              ) : item.type === 'date-time-picker' ? (
+                <button
+                  class="mobile-picker-trigger date-time-picker"
+                  type="button"
+                  data-picker="date-time"
+                  data-field={item.name}
+                >
+                  {item.defaultValue || item.placeholder || '选择日期时间'}
+                </button>
+              ) : (
+                <button
+                  class="mobile-picker-trigger"
+                  type="button"
+                  data-picker={item.pickerKey}
+                >
+                  {item.defaultValue || item.placeholder || '请选择'}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  ))}
+</div>
+
+<style is:global>
+  .filter-container {
+    width: 100%;
+  }
+
+  .filter-section {
+    margin-bottom: 24px;
+  }
+
+  .filter-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 12px;
+  }
+
+  .filter-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1fr;
+  }
+
+  .filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-item.half-width {
+    grid-column: span 1;
+  }
+
+  .filter-item.full-width {
+    grid-column: span 2;
+  }
+
+  .filter-item-icon {
+    font-size: 16px;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .filter-input {
+    flex: 1;
+    padding: 12px 14px 12px 40px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    font-size: 16px;
+    color: #374151;
+    transition: all 0.2s ease;
+  }
+
+  .filter-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .mobile-picker-trigger {
+    flex: 1;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    font-size: 16px;
+    color: #374151;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .mobile-picker-trigger:hover {
+    border-color: #667eea;
+  }
+
+  .mobile-picker-trigger.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #667eea;
+    font-weight: 600;
+  }
+
+  /* 两列布局 */
+  .filter-grid.two-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 768px) {    
+    .filter-item.half-width {
+      grid-column: span 1;
+    }
+  }
+</style>

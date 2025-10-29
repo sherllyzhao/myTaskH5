@@ -4,6 +4,7 @@ import TaskCard from "../components/TaskCard.astro";
 import LoginExpiredMessage from "../components/LoginExpiredMessage.astro";
 import FilterDrawer from "../components/FilterDrawer.astro";
 import MobilePicker from "../components/MobilePicker.astro";
+import FilterSection from "../components/FilterSection.astro";
 
 /* 获取任务大厅列表 */
 const employeeToken = Astro.cookies.get("employee_token")?.value;
@@ -113,6 +114,169 @@ try {
 }
 
 const taskStats = taskStatsRes || {};
+
+// 筛选组件配置
+const filterGroups = [
+  {
+    title: "基础筛选",
+    items: [
+      {
+        type: "input",
+        icon: "📋",
+        name: "name",
+        placeholder: "项目名称或项目编号",
+        width: "full"
+      },
+      {
+        type: "picker",
+        icon: "📊",
+        name: "projectTask",
+        placeholder: "项目类型",
+        pickerKey: "projectTask",
+        width: "half",
+        options: [
+          {label: "全部项目和任务", value: 0},
+          {label: "仅项目", value: 1},
+          {label: "仅任务", value: 2},
+        ]
+      },
+      {
+        type: "picker",
+        icon: "📈",
+        name: "executeStatus",
+        placeholder: "执行状态",
+        pickerKey: "executeStatus",
+        width: "half",
+        options: [
+          {label: "全部", value: 0},
+          {label: "已接单", value: 1},
+          {label: "核对中", value: 2},
+          {label: "待质检", value: 3},
+          {label: "已完结", value: 4},
+          {label: "已逾期", value: 5},
+          {label: "已转移", value: 6}
+        ]
+      },
+      {
+        type: "picker",
+        icon: "💰",
+        name: "amountStart",
+        placeholder: "开始金额",
+        pickerKey: "amountStart",
+        width: "half",
+        options: [
+          {label: "不限", value: 0},
+          {label: "¥100", value: 1},
+          {label: "¥500", value: 2},
+          {label: "¥1000", value: 3}
+        ]
+      },
+      {
+        type: "picker",
+        icon: "💰",
+        name: "amountEnd",
+        placeholder: "结束金额",
+        pickerKey: "amountEnd",
+        width: "half",
+        options: [
+          {label: "不限", value: 0},
+          {label: "¥1000", value: 1},
+          {label: "¥5000", value: 2},
+          {label: "¥10000", value: 3}
+        ]
+      }
+    ]
+  },
+  {
+    title: "时间筛选",
+    items: [
+      {
+        type: "picker",
+        icon: "📅",
+        name: "publishStart",
+        placeholder: "发布开始",
+        pickerKey: "publishStart",
+        width: "half",
+        options: [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ]
+      },
+      {
+        type: "picker",
+        icon: "📅",
+        name: "publishEnd",
+        placeholder: "发布结束",
+        pickerKey: "publishEnd",
+        width: "half",
+        options: [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ]
+      },
+      {
+        type: "picker",
+        icon: "📅",
+        name: "deadlineStart",
+        placeholder: "截止开始",
+        pickerKey: "deadlineStart",
+        width: "half",
+        options: [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ]
+      },
+      {
+        type: "picker",
+        icon: "📅",
+        name: "deadlineEnd",
+        placeholder: "截止结束",
+        pickerKey: "deadlineEnd",
+        width: "half",
+        options: [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ]
+      },
+      {
+        type: "picker",
+        icon: "📅",
+        name: "orderStart",
+        placeholder: "接单开始",
+        pickerKey: "orderStart",
+        width: "half",
+        options: [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ]
+      },
+      {
+        type: "picker",
+        icon: "📅",
+        name: "orderEnd",
+        placeholder: "接单结束",
+        pickerKey: "orderEnd",
+        width: "half",
+        options: [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ]
+      }
+    ]
+  }
+];
 ---
 
 <html lang="zh-CN">
@@ -124,6 +288,171 @@ const taskStats = taskStatsRes || {};
     <title>任务管理</title>
     <link rel="stylesheet" href="/common.css" />
     <script src="/js/auth.js" defer></script>
+    
+    <!-- 传递筛选配置给前端组件 -->
+    <script is:inline>
+      window.__FILTER_GROUPS__ = [
+        {
+          title: "基础筛选",
+          items: [
+            {
+              type: "input",
+              icon: "📋",
+              name: "name",
+              placeholder: "项目名称或项目编号",
+              width: "full"
+            },
+            {
+              type: "picker",
+              icon: "📊",
+              name: "projectTask",
+              placeholder: "项目类型",
+              pickerKey: "projectTask",
+              width: "half",
+              options: [
+                {label: "全部项目和任务", value: 0},
+                {label: "仅项目", value: 1},
+                {label: "仅任务", value: 2}
+              ]
+            },
+            {
+              type: "picker",
+              icon: "📈",
+              name: "executeStatus",
+              placeholder: "执行状态",
+              pickerKey: "executeStatus",
+              width: "half",
+              options: [
+                {label: "全部", value: 0},
+                {label: "已接单", value: 1},
+                {label: "核对中", value: 2},
+                {label: "待质检", value: 3},
+                {label: "已完结", value: 4},
+                {label: "已逾期", value: 5},
+                {label: "已转移", value: 6}
+              ]
+            },
+            {
+              type: "picker",
+              icon: "💰",
+              name: "amountStart",
+              placeholder: "开始金额",
+              pickerKey: "amountStart",
+              width: "half",
+              options: [
+                {label: "不限", value: 0},
+                {label: "¥100", value: 1},
+                {label: "¥500", value: 2},
+                {label: "¥1000", value: 3}
+              ]
+            },
+            {
+              type: "picker",
+              icon: "💰",
+              name: "amountEnd",
+              placeholder: "结束金额",
+              pickerKey: "amountEnd",
+              width: "half",
+              options: [
+                {label: "不限", value: 0},
+                {label: "¥1000", value: 1},
+                {label: "¥5000", value: 2},
+                {label: "¥10000", value: 3}
+              ]
+            }
+          ]
+        },
+        {
+          title: "时间筛选",
+          items: [
+            {
+              type: "picker",
+              icon: "📅",
+              name: "publishStart",
+              placeholder: "发布开始",
+              pickerKey: "publishStart",
+              width: "half",
+              options: [
+                {label: "不限", value: 0},
+                {label: "今天", value: 1},
+                {label: "近7天", value: 2},
+                {label: "近30天", value: 3}
+              ]
+            },
+            {
+              type: "picker",
+              icon: "📅",
+              name: "publishEnd",
+              placeholder: "发布结束",
+              pickerKey: "publishEnd",
+              width: "half",
+              options: [
+                {label: "不限", value: 0},
+                {label: "今天", value: 1},
+                {label: "近7天", value: 2},
+                {label: "近30天", value: 3}
+              ]
+            },
+            {
+              type: "picker",
+              icon: "📅",
+              name: "deadlineStart",
+              placeholder: "截止开始",
+              pickerKey: "deadlineStart",
+              width: "half",
+              options: [
+                {label: "不限", value: 0},
+                {label: "今天", value: 1},
+                {label: "近7天", value: 2},
+                {label: "近30天", value: 3}
+              ]
+            },
+            {
+              type: "picker",
+              icon: "📅",
+              name: "deadlineEnd",
+              placeholder: "截止结束",
+              pickerKey: "deadlineEnd",
+              width: "half",
+              options: [
+                {label: "不限", value: 0},
+                {label: "今天", value: 1},
+                {label: "近7天", value: 2},
+                {label: "近30天", value: 3}
+              ]
+            },
+            {
+              type: "picker",
+              icon: "📅",
+              name: "orderStart",
+              placeholder: "接单开始",
+              pickerKey: "orderStart",
+              width: "half",
+              options: [
+                {label: "不限", value: 0},
+                {label: "今天", value: 1},
+                {label: "近7天", value: 2},
+                {label: "近30天", value: 3}
+              ]
+            },
+            {
+              type: "picker",
+              icon: "📅",
+              name: "orderEnd",
+              placeholder: "接单结束",
+              pickerKey: "orderEnd",
+              width: "half",
+              options: [
+                {label: "不限", value: 0},
+                {label: "今天", value: 1},
+                {label: "近7天", value: 2},
+                {label: "近30天", value: 3}
+              ]
+            }
+          ]
+        }
+      ];
+    </script>
     <style is:global>
       /* 任务大厅特有样式 */
       .task-card {
@@ -498,6 +827,8 @@ const taskStats = taskStatsRes || {};
   <body>
     <!-- 移动端选择器弹层 -->
     <MobilePicker />
+    
+
     <script is:inline>
       // 全局函数定义，确保在HTML元素之前加载
       function openFilterDrawer() {
@@ -518,82 +849,39 @@ const taskStats = taskStatsRes || {};
       }
 
       function resetFilters() {
-        const selects = document.querySelectorAll(".filter-select");
+        const selects = document.querySelectorAll(".mobile-picker-trigger");
         const inputs = document.querySelectorAll(".filter-input");
 
-        selects.forEach((select) => (select.selectedIndex = 0));
+        selects.forEach((select) => {
+          select.setAttribute("data-value", "");
+          select.textContent = select.getAttribute("data-default") || "请选择";
+          select.classList.remove("selected");
+        });
         inputs.forEach((input) => (input.value = ""));
       }
 
+      function getValue(type = 'picker', name){
+        if(type === 'input'){
+          return document.querySelector(`.filter-input[name='${name}']`).value
+        }else{
+          return document.querySelector(`.mobile-picker-trigger[data-picker='${name}']`).getAttribute("data-value")
+        }
+      }
+
       function applyFilters() {
+        const formData = {
+          name: getValue('input', 'name'),
+          orderType: getValue('picker', 'projectTask'),
+          status: getValue('picker', 'executeStatus'),
+        }
         closeFilterDrawer();
       }
 
-      // 移动端选择器逻辑
-      const pickerState = {
-        current: null,
-        dataMap: {
-          projectTask: ["全部项目和任务", "仅项目", "仅任务"],
-          amountStart: ["不限", "¥100", "¥500", "¥1000"],
-          amountEnd: ["不限", "¥1000", "¥5000", "¥10000"],
-          publishStart: ["不限", "今天", "近7天", "近30天"],
-          publishEnd: ["不限", "今天", "近7天", "近30天"],
-          deadlineStart: ["不限", "今天", "近7天", "近30天"],
-          deadlineEnd: ["不限", "今天", "近7天", "近30天"],
-          orderStart: ["不限", "今天", "近7天", "近30天"],
-          orderEnd: ["不限", "今天", "近7天", "近30天"],
-        },
-      };
-
-      function openMobilePicker(key, trigger) {
-        pickerState.current = key;
-        const overlay = document.getElementById("mobilePickerOverlay");
-        const list = document.getElementById("mobilePickerList");
-        const title = document.getElementById("mobilePickerTitle");
-        const options = pickerState.dataMap[key] || ["选项1", "选项2"];
-        if (title) title.textContent = trigger?.textContent || "请选择";
-        if (list) list.innerHTML = "";
-        options.forEach((opt) => {
-          const item = document.createElement("div");
-          item.className = "mobile-picker-item";
-          item.textContent = opt;
-          item.addEventListener("click", () => {
-            if (trigger) trigger.textContent = opt;
-            closeMobilePicker();
-          });
-          list && list.appendChild(item);
-        });
-        if (overlay) overlay.style.display = "block";
-      }
-      function closeMobilePicker() {
-        const overlay = document.getElementById("mobilePickerOverlay");
-        if (overlay) overlay.style.display = "none";
-      }
-
       window.addEventListener("load", function () {
-        document
-          .querySelectorAll(".mobile-picker-trigger")
-          .forEach(function (el) {
-            el.addEventListener("click", function (e) {
-              e.preventDefault();
-              openMobilePicker(el.getAttribute("data-picker"), el);
-              return false;
-            });
-          });
-        document.addEventListener("click", function (e) {
-          var overlay = document.getElementById("mobilePickerOverlay");
-          var target = e.target;
-          var el = target && target.nodeType === 1 ? target : null; // 1 = ELEMENT_NODE
-          if (overlay && el && el.id === "mobilePickerOverlay") {
-            closeMobilePicker();
-          }
-        });
-
         // ESC键关闭抽屉
         document.addEventListener("keydown", function (event) {
           if (event.key === "Escape") {
             closeFilterDrawer();
-            closeMobilePicker();
           }
         });
       });
@@ -741,99 +1029,8 @@ const taskStats = taskStatsRes || {};
           >
         </Fragment>
 
-        <!-- 基础筛选 -->
-        <div class="filter-section">
-          <h4 class="filter-section-title">基础筛选</h4>
-          <div class="filter-grid">
-            <div class="filter-item">
-              <span class="filter-item-icon">📋</span>
-              <input type="text" class="filter-input" placeholder="项目名称或项目编号" />
-            </div>
-          </div>
-          <div class="filter-grid two-cols" style="margin-top: 12px;">
-            <div class="filter-item">
-              <span class="filter-item-icon">📋</span>
-              <button
-                class="mobile-picker-trigger"
-                type="button"
-                data-picker="projectTask">全部项目和任务</button
-              >
-            </div>
-            <div class="filter-item">
-              <span class="filter-item-icon">💰</span>
-              <button
-                class="mobile-picker-trigger"
-                type="button"
-                data-picker="amountStart">开始金额</button
-              >
-            </div>
-          </div>
-          <div class="filter-grid" style="margin-top: 12px;">
-            <div class="filter-item">
-              <span class="filter-item-icon">💵</span>
-              <button
-                class="mobile-picker-trigger"
-                type="button"
-                data-picker="amountEnd">结束金额</button
-              >
-            </div>
-          </div>
-        </div>
-
-        <!-- 时间筛选 -->
-        <div class="filter-section">
-          <h4 class="filter-section-title">时间筛选</h4>
-          <div class="filter-grid">
-            <div class="filter-item">
-              <span class="filter-item-icon">📅</span>
-              <button
-                class="mobile-picker-trigger"
-                type="button"
-                data-picker="publishStart">发布时间-开始时间</button
-              >
-            </div>
-            <div class="filter-item">
-              <span class="filter-item-icon">📅</span>
-              <button
-                class="mobile-picker-trigger"
-                type="button"
-                data-picker="publishEnd">发布时间-结束时间</button
-              >
-            </div>
-            <div class="filter-item">
-              <span class="filter-item-icon">⏰</span>
-              <button
-                class="mobile-picker-trigger"
-                type="button"
-                data-picker="deadlineStart">截止时间-开始时间</button
-              >
-            </div>
-            <div class="filter-item">
-              <span class="filter-item-icon">⏰</span>
-              <button
-                class="mobile-picker-trigger"
-                type="button"
-                data-picker="deadlineEnd">截止时间-结束时间</button
-              >
-            </div>
-            <div class="filter-item">
-              <span class="filter-item-icon">🤝</span>
-              <button
-                class="mobile-picker-trigger"
-                type="button"
-                data-picker="orderStart">接单时间-开始时间</button
-              >
-            </div>
-            <div class="filter-item">
-              <span class="filter-item-icon">🤝</span>
-              <button
-                class="mobile-picker-trigger"
-                type="button"
-                data-picker="orderEnd">接单时间-结束时间</button
-              >
-            </div>
-          </div>
-        </div>
+        <!-- 筛选组件 -->
+        <FilterSection groups={filterGroups} />
 
         <Fragment slot="footer">
           <div class="filter-actions">
