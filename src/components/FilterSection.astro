@@ -1,13 +1,17 @@
 ---
 // 筛选项类型定义
 interface FilterItem {
-  type: 'input' | 'picker' | 'date-time-picker';
+  type: 'input' | 'number' | 'picker' | 'date-time-picker';
   icon: string;
   name: string;
   placeholder?: string;
   width?: 'full' | 'half';
   pickerKey?: string;
   defaultValue?: string;
+  options?: {
+    value: string;
+    label: string;
+  }[]
 }
 
 // 筛选组配置
@@ -21,11 +25,19 @@ interface Props {
 }
 
 const { groups } = Astro.props;
+
+const getPickerLabel = (value: string | undefined) => {
+  if (value) {
+    const option: FilterItem | undefined = groups.flatMap((group: FilterGroup) => group.items).find((item: FilterItem) => '' + item.pickerKey === '' + item.pickerKey && '' + item.defaultValue === '' + value);
+    return option?.options?.find((opt: { value: string; label: string; }) => '' + opt.value === '' + value)?.label || value;
+  }
+  return ''; 
+}
 ---
 
 <!-- 可配置的筛选组件 -->
 <div class="filter-container">
-  {groups.map((group) => (
+  {groups.map((group: FilterGroup) => (
     <div class="filter-section">
       <h4 class="filter-section-title">{group.title}</h4>
       <div class={`filter-grid ${group.items.some((item: FilterItem) => item.width === 'half') ? 'two-cols' : ''}`}>
@@ -44,12 +56,23 @@ const { groups } = Astro.props;
                   placeholder={item.placeholder || ''}
                   value={item.defaultValue || ''}
                 />
+              ) : item.type === 'number' ? (
+                <input 
+                  type="number" 
+                  class="filter-input" 
+                  name={item.name} 
+                  placeholder={item.placeholder || ''}
+                  value={item.defaultValue || ''}
+                  min="0"
+                  step="1"
+                />
               ) : item.type === 'date-time-picker' ? (
                 <button
                   class="mobile-picker-trigger date-time-picker"
                   type="button"
+                  name={item.name} 
                   data-picker="date-time"
-                  data-field={item.name}
+                  data-value={item.defaultValue || ''}
                 >
                   {item.defaultValue || item.placeholder || '选择日期时间'}
                 </button>
@@ -58,8 +81,10 @@ const { groups } = Astro.props;
                   class="mobile-picker-trigger"
                   type="button"
                   data-picker={item.pickerKey}
+                  name={item.name} 
+                  data-value={item.defaultValue || ''}
                 >
-                  {item.defaultValue || item.placeholder || '请选择'}
+                  {getPickerLabel(item.defaultValue) || item.placeholder || '请选择'}
                 </button>
               )}
             </div>

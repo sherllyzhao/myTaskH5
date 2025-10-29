@@ -470,31 +470,73 @@
         }
       }
     } else {
-      // 普通选择器 - 从 filterGroups 配置中获取选项
-      let options = [
+      // 内置选项配置
+      const optionsConfig = {
+        "projectTask": [
+          {label: "全部项目和任务", value: 0},
+          {label: "仅项目", value: 1},
+          {label: "仅任务", value: 2}
+        ],
+        "order": [
+          {label: '发布时间由近到远排序', value: 'id'},
+          {label: '佣金变更时间由近到远排序', value: 'commission_edittime'},
+          {label: '工期到期天数由近到远排序', value: 'syday'}
+        ],
+        "amountStart": [
+          {label: "不限", value: 0},
+          {label: "¥100", value: 1},
+          {label: "¥500", value: 2},
+          {label: "¥1000", value: 3}
+        ],
+        "amountEnd": [
+          {label: "不限", value: 0},
+          {label: "¥1000", value: 1},
+          {label: "¥5000", value: 2},
+          {label: "¥10000", value: 3}
+        ],
+        "publishStart": [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ],
+        "publishEnd": [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ],
+        "deadlineStart": [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ],
+        "deadlineEnd": [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ],
+        "orderStart": [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ],
+        "orderEnd": [
+          {label: "不限", value: 0},
+          {label: "今天", value: 1},
+          {label: "近7天", value: 2},
+          {label: "近30天", value: 3}
+        ]
+      };
+      
+      // 根据 key 获取对应的选项
+      let options = optionsConfig[key] || [
         { label: "选项1", value: "1" },
         { label: "选项2", value: "2" }
       ];
-      
-      // 查找对应的配置项 - 添加延迟检查，确保配置已加载
-      function getOptionsFromFilterGroups(key) {
-        const filterGroups = window.__FILTER_GROUPS__;
-        if (filterGroups && Array.isArray(filterGroups)) {
-          for (const group of filterGroups) {
-            const item = group.items.find(item => item.pickerKey === key);
-            if (item && item.options) {
-              return item.options;
-            }
-          }
-        }
-        return null;
-      }
-      
-      // 尝试获取配置，如果未找到则使用默认选项
-      const configOptions = getOptionsFromFilterGroups(key);
-      if (configOptions) {
-        options = configOptions;
-      }
       
       if (title) title.textContent = trigger?.textContent || "请选择";
       if (list) list.innerHTML = "";

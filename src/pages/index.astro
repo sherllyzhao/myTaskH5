@@ -129,11 +129,12 @@ const filterGroups = [
       },
       {
         type: "picker",
-        icon: "📊",
+        icon: "📁",
         name: "projectTask",
         placeholder: "项目类型",
         pickerKey: "projectTask",
-        width: "half",
+        width: "full",
+        defaultValue: '0',
         options: [
           {label: "全部项目和任务", value: 0},
           {label: "仅项目", value: 1},
@@ -142,48 +143,42 @@ const filterGroups = [
       },
       {
         type: "picker",
-        icon: "📈",
-        name: "executeStatus",
-        placeholder: "执行状态",
-        pickerKey: "executeStatus",
-        width: "half",
+        icon: "🔽",
+        name: "order",
+        placeholder: "排序",
+        pickerKey: "order",
+        width: "full",
+        defaultValue: "id",
         options: [
-          {label: "全部", value: 0},
-          {label: "已接单", value: 1},
-          {label: "核对中", value: 2},
-          {label: "待质检", value: 3},
-          {label: "已完结", value: 4},
-          {label: "已逾期", value: 5},
-          {label: "已转移", value: 6}
+          {
+            label: '发布时间由近到远排序',
+            value: 'id',
+          },
+          {
+            label: '佣金变更时间由近到远排序',
+            value: 'commission_edittime',
+          },
+          {
+            label: '工期到期天数由近到远排序',
+            value: 'syday',
+          }
         ]
       },
       {
-        type: "picker",
+        type: "number",
         icon: "💰",
         name: "amountStart",
         placeholder: "开始金额",
         pickerKey: "amountStart",
         width: "half",
-        options: [
-          {label: "不限", value: 0},
-          {label: "¥100", value: 1},
-          {label: "¥500", value: 2},
-          {label: "¥1000", value: 3}
-        ]
       },
       {
-        type: "picker",
+        type: "number",
         icon: "💰",
         name: "amountEnd",
         placeholder: "结束金额",
         pickerKey: "amountEnd",
         width: "half",
-        options: [
-          {label: "不限", value: 0},
-          {label: "¥1000", value: 1},
-          {label: "¥5000", value: 2},
-          {label: "¥10000", value: 3}
-        ]
       }
     ]
   },
@@ -191,88 +186,52 @@ const filterGroups = [
     title: "时间筛选",
     items: [
       {
-        type: "picker",
+        type: "date-time-picker",
         icon: "📅",
         name: "publishStart",
         placeholder: "发布开始",
         pickerKey: "publishStart",
-        width: "half",
-        options: [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ]
+        width: "half"
       },
       {
-        type: "picker",
+        type: "date-time-picker",
         icon: "📅",
         name: "publishEnd",
         placeholder: "发布结束",
         pickerKey: "publishEnd",
-        width: "half",
-        options: [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ]
+        width: "half"
       },
       {
-        type: "picker",
+        type: "date-time-picker",
         icon: "📅",
         name: "deadlineStart",
         placeholder: "截止开始",
         pickerKey: "deadlineStart",
-        width: "half",
-        options: [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ]
+        width: "half"
       },
       {
-        type: "picker",
+        type: "date-time-picker",
         icon: "📅",
         name: "deadlineEnd",
         placeholder: "截止结束",
         pickerKey: "deadlineEnd",
-        width: "half",
-        options: [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ]
+        width: "half"
       },
       {
-        type: "picker",
+        type: "date-time-picker",
         icon: "📅",
         name: "orderStart",
         placeholder: "接单开始",
         pickerKey: "orderStart",
-        width: "half",
-        options: [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ]
+        width: "half"
       },
       {
-        type: "picker",
+        type: "date-time-picker",
         icon: "📅",
         name: "orderEnd",
         placeholder: "接单结束",
         pickerKey: "orderEnd",
-        width: "half",
-        options: [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ]
+        width: "half"
       }
     ]
   }
@@ -288,171 +247,7 @@ const filterGroups = [
     <title>任务管理</title>
     <link rel="stylesheet" href="/common.css" />
     <script src="/js/auth.js" defer></script>
-    
-    <!-- 传递筛选配置给前端组件 -->
-    <script is:inline>
-      window.__FILTER_GROUPS__ = [
-        {
-          title: "基础筛选",
-          items: [
-            {
-              type: "input",
-              icon: "📋",
-              name: "name",
-              placeholder: "项目名称或项目编号",
-              width: "full"
-            },
-            {
-              type: "picker",
-              icon: "📊",
-              name: "projectTask",
-              placeholder: "项目类型",
-              pickerKey: "projectTask",
-              width: "half",
-              options: [
-                {label: "全部项目和任务", value: 0},
-                {label: "仅项目", value: 1},
-                {label: "仅任务", value: 2}
-              ]
-            },
-            {
-              type: "picker",
-              icon: "📈",
-              name: "executeStatus",
-              placeholder: "执行状态",
-              pickerKey: "executeStatus",
-              width: "half",
-              options: [
-                {label: "全部", value: 0},
-                {label: "已接单", value: 1},
-                {label: "核对中", value: 2},
-                {label: "待质检", value: 3},
-                {label: "已完结", value: 4},
-                {label: "已逾期", value: 5},
-                {label: "已转移", value: 6}
-              ]
-            },
-            {
-              type: "picker",
-              icon: "💰",
-              name: "amountStart",
-              placeholder: "开始金额",
-              pickerKey: "amountStart",
-              width: "half",
-              options: [
-                {label: "不限", value: 0},
-                {label: "¥100", value: 1},
-                {label: "¥500", value: 2},
-                {label: "¥1000", value: 3}
-              ]
-            },
-            {
-              type: "picker",
-              icon: "💰",
-              name: "amountEnd",
-              placeholder: "结束金额",
-              pickerKey: "amountEnd",
-              width: "half",
-              options: [
-                {label: "不限", value: 0},
-                {label: "¥1000", value: 1},
-                {label: "¥5000", value: 2},
-                {label: "¥10000", value: 3}
-              ]
-            }
-          ]
-        },
-        {
-          title: "时间筛选",
-          items: [
-            {
-              type: "picker",
-              icon: "📅",
-              name: "publishStart",
-              placeholder: "发布开始",
-              pickerKey: "publishStart",
-              width: "half",
-              options: [
-                {label: "不限", value: 0},
-                {label: "今天", value: 1},
-                {label: "近7天", value: 2},
-                {label: "近30天", value: 3}
-              ]
-            },
-            {
-              type: "picker",
-              icon: "📅",
-              name: "publishEnd",
-              placeholder: "发布结束",
-              pickerKey: "publishEnd",
-              width: "half",
-              options: [
-                {label: "不限", value: 0},
-                {label: "今天", value: 1},
-                {label: "近7天", value: 2},
-                {label: "近30天", value: 3}
-              ]
-            },
-            {
-              type: "picker",
-              icon: "📅",
-              name: "deadlineStart",
-              placeholder: "截止开始",
-              pickerKey: "deadlineStart",
-              width: "half",
-              options: [
-                {label: "不限", value: 0},
-                {label: "今天", value: 1},
-                {label: "近7天", value: 2},
-                {label: "近30天", value: 3}
-              ]
-            },
-            {
-              type: "picker",
-              icon: "📅",
-              name: "deadlineEnd",
-              placeholder: "截止结束",
-              pickerKey: "deadlineEnd",
-              width: "half",
-              options: [
-                {label: "不限", value: 0},
-                {label: "今天", value: 1},
-                {label: "近7天", value: 2},
-                {label: "近30天", value: 3}
-              ]
-            },
-            {
-              type: "picker",
-              icon: "📅",
-              name: "orderStart",
-              placeholder: "接单开始",
-              pickerKey: "orderStart",
-              width: "half",
-              options: [
-                {label: "不限", value: 0},
-                {label: "今天", value: 1},
-                {label: "近7天", value: 2},
-                {label: "近30天", value: 3}
-              ]
-            },
-            {
-              type: "picker",
-              icon: "📅",
-              name: "orderEnd",
-              placeholder: "接单结束",
-              pickerKey: "orderEnd",
-              width: "half",
-              options: [
-                {label: "不限", value: 0},
-                {label: "今天", value: 1},
-                {label: "近7天", value: 2},
-                {label: "近30天", value: 3}
-              ]
-            }
-          ]
-        }
-      ];
-    </script>
+
     <style is:global>
       /* 任务大厅特有样式 */
       .task-card {
@@ -860,20 +655,25 @@ const filterGroups = [
         inputs.forEach((input) => (input.value = ""));
       }
 
-      function getValue(type = 'picker', name){
-        if(type === 'input'){
-          return document.querySelector(`.filter-input[name='${name}']`).value
-        }else{
-          return document.querySelector(`.mobile-picker-trigger[data-picker='${name}']`).getAttribute("data-value")
+      function getValue(name){      
+        if(!document.querySelector(`[name='${name}']`)){
+          console.log(name + '不存在')
+          return ''
         }
+        return document.querySelector(`[name='${name}']`).value
       }
 
       function applyFilters() {
         const formData = {
-          name: getValue('input', 'name'),
-          orderType: getValue('picker', 'projectTask'),
-          status: getValue('picker', 'executeStatus'),
+          name: getValue('name'),
+          orderType: getValue('projectTask'),
+          sort: getValue('order'),
+          moneyInput: [getValue('amountStart'), getValue('amountEnd')],
+          ordertime: [getValue('publishStart'), getValue('publishEnd')],
+          enddatatime: [getValue('deadlineStart'), getValue('deadlineEnd')],
+          performtime: [getValue('orderStart'), getValue('orderEnd')]
         }
+        console.log(formData)
         closeFilterDrawer();
       }
 
@@ -913,12 +713,12 @@ const filterGroups = [
             <div class="stat-detail">
               <div>
                 项目：<span class="stat-value"
-                  >{taskStatsRes?.qd_num?.xmnum || 0}</span
+                  >{taskStats?.qd_num?.xmnum || 0}</span
                 >
               </div>
               <div>
                 任务：<span class="stat-value"
-                  >{taskStatsRes?.qd_num?.rwnum || 0}</span
+                  >{taskStats?.qd_num?.rwnum || 0}</span
                 >
               </div>
             </div>
@@ -928,12 +728,12 @@ const filterGroups = [
             <div class="stat-detail">
               <div>
                 项目：<span class="stat-value"
-                  ><i>￥</i>{taskStatsRes?.qd_price?.xmprice || 0}</span
+                  ><i>￥</i>{taskStats?.qd_price?.xmprice || 0}</span
                 >
               </div>
               <div>
                 任务：<span class="stat-value"
-                  ><i>￥</i>{taskStatsRes?.qd_price?.rwprice || 0}</span
+                  ><i>￥</i>{taskStats?.qd_price?.rwprice || 0}</span
                 >
               </div>
             </div>
@@ -943,12 +743,12 @@ const filterGroups = [
             <div class="stat-detail">
               <div>
                 项目：<span class="stat-value"
-                  >{taskStatsRes?.end_num?.xmnum || 0}</span
+                  >{taskStats?.end_num?.xmnum || 0}</span
                 >
               </div>
               <div>
                 任务：<span class="stat-value"
-                  >{taskStatsRes?.end_num?.rwnum || 0}</span
+                  >{taskStats?.end_num?.rwnum || 0}</span
                 >
               </div>
             </div>
@@ -958,12 +758,12 @@ const filterGroups = [
             <div class="stat-detail">
               <div>
                 项目：<span class="stat-value"
-                  ><i>￥</i>{taskStatsRes?.end_price?.xmprice || 0}</span
+                  ><i>￥</i>{taskStats?.end_price?.xmprice || 0}</span
                 >
               </div>
               <div>
                 任务：<span class="stat-value"
-                  ><i>￥</i>{taskStatsRes?.end_price?.rwprice || 0}</span
+                  ><i>￥</i>{taskStats?.end_price?.rwprice || 0}</span
                 >
               </div>
             </div>
@@ -977,7 +777,7 @@ const filterGroups = [
 
         <div class="content">
           {
-            taskListResData.code === 101 ? (
+            taskListResData.code === 401 ? (
               <LoginExpiredMessage />
             ) : taskList.length === 0 ? (
               <div style="text-align: center; padding: 40px; color: #64748b;">
@@ -1058,6 +858,12 @@ const filterGroups = [
         let isLoading = false;
         let hasMore = true;
         const limit = 10;
+        
+        // 请求配置 - 与服务器端保持一致
+        const requestConfig = {
+          path: "/taskorder/orderindex",
+          enterpriseSide: "pc"
+        };
 
         const clientToken =
           getCookie("token") || localStorage.getItem("token") || "";
@@ -1106,10 +912,9 @@ const filterGroups = [
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                path: "/taskorder/orderindex",
+                ...requestConfig,
                 page: currentPage,
-                limit: limit,
-                enterpriseSide: "pc",
+                limit: limit
               }),
             });
 
