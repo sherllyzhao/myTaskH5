@@ -45,7 +45,7 @@ const getPickerLabel = (value: string | undefined) => {
           const itemClass = `filter-item ${item.width === 'half' ? 'half-width' : 'full-width'}`;
           
           return (
-            <div class={itemClass} key={index}>
+            <div class={itemClass}>
               <span class="filter-item-icon">{item.icon}</span>
               
               {item.type === 'input' ? (

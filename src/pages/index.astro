@@ -1,79 +1,13 @@
 ---
-import { Debug } from "astro:components";
-import TaskCard from "../components/TaskCard.astro";
-import LoginExpiredMessage from "../components/LoginExpiredMessage.astro";
 import FilterDrawer from "../components/FilterDrawer.astro";
 import MobilePicker from "../components/MobilePicker.astro";
 import FilterSection from "../components/FilterSection.astro";
 
-/* 获取任务大厅列表 */
-const employeeToken = Astro.cookies.get("employee_token")?.value;
-
-// 使用和浏览器端一样的最小化请求数据
-const postData = {
-  path: "/taskorder/orderindex", // 指定要调用的后端路径
-  page: 1,
-  limit: 10,
-  enterpriseSide: "pc",
-};
-
-// SSR 模式：通过 Astro API 代理路由
-const proxyUrl = `${Astro.url.origin}/proxy`;
-
-let taskListResData: any = {
-  list: [],
-  total: 0,
-};
-
-try {
-  // 直接使用 fetch 调用代理路由，不经过 http 工具
-  const response = await fetch(proxyUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: Astro.request.headers.get("cookie") || "",
-    },
-    body: JSON.stringify(postData),
-  });
-
-  // 检查HTTP状态码101
-  if (response.status === 401) {
-    // 在SSR环境下无法直接跳转，返回空数据让前端处理
-    taskListResData = {
-      list: [],
-      total: 0,
-      error: "未授权，请重新登录",
-      code: 401,
-    };
-  } else {
-    const taskListRes = await response.json();
-
-    // 检查业务状态码101
-    if (taskListRes.code === 401) {
-      taskListResData = {
-        list: [],
-        total: 0,
-        error: "未授权，请重新登录",
-        code: 101,
-      };
-    } else if (taskListRes.code === 1) {
-      taskListResData = taskListRes.data || taskListRes;
-    }
-  }
-} catch (error: any) {
-  console.error("❌ SSR Error:", error);
-  taskListResData = {
-    list: [],
-    total: 0,
-    error: error.message || "请求失败",
-  };
-}
-
-const taskList = taskListResData?.data || [];
-const total = taskListResData?.total || taskListResData?.count || 0;
+// 初始化空数据，由客户端加载
 
 /* 统计 */
 let taskStatsRes: any;
+const proxyUrl = `${Astro.url.origin}/proxy`;
 try {
   // 统计数据
   const statsResponse = await fetch(proxyUrl, {
@@ -90,7 +24,7 @@ try {
   // 检查HTTP状态码101
   if (statsResponse.status === 401) {
     // 在SSR环境下无法直接跳转，返回空数据让前端处理
-    taskListResData = {
+    taskStatsRes = {
       list: [],
       total: 0,
       error: "未授权，请重新登录",
@@ -136,9 +70,9 @@ const filterGroups = [
         width: "full",
         defaultValue: '0',
         options: [
-          {label: "全部项目和任务", value: 0},
-          {label: "仅项目", value: 1},
-          {label: "仅任务", value: 2},
+          {label: "全部项目和任务", value: "0"},
+          {label: "仅项目", value: "1"},
+          {label: "仅任务", value: "2"},
         ]
       },
       {
@@ -169,7 +103,6 @@ const filterGroups = [
         icon: "💰",
         name: "amountStart",
         placeholder: "开始金额",
-        pickerKey: "amountStart",
         width: "half",
       },
       {
@@ -177,7 +110,6 @@ const filterGroups = [
         icon: "💰",
         name: "amountEnd",
         placeholder: "结束金额",
-        pickerKey: "amountEnd",
         width: "half",
       }
     ]
@@ -655,25 +587,32 @@ const filterGroups = [
         inputs.forEach((input) => (input.value = ""));
       }
 
-      function getValue(name){      
-        if(!document.querySelector(`[name='${name}']`)){
+      // 全局筛选工具函数
+      window.getFilterFormData = function() {
+        return {
+          name: window.getValue('name'),
+          orderType: window.getValue('projectTask'),
+          sort: window.getValue('order'),
+          moneyInput: [window.getValue('amountStart'), window.getValue('amountEnd')],
+          ordertime: [window.getValue('publishStart'), window.getValue('publishEnd')],
+          enddatatime: [window.getValue('deadlineStart'), window.getValue('deadlineEnd')],
+          performtime: [window.getValue('orderStart'), window.getValue('orderEnd')]
+        };
+      };
+
+      // 全局 getValue 函数
+      (window as any).getValue = function(name: string): string {
+        const element = document.querySelector(`[name='${name}']`) as HTMLInputElement;
+        if(!element){
           console.log(name + '不存在')
           return ''
         }
-        return document.querySelector(`[name='${name}']`).value
+        return element.value
       }
 
       function applyFilters() {
-        const formData = {
-          name: getValue('name'),
-          orderType: getValue('projectTask'),
-          sort: getValue('order'),
-          moneyInput: [getValue('amountStart'), getValue('amountEnd')],
-          ordertime: [getValue('publishStart'), getValue('publishEnd')],
-          enddatatime: [getValue('deadlineStart'), getValue('deadlineEnd')],
-          performtime: [getValue('orderStart'), getValue('orderEnd')]
-        }
-        console.log(formData)
+        const formData = window.getFilterFormData();
+        console.log('筛选数据:', formData);
         closeFilterDrawer();
       }
 
@@ -776,47 +715,31 @@ const filterGroups = [
         </button>
 
         <div class="content">
-          {
-            taskListResData.code === 401 ? (
-              <LoginExpiredMessage />
-            ) : taskList.length === 0 ? (
-              <div style="text-align: center; padding: 40px; color: #64748b;">
-                {taskListResData.error
-                  ? `❌ ${taskListResData.error}`
-                  : "📭 暂无任务"}
-              </div>
-            ) : (
-              <>
-                <div id="taskListContainer">
-                  {taskList.map((task: any) => (
-                    <TaskCard task={task} />
-                  ))}
-                </div>
+          <div id="taskListContainer">
+            <!-- 任务列表将由客户端动态加载 -->
+          </div>
 
-                <div
-                  id="loadingIndicator"
-                  style="display: none; text-align: center; padding: 20px; color: #667eea;"
-                >
-                  <div style="display: inline-block; animation: spin 1s linear infinite;">
-                    ⏳
-                  </div>
-                  <span style="margin-left: 10px;">加载中...</span>
-                </div>
+          <div
+            id="loadingIndicator"
+            style="display: none; text-align: center; padding: 20px; color: #667eea;"
+          >
+            <div style="display: inline-block; animation: spin 1s linear infinite;">
+              ⏳
+            </div>
+            <span style="margin-left: 10px;">加载中...</span>
+          </div>
 
-                <div
-                  id="noMoreData"
-                  style="display: none; text-align: center; padding: 20px; color: #94a3b8;"
-                >
-                  📭 已加载全部任务
-                </div>
+          <div
+            id="noMoreData"
+            style="display: none; text-align: center; padding: 20px; color: #94a3b8;"
+          >
+            📭 已加载全部任务
+          </div>
 
-                <div class="pagination">
-                  📊 共 <span id="totalCount">{total}</span> 条记录 已加载{" "}
-                  <span id="loadedCount">{taskList.length}</span> 条
-                </div>
-              </>
-            )
-          }
+          <div class="pagination">
+            📊 共 <span id="totalCount">0</span> 条记录 已加载{" "}
+            <span id="loadedCount">0</span> 条
+          </div>
         </div>
       </div>
 
@@ -854,16 +777,123 @@ const filterGroups = [
       import { getCookie } from "../utils/tool";
 
       (function () {
-        let currentPage = 1;
+        let currentPage = 0; // 从0开始，第一次加载就是第1页
         let isLoading = false;
         let hasMore = true;
         const limit = 10;
+        const formFilters = {
+          name: (window as any).getValue('name'),
+          orderType: (window as any).getValue('projectTask'),
+          sort: (window as any).getValue('order'),
+          moneyInput: [(window as any).getValue('amountStart'), (window as any).getValue('amountEnd')],
+          ordertime: [(window as any).getValue('publishStart'), (window as any).getValue('publishEnd')],
+          enddatatime: [(window as any).getValue('deadlineStart'), (window as any).getValue('deadlineEnd')],
+          performtime: [(window as any).getValue('orderStart'), (window as any).getValue('orderEnd')]
+        };
         
         // 请求配置 - 与服务器端保持一致
         const requestConfig = {
           path: "/taskorder/orderindex",
           enterpriseSide: "pc"
         };
+        
+        // 获取 DOM 元素
+        const taskListContainer = document.getElementById("taskListContainer");
+        const loadingIndicator = document.getElementById("loadingIndicator");
+        const noMoreData = document.getElementById("noMoreData");
+        const totalCountEl = document.getElementById("totalCount");
+        const loadedCountEl = document.getElementById("loadedCount");
+        
+        // 创建任务卡片 HTML - 使用共享模板函数
+        function createTaskCard(task: any) {
+          return createTaskCardHTML(task);
+        }
+        
+        // 初始加载数据
+        async function loadInitialData() {
+          if (isLoading) return;
+          
+          isLoading = true;
+          loadingIndicator && (loadingIndicator.style.display = "block");
+          noMoreData && (noMoreData.style.display = "none");
+          
+          try {
+            currentPage = 1;
+            
+            const response = await fetch(`/proxy`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                ...requestConfig,
+                page: currentPage,
+                limit: limit,
+                ...formFilters
+              }),
+            });
+
+            if (response.status === 101) {
+              window.location.href = "/login";
+              return;
+            }
+
+            const result = await response.json();
+
+            if (result.code === 101) {
+              window.location.href = "/login";
+              return;
+            }
+
+            if (result.code === 1) {
+              const tasks = result.data?.data || [];
+              const total = result.data?.total || result.data?.count || 0;
+
+              // 更新总数
+              if (totalCountEl) {
+                totalCountEl.textContent = total;
+              }
+
+              // 清空容器并添加新任务
+              if (taskListContainer) {
+                taskListContainer.innerHTML = "";
+                
+                if (tasks.length > 0) {
+                  tasks.forEach((task: any) => {
+                    const taskHTML = createTaskCard(task);
+                    taskListContainer.insertAdjacentHTML("beforeend", taskHTML);
+                  });
+
+                  if (loadedCountEl) {
+                    loadedCountEl.textContent = "" + tasks.length;
+                  }
+                } else {
+                  // 没有数据时显示提示
+                  taskListContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">📭 暂无任务</div>';
+                }
+              }
+
+              // 检查是否还有更多数据
+              if (tasks.length < limit) {
+                hasMore = false;
+                noMoreData && (noMoreData.style.display = "block");
+              }
+            } else {
+              console.error("加载失败:", result.msg || "未知错误");
+              if (taskListContainer) {
+                taskListContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #f56565;">❌ 加载失败</div>';
+              }
+            }
+          } catch (error) {
+            console.error("加载失败:", error);
+            if (taskListContainer) {
+              taskListContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #f56565;">❌ 网络错误</div>';
+            }
+          } finally {
+            isLoading = false;
+            loadingIndicator && (loadingIndicator.style.display = "none");
+          }
+        }
 
         const clientToken =
           getCookie("token") || localStorage.getItem("token") || "";
@@ -872,13 +902,6 @@ const filterGroups = [
           localStorage.getItem("employee_token") ||
           "";
 
-        // 获取 DOM 元素
-        const taskListContainer = document.getElementById("taskListContainer");
-        const loadingIndicator = document.getElementById("loadingIndicator");
-        const noMoreData = document.getElementById("noMoreData");
-        const totalCountEl = document.getElementById("totalCount");
-        const loadedCountEl = document.getElementById("loadedCount");
-
         // 初始化总数
         const initialTotal = parseInt(totalCountEl?.textContent || "0");
         let loadedCount = parseInt(loadedCountEl?.textContent || "0");
@@ -886,11 +909,6 @@ const filterGroups = [
         // 检查是否还有更多数据
         if (loadedCount >= initialTotal) {
           hasMore = false;
-        }
-
-        // 创建任务卡片 HTML - 使用共享模板函数
-        function createTaskCard(task: any) {
-          return createTaskCardHTML(task);
         }
 
         // 加载更多数据
@@ -947,14 +965,17 @@ const filterGroups = [
                     taskListContainer.insertAdjacentHTML("beforeend", taskHTML);
                 });
 
-                loadedCount += newTasks.length;
+                const currentLoaded = parseInt(loadedCountEl?.textContent || "0");
+                const newLoadedCount = currentLoaded + newTasks.length;
+                
                 if (loadedCountEl) {
-                  loadedCountEl.textContent = "" + loadedCount;
+                  loadedCountEl.textContent = "" + newLoadedCount;
                 }
               }
 
               // 检查是否还有更多数据
-              if (loadedCount >= total || newTasks.length < limit) {
+              const currentLoaded = parseInt(loadedCountEl?.textContent || "0");
+              if (currentLoaded >= total || newTasks.length < limit) {
                 hasMore = false;
                 noMoreData && (noMoreData.style.display = "block");
               }
@@ -1001,6 +1022,9 @@ const filterGroups = [
         // 监听滚动事件（使用防抖）
         const debouncedScroll = debounce(checkScrollBottom, 200);
         window.addEventListener("scroll", debouncedScroll);
+
+        // 页面加载时立即获取初始数据
+        loadInitialData();
 
         // 初始检查一次（如果页面很短，直接显示没有更多数据）
         setTimeout(() => {
