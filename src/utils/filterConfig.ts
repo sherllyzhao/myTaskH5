@@ -7,30 +7,10 @@ export interface FilterFormData {
   name: string;
   orderType: string;
   sort: string;
-  moneyInput: [string, string];
-  ordertime: [string, string];
-  enddatatime: [string, string];
-  performtime: [string, string];
-}
-
-/**
- * 获取筛选表单数据的通用函数
- */
-export function getFilterFormData(): FilterFormData {
-  const getValue = (name: string): string => {
-    const element = document.querySelector(`[name='${name}']`) as HTMLInputElement;
-    return element?.value || '';
-  };
-
-  return {
-    name: getValue('name'),
-    orderType: getValue('projectTask'),
-    sort: getValue('order'),
-    moneyInput: [getValue('amountStart'), getValue('amountEnd')],
-    ordertime: [getValue('publishStart'), getValue('publishEnd')],
-    enddatatime: [getValue('deadlineStart'), getValue('deadlineEnd')],
-    performtime: [getValue('orderStart'), getValue('orderEnd')]
-  };
+  moneyInput: string[] | number[];
+  ordertime: string[];
+  enddatatime: string[];
+  performtime: string[];
 }
 
 /**
@@ -65,8 +45,8 @@ export const FILTER_CONFIG = {
 export function validateFilterData(data: FilterFormData): boolean {
   // 验证金额范围
   if (data.moneyInput[0] && data.moneyInput[1]) {
-    const start = parseFloat(data.moneyInput[0]);
-    const end = parseFloat(data.moneyInput[1]);
+    const start = parseFloat(data.moneyInput[0] as string);
+    const end = parseFloat(data.moneyInput[1] as string);
     if (start > end) {
       console.warn('开始金额不能大于结束金额');
       return false;
@@ -86,9 +66,9 @@ export function validateFilterData(data: FilterFormData): boolean {
     return true;
   };
 
-  return validateTimeRange(data.ordertime, '发布时间') &&
-         validateTimeRange(data.enddatatime, '截止时间') &&
-         validateTimeRange(data.performtime, '接单时间');
+  return validateTimeRange(data.ordertime as [string, string], '发布时间') &&
+         validateTimeRange(data.enddatatime as [string, string], '截止时间') &&
+         validateTimeRange(data.performtime as [string, string], '接单时间');
 }
 
 /**
@@ -112,10 +92,10 @@ export function serializeFilters(data: FilterFormData): Record<string, string> {
     if (range[1]) params[`${paramName}End`] = range[1];
   };
 
-  serializeRange(data.moneyInput, 'amount');
-  serializeRange(data.ordertime, 'publish');
-  serializeRange(data.enddatatime, 'deadline');
-  serializeRange(data.performtime, 'order');
+  serializeRange(data.moneyInput as [string, string], 'amount');
+  serializeRange(data.ordertime as [string, string], 'publish');
+  serializeRange(data.enddatatime as [string, string], 'deadline');
+  serializeRange(data.performtime as [string, string], 'order');
 
   return params;
 }
