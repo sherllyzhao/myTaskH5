@@ -32,7 +32,7 @@
       window.getFilterFormData = function() {
         const getValue = (name) => {
           const element = document.querySelector(`[name='${name}']`);
-          return element?.value || '';
+          return element?.getAttribute('data-value') || '';
         };
 
         return {
@@ -59,8 +59,15 @@
       function applyFilters(callback) {
         const formData = window.getFilterFormData();
         console.log('筛选数据:', formData);
+
+        // 显示手动加载指示器
+        const manualLoadingIndicator = document.getElementById('manualLoadingIndicator');
+        if (manualLoadingIndicator) {
+          manualLoadingIndicator.style.display = 'block';
+        }
+
         closeFilterDrawer();
-        callback(formData);
+        callback && callback(formData);
       }
 
       window.addEventListener("load", function () {

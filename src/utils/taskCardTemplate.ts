@@ -1,5 +1,6 @@
 import { getTypeName, getTotalMoney, getBaseCommission } from './map';
 import { removeTime } from './tool';
+import { isProject } from './map';
 
 /**
  * 生成任务卡片的 HTML 模板
@@ -14,6 +15,10 @@ export function createTaskCardHTML(task: any): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
+
+  // 判断是否为项目，添加对应的 CSS 类
+  const isProjectType = isProject(task.orderType);
+  const cardTypeClass = isProjectType ? 'card-type-project' : 'card-type-task';
 
   // 处理可选标签
   const buttonInfoTag = task.button_info
@@ -41,7 +46,7 @@ export function createTaskCardHTML(task: any): string {
     : '';
 
   return `
-    <div class="task-card card">
+    <div class="task-card card ${cardTypeClass}">
       <div class="task-badge status-${task.statusInfo || '待接单'}">💼 ${task.statusInfo || '待接单'}</div>
       <div class="task-title">接取后可见项目全称</div>
 
@@ -88,7 +93,13 @@ export function createTaskCardHTML(task: any): string {
       ${descriptionRow}
 
       <div class="task-actions">
-        <button class="btn btn-primary">🚀 立即接取</button>
+        <button
+          class="btn btn-primary"
+          onclick="handleTaskAccept(event, ${task.id}, '${task.company_id || ''}', '${task.company_name || ''}')"
+          data-task-id="${task.id}"
+          data-company-id="${task.company_id || ''}"
+          data-company-name="${task.company_name || ''}"
+        >🚀 立即接取</button>
         <a href="/task/${task.id}/" class="btn btn-secondary">👁️ 查看详情</a>
       </div>
     </div>

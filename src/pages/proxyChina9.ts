@@ -20,10 +20,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const body = await request.json();
 
     // 基础 URL（固定部分）
-    const baseUrl = 'https://flexible.china9.cn/api';
+    const baseUrl = 'https://china9.cn/api';
 
     // 从请求体中获取目标路径（可选，默认为 /taskorder/orderindex）
-    const path = body.path || '/taskorder/orderindex';
+    const path = body.path || '/user/infoClient';
 
     // 构造完整的后端 URL
     const targetUrl = `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
@@ -42,12 +42,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // 移除 path 参数（这是给代理用的，不发送给后端）
     delete requestBody.path;
-    requestBody.tokens = cookies.get('employee_token')?.value || requestBody.tokens;
+    requestBody.token = cookies.get('token')?.value || requestBody.token;
 
     // 添加 tokens 到请求头（如果存在）
-    if (body.tokens) {
-      headers['Tokens'] = body.tokens;
-      headers['Employee_token'] = body.employee_token;
+    if (body.token) {
+      headers['Token'] = body.token;
     }
 
     // 转发所有 Cookie 到后端

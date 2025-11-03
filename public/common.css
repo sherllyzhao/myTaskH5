@@ -1030,10 +1030,58 @@ body::after {
 /* 分页样式 */
 .pagination {
     text-align: center;
-    padding: 40px 24px;
+    padding: 20px 24px;
     color: #64748b;
     font-size: 14px;
     font-weight: 600;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    margin: 16px 0;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.pagination span {
+    color: #667eea;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+/* 状态指示器样式 */
+.status-indicator {
+    text-align: center;
+    padding: 20px 24px;
+    margin: 16px 0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    border: 2px solid;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.status-indicator .status-icon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.loading-status {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-color: #93c5fd;
+    color: #1e40af;
+}
+
+.loading-status .status-icon {
+    animation: spin 1s linear infinite;
+}
+
+.complete-status {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: #86efac;
+    color: #166534;
 }
 
 .page-btn {
@@ -1202,4 +1250,119 @@ body::after {
 .task-badge.status-取消 {
   background: linear-gradient(135deg, #cfd8dc 0%, #90a4ae 100%);
   color: #263238;
+}
+
+/* ===== 任务与项目类型区分样式 ===== */
+
+/* 项目卡片 - 醒目的橙色渐变背景 */
+.card-type-project {
+  background: linear-gradient(135deg, #fff9f0 0%, #ffeddb 100%) !important;
+  border-left: 6px solid #ff9800 !important;
+  box-shadow:
+    0 8px 32px rgba(255, 152, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.card-type-project::before {
+  background: linear-gradient(90deg, #ff9800, #fb8c00, #f57c00) !important;
+}
+
+.card-type-project:hover {
+  box-shadow:
+    0 20px 60px rgba(255, 152, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 任务卡片 - 清新的蓝色渐变背景 */
+.card-type-task {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%) !important;
+  border-left: 6px solid #2196f3 !important;
+  box-shadow:
+    0 8px 32px rgba(33, 150, 243, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.card-type-task::before {
+  background: linear-gradient(90deg, #2196f3, #1e88e5, #1976d2) !important;
+}
+
+.card-type-task:hover {
+  box-shadow:
+    0 20px 60px rgba(33, 150, 243, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ===== 类型图例说明 ===== */
+.type-legend {
+  margin: 16px 20px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.legend-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 8px;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.legend-items {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+
+.legend-item:hover {
+  transform: translateY(-1px);
+}
+
+.legend-project {
+  background: linear-gradient(135deg, #fff9f0 0%, #ffeddb 100%);
+  border: 1.5px solid #ff9800;
+}
+
+.legend-task {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%);
+  border: 1.5px solid #2196f3;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+.legend-project .legend-color {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+}
+
+.legend-task .legend-color {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+}
+
+.legend-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
 }

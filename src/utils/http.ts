@@ -133,8 +133,8 @@ const handleResponse = async <T>(response: Response): Promise<ApiResponse<T>> =>
 
   // 处理HTTP状态码
   if (!response.ok) {
-    // 处理101未授权状态码
-    if (response.status === 101) {
+    // 处理401未授权状态码
+    if (response.status === 401) {
       // 清除本地存储的token
       if (typeof window !== 'undefined') {
         // 清除cookie中的token
@@ -161,8 +161,8 @@ const handleResponse = async <T>(response: Response): Promise<ApiResponse<T>> =>
   if (typeof data === 'object' && data !== null) {
     // 如果后端已经返回了标准格式
     if ('code' in data && 'data' in data && 'message' in data) {
-      // 处理业务状态码101未授权
-      if (data.code === 101) {
+      // 处理业务状态码401未授权
+      if (data.code === 401) {
         // 清除本地存储的token
         if (typeof window !== 'undefined') {
           // 清除cookie中的token
