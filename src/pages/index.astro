@@ -30,6 +30,7 @@ try {
     const userInfoResult = await userInfoResponse.json();
     if (userInfoResult.code === 200) {
       userInfo = userInfoResult.data;
+      localStorage.setItem("userInfo", JSON.stringify(userInfo));
     }
   }
 } catch (error: any) {
