@@ -752,11 +752,10 @@ const filterGroups = [
         }
 
         // 获取用户的公司ID（根据实际的数据结构调整）
-        const userCompanyId = currentUser.company_id || currentUser.companyId || '';
-        const userCompanyName = currentUser.company_name || currentUser.companyName || '';
+        const userCompanyName = currentUser?.companyInfo?.company_name || currentUser.companyName || '';
 
         // 检查是否为非本公司任务
-        if (taskCompanyId && userCompanyId && taskCompanyId !== userCompanyId) {
+        if (taskCompanyId && userCompanyName && taskCompanyId !== userCompanyName) {
           const taskCompanyText = taskCompanyName ? `"${taskCompanyName}"` : '其他公司';
           const userCompanyText = userCompanyName ? `您当前所属公司为"${userCompanyName}"` : '';
 
