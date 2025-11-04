@@ -30,7 +30,6 @@ try {
     const userInfoResult = await userInfoResponse.json();
     if (userInfoResult.code === 200) {
       userInfo = userInfoResult.data;
-      localStorage.setItem("userInfo", JSON.stringify(userInfo));
     }
   }
 } catch (error: any) {
@@ -601,7 +600,7 @@ const filterGroups = [
           </div>
 
           <div class="profile-section">
-            <img src="/favicon.svg" alt="用户头像" class="avatar" />
+            <img src={userInfo?.memberInfo?.avatar || '/favicon.svg'} alt="用户头像" class="avatar" />
             <a href="/profile" class="profile-btn">个人主页</a>
           </div>
         </div>
@@ -736,6 +735,7 @@ const filterGroups = [
     <script is:inline define:vars={{ userInfo }}>
       // 将用户信息设置为全局变量
       window.currentUserInfo = userInfo;
+      localStorage.setItem('currentUserInfo', JSON.stringify(userInfo));
       console.log('当前用户信息:', window.currentUserInfo);
 
       // 处理接任务的全局函数
