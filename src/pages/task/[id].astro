@@ -168,35 +168,6 @@ try {
         }
       }
 
-      .back-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: white;
-        text-decoration: none;
-        font-size: 15px;
-        font-weight: 500;
-        padding: 10px 18px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        margin-bottom: 24px;
-        position: relative;
-        z-index: 1;
-      }
-
-      .back-button:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: translateX(-4px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-
-      .back-button:active {
-        transform: translateX(-2px);
-      }
-
       .detail-title {
         color: white;
         font-size: 18px;
@@ -841,9 +812,6 @@ try {
         <!-- <Debug data={custom} /> -->
 
         <div class="detail-header">
-          <div>
-            <a href="/" class="back-button"> ← 返回任务列表 </a>
-          </div>
           <div class="detail-title">
             {
               task.orderType && (
@@ -1056,157 +1024,168 @@ try {
 					<div class="detail-card">
 						<div class="section-title">📊 佣金修改记录</div>
 							<div class="history-list">
-								<div class="history-item">
-									<div class="history-date">2025-06-28 15:14:30</div>
-									<div class="history-changes">
-									<div class="history-change">
-										<div class="history-label">总用金：</div>
-										<div class="history-value">202.00</div>
+								{task.moneyeditlst.map((record: any) => (
+									<div class="history-item">
+										<div class="history-date">{record.createtime || '-'}</div>
+										<div class="history-changes">
+											<div class="history-change">
+												<div class="history-label">修改依据：</div>
+												<div class="history-value">{record.remarks || '-'}</div>
+											</div>
+											<div class="history-change">
+												<div class="history-label">修改前：</div>
+												<div class="history-value">¥{record.befor || '0.00'}</div>
+											</div>
+											<div class="history-change">
+												<div class="history-label">修改后：</div>
+												<div class="history-value">¥{record.after || '0.00'}</div>
+											</div>
+										</div>
 									</div>
-									<div class="history-change">
-										<div class="history-label">基础佣金：</div>
-										<div class="history-value">202.00</div>
-									</div>
-									<div class="history-change">
-										<div class="history-label">加价佣金：</div>
-										<div class="history-value">0.00</div>
-									</div>
-								</div>
+								))}
 							</div>
-						</div>
 					</div>
 				)
 		   }
 
           <!-- 变更记录 -->
-          <div class="detail-card">
-            <div class="section-title">📝 变更记录</div>
-            <div class="change-list">
-              <div class="change-item">
-                <div class="change-date">2025-06-28 15:14:30 增加佣金</div>
-                <div class="change-note">佣金变更金额限制</div>
-              </div>
-              <div class="change-item">
-                <div class="change-date">2024-12-17 14:49:23 增加佣金</div>
-                <div class="change-note">1</div>
-              </div>
-              <div class="change-item">
-                <div class="change-date">2024-12-17 09:19:51 新增需求</div>
-                <div class="change-note">dz20141217</div>
-              </div>
-              <div class="change-item">
-                <div class="change-date">2024-12-17 09:38:33 新增需求</div>
-                <div class="change-note">1</div>
-              </div>
-            </div>
-          </div>
+		   {
+				!isWaiting(task) && (
+					<div class="detail-card">
+						<div class="section-title">📝 变更记录</div>
+						<div class="change-list">
+							<div class="change-item">
+								<div class="change-date">2025-06-28 15:14:30 增加佣金</div>
+								<div class="change-note">佣金变更金额限制</div>
+							</div>
+							<div class="change-item">
+								<div class="change-date">2024-12-17 14:49:23 增加佣金</div>
+								<div class="change-note">1</div>
+							</div>
+							<div class="change-item">
+								<div class="change-date">2024-12-17 09:19:51 新增需求</div>
+								<div class="change-note">dz20141217</div>
+							</div>
+							<div class="change-item">
+								<div class="change-date">2024-12-17 09:38:33 新增需求</div>
+								<div class="change-note">1</div>
+							</div>
+						</div>
+					</div>
+				)
+		   }
+          
 
           <!-- 执行信息 -->
-          <div class="detail-card">
-            <div class="section-title">⚡ 执行信息</div>
-            <div class="execution-list">
-              <!-- 设计任务 -->
-              <div class="execution-item">
-                <div class="execution-header">
-                  <div class="execution-type">
-                    <span class="execution-status status-设计">🎨 设计</span>
-                  </div>
-                  <div class="execution-amount">¥ 0.00</div>
-                </div>
-                <div class="execution-details">
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">📅 发布时间</span>
-                    <span class="execution-detail-value"
-                      >2024-12-28<br />09:13:42</span
-                    >
-                  </div>
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">📤 验收时间</span>
-                    <span class="execution-detail-value">未上传</span>
-                  </div>
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">🔍 状态</span>
-                    <span class="execution-detail-value">未审核</span>
-                  </div>
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">🔗 功能地址</span>
-                    <span class="execution-detail-value">1</span>
-                  </div>
-                </div>
-                <div class="execution-actions">
-                  <div class="execution-satisfaction">
-                    <span>满意度:</span>
-                    <span class="satisfaction-stars">-</span>
-                  </div>
-                  <button class="execution-action-btn">新增</button>
-                </div>
-              </div>
+		   {
+				!isWaiting(task) && (
+					<div class="detail-card">
+						<div class="section-title">⚡ 执行信息</div>
+						<div class="execution-list">
+						<!-- 设计任务 -->
+						<div class="execution-item">
+							<div class="execution-header">
+							<div class="execution-type">
+								<span class="execution-status status-设计">🎨 设计</span>
+							</div>
+							<div class="execution-amount">¥ 0.00</div>
+							</div>
+							<div class="execution-details">
+							<div class="execution-detail">
+								<span class="execution-detail-label">📅 发布时间</span>
+								<span class="execution-detail-value"
+								>2024-12-28<br />09:13:42</span
+								>
+							</div>
+							<div class="execution-detail">
+								<span class="execution-detail-label">📤 验收时间</span>
+								<span class="execution-detail-value">未上传</span>
+							</div>
+							<div class="execution-detail">
+								<span class="execution-detail-label">🔍 状态</span>
+								<span class="execution-detail-value">未审核</span>
+							</div>
+							<div class="execution-detail">
+								<span class="execution-detail-label">🔗 功能地址</span>
+								<span class="execution-detail-value">1</span>
+							</div>
+							</div>
+							<div class="execution-actions">
+							<div class="execution-satisfaction">
+								<span>满意度:</span>
+								<span class="satisfaction-stars">-</span>
+							</div>
+							<button class="execution-action-btn">新增</button>
+							</div>
+						</div>
 
-              <!-- 网站制作任务 -->
-              <div class="execution-item">
-                <div class="execution-header">
-                  <div class="execution-type">
-                    <span class="execution-status status-网站制作"
-                      >💻 网站制作</span
-                    >
-                  </div>
-                  <div class="execution-amount">¥ 0.50</div>
-                </div>
-                <div class="execution-details">
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">👤 申请人</span>
-                    <span class="execution-detail-value">资海云</span>
-                  </div>
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">📅 发布时间</span>
-                    <span class="execution-detail-value"
-                      >2024-11-04<br />10:00:59</span
-                    >
-                  </div>
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">📤 验收时间</span>
-                    <span class="execution-detail-value"
-                      >2024-11-04<br />10:42:39</span
-                    >
-                  </div>
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">🔍 状态</span>
-                    <span class="execution-detail-value">
-                      <span class="execution-status status-已验收"
-                        >✅ 已验收</span
-                      >
-                    </span>
-                  </div>
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">🔗 功能地址</span>
-                    <span class="execution-detail-value">停生查看</span>
-                  </div>
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">📝 验收情况</span>
-                    <span class="execution-detail-value">排权关</span>
-                  </div>
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">⏰ 完成时间</span>
-                    <span class="execution-detail-value"
-                      >2024-11-04<br />10:53:15</span
-                    >
-                  </div>
-                  <div class="execution-detail">
-                    <span class="execution-detail-label">🔍 审核时间</span>
-                    <span class="execution-detail-value">-</span>
-                  </div>
-                </div>
-                <div class="execution-actions">
-                  <div class="execution-satisfaction">
-                    <span>满意度:</span>
-                    <span class="satisfaction-stars">⭐</span>
-                    <span>1</span>
-                  </div>
-                  <button class="execution-action-btn">新增</button>
-                </div>
-              </div>
-            </div>
-          </div>
+						<!-- 网站制作任务 -->
+						<div class="execution-item">
+							<div class="execution-header">
+							<div class="execution-type">
+								<span class="execution-status status-网站制作"
+								>💻 网站制作</span
+								>
+							</div>
+							<div class="execution-amount">¥ 0.50</div>
+							</div>
+							<div class="execution-details">
+							<div class="execution-detail">
+								<span class="execution-detail-label">👤 申请人</span>
+								<span class="execution-detail-value">资海云</span>
+							</div>
+							<div class="execution-detail">
+								<span class="execution-detail-label">📅 发布时间</span>
+								<span class="execution-detail-value"
+								>2024-11-04<br />10:00:59</span
+								>
+							</div>
+							<div class="execution-detail">
+								<span class="execution-detail-label">📤 验收时间</span>
+								<span class="execution-detail-value"
+								>2024-11-04<br />10:42:39</span
+								>
+							</div>
+							<div class="execution-detail">
+								<span class="execution-detail-label">🔍 状态</span>
+								<span class="execution-detail-value">
+								<span class="execution-status status-已验收"
+									>✅ 已验收</span
+								>
+								</span>
+							</div>
+							<div class="execution-detail">
+								<span class="execution-detail-label">🔗 功能地址</span>
+								<span class="execution-detail-value">停生查看</span>
+							</div>
+							<div class="execution-detail">
+								<span class="execution-detail-label">📝 验收情况</span>
+								<span class="execution-detail-value">排权关</span>
+							</div>
+							<div class="execution-detail">
+								<span class="execution-detail-label">⏰ 完成时间</span>
+								<span class="execution-detail-value"
+								>2024-11-04<br />10:53:15</span
+								>
+							</div>
+							<div class="execution-detail">
+								<span class="execution-detail-label">🔍 审核时间</span>
+								<span class="execution-detail-value">-</span>
+							</div>
+							</div>
+							<div class="execution-actions">
+							<div class="execution-satisfaction">
+								<span>满意度:</span>
+								<span class="satisfaction-stars">⭐</span>
+								<span>1</span>
+							</div>
+							<button class="execution-action-btn">新增</button>
+							</div>
+						</div>
+						</div>
+					</div>
+				)
+		   }
         </div>
 
         <div class="action-buttons">
