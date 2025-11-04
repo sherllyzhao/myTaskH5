@@ -18,11 +18,10 @@ try {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Cookie: Astro.request.headers.get("cookie") || "",
+      "Cookie": Astro.request.headers.get("cookie") || "",
     },
     body: JSON.stringify({
       path: "/user/infoClient", // 假设这是获取用户信息的接口路径，请根据实际情况修改
-      enterpriseSide: "pc",
     }),
   });
 
@@ -42,11 +41,10 @@ try {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Cookie: Astro.request.headers.get("cookie") || "",
+      "Cookie": Astro.request.headers.get("cookie") || "",
     },
     body: JSON.stringify({
       path: "/taskorder/monthinfo",
-      enterpriseSide: "pc",
     }),
   });
   // 检查HTTP状态码401
@@ -586,7 +584,7 @@ const filterGroups = [
     <script is:inline src="/js/drawer.js"></script>
     <div class="container">
       <div class="wrap">
-        <Debug data={userInfo} />
+        <!-- <Debug data={userInfo} /> -->
         
         <div class="header">
           <div class="nav-tabs">
@@ -689,12 +687,6 @@ const filterGroups = [
         </div>
 
         <div class="content">
-          <!-- 加载中提示 - 直接在这里定义 -->
-          <div id="manualLoadingIndicator" style="display: none; text-align: center; padding: 20px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; margin: 16px 0; border: 2px solid #93c5fd; color: #1e40af; font-weight: 600; font-size: 15px;">
-            <div style="display: inline-block; animation: spin 1s linear infinite; font-size: 24px; margin-right: 12px;">⏳</div>
-            <span>加载中...</span>
-          </div>
-
           <!-- 任务列表容器 - 状态元素将自动创建 -->
           <div id="taskListContainer">
             <!-- 任务列表将由客户端动态加载 -->
@@ -827,13 +819,7 @@ const filterGroups = [
           isLoading = true;
           hasMore = true;
 
-          // 显示手动加载指示器
-          const manualLoadingIndicator = document.getElementById('manualLoadingIndicator');
-          if (manualLoadingIndicator) {
-            manualLoadingIndicator.style.display = 'block';
-          }
-
-          // 同时也尝试显示状态管理器的加载状态
+          // 使用状态管理器显示加载状态
           if (stateManager) {
             stateManager.onRequestStart();
           }
@@ -905,11 +891,6 @@ const filterGroups = [
             stateManager.onRequestError();
           } finally {
             isLoading = false;
-            // 隐藏手动加载指示器
-            const manualLoadingIndicator = document.getElementById('manualLoadingIndicator');
-            if (manualLoadingIndicator) {
-              manualLoadingIndicator.style.display = 'none';
-            }
           }
         }
 

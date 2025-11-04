@@ -1,6 +1,6 @@
 import { getTypeName, getTotalMoney, getBaseCommission } from './map';
 import { removeTime } from './tool';
-import { isProject } from './map';
+import { isProject, showChangeTag} from './map';
 
 /**
  * 生成任务卡片的 HTML 模板
@@ -21,6 +21,9 @@ export function createTaskCardHTML(task: any): string {
   const cardTypeClass = isProjectType ? 'card-type-project' : 'card-type-task';
 
   // 处理可选标签
+  const changeTag = showChangeTag(task)
+    ? `<span class="tag tag-changes">🔄 有变更</span>`
+    : '';
   const buttonInfoTag = task.button_info
     ? `<span class="tag tag-overdue tag-overdue-${task.button_color}">${task.button_info}</span>`
     : '';
@@ -51,6 +54,7 @@ export function createTaskCardHTML(task: any): string {
       <div class="task-title">接取后可见项目全称</div>
 
       <div class="task-tags">
+        ${changeTag}
         ${buttonInfoTag}
         ${timeoutTag}
       </div>

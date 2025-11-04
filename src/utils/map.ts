@@ -28,3 +28,13 @@ export function getBaseCommission(task: any) {
   }
   return Number(task.bountymoney).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})
 }
+
+export function showChangeTag (data: any): boolean{
+  let show = false
+  if (data && data.orderType && +data.is_change) {
+    if (+data.orderType === 2) {
+      show = true
+    }
+  }
+  return show
+}

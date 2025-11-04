@@ -43,6 +43,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // 移除 path 参数（这是给代理用的，不发送给后端）
     delete requestBody.path;
     requestBody.tokens = cookies.get('employee_token')?.value || requestBody.tokens;
+    requestBody.enterpriseSide = requestBody.enterpriseSide ?? 'pc';
 
     // 添加 tokens 到请求头（如果存在）
     if (body.tokens) {
