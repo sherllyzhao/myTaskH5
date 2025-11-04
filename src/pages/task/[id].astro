@@ -1,6 +1,7 @@
 ---
-import { Debug } from 'astro:components';
-import { isProject } from '../../utils/map';
+import { Debug } from "astro:components";
+import { isProject, getTypeName, getTotalMoney, getBaseCommission, getAddCommission } from "../../utils/map";
+import AttachmentViewer from "../../components/AttachmentViewer.astro";
 
 export async function getStaticPaths() {
   return [{ params: { id: "" } }];
@@ -10,44 +11,51 @@ const { id } = Astro.params;
 
 let task: any = null;
 const proxyUrl = `${Astro.url.origin}/proxy`;
-let taskName = ""
+let taskName = "";
 
 try {
-	const taskRes = await fetch(proxyUrl, {
-		headers: {
-			"Content-Type": "application/json",
-			"Cookie": Astro.request.headers.get("cookie") || "",
-		},
-		method: 'POST',
-		body: JSON.stringify({
-			path: `/taskorder/show`,
-			id: id
-		}),
-	});
-	if (taskRes.status === 401) {
-		// 在SSR环境下无法直接跳转，返回空数据让前端处理
-		task = {
-			data: {},
-			error: "未授权，请重新登录",
-			code: 401,
-		};
-	} else {
-		task = await taskRes.json();
-		// 检查业务状态码401
-		if (task.code === 401) {
-			task = {
-				data: {},
-				error: "未授权，请重新登录",
-				code: 401,
-			};
-		} else if (task.code === 1) {
-			task = task.data || task;
-			let hall_orderNumber = task.hall_orderNumber ? '（' + task.hall_orderNumber + '）' : ''
-			taskName = task.statusInfo === '待接单' ? '接取后可见项目全称' : isProject(task.orderType) ? task.hall_customer + hall_orderNumber : task.name;
-		}
-	}
-}catch(e){
-	console.log(e)
+  const taskRes = await fetch(proxyUrl, {
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "",
+    },
+    method: "POST",
+    body: JSON.stringify({
+      path: `/taskorder/show`,
+      id: id,
+    }),
+  });
+  if (taskRes.status === 401) {
+    // 在SSR环境下无法直接跳转，返回空数据让前端处理
+    task = {
+      data: {},
+      error: "未授权，请重新登录",
+      code: 401,
+    };
+  } else {
+    task = await taskRes.json();
+    // 检查业务状态码401
+    if (task.code === 401) {
+      task = {
+        data: {},
+        error: "未授权，请重新登录",
+        code: 401,
+      };
+    } else if (task.code === 1) {
+      task = task.data || task;
+      let hall_orderNumber = task.hall_orderNumber
+        ? "（" + task.hall_orderNumber + "）"
+        : "";
+      taskName =
+        task.statusInfo === "待接单"
+          ? "接取后可见项目全称"
+          : isProject(task.orderType)
+            ? task.hall_customer + hall_orderNumber
+            : task.name;
+    }
+  }
+} catch (e) {
+  console.log(e);
 }
 ---
 
@@ -66,10 +74,10 @@ try {
         z-index: 1;
       }
 
-	  .detail-wrap{
-		height: 100%;
-		overflow: auto;
-	  }
+      .detail-wrap {
+        height: 100%;
+        overflow: auto;
+      }
 
       /* 任务详情页特有样式 */
       .detail-header {
@@ -149,23 +157,65 @@ try {
 
       .detail-title {
         color: white;
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 700;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         margin-bottom: 10px;
         letter-spacing: 0.3px;
         position: relative;
         z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
       }
 
-      .detail-subtitle {
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 14px;
-        font-weight: 400;
-        letter-spacing: 0.2px;
-        position: relative;
-        z-index: 1;
-        opacity: 0.95;
+      .type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        border: 1.5px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(8px);
+        transition: all 0.3s ease;
+        align-self: flex-start;
+      }
+
+      .type-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      }
+
+      .type-project {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 152, 0, 0.95) 0%,
+          rgba(245, 124, 0, 0.95) 100%
+        );
+      }
+
+      .type-task {
+        background: linear-gradient(
+          135deg,
+          rgba(33, 150, 243, 0.95) 0%,
+          rgba(25, 118, 210, 0.95) 100%
+        );
+      }
+
+      .title-text {
+        color: white;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.4;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        letter-spacing: 0.3px;
+        word-break: break-word;
       }
 
       .detail-content {
@@ -251,6 +301,43 @@ try {
       .info-item:hover {
         background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
         border-color: #cbd5e1;
+      }
+
+      .info-item-full {
+        grid-column: 1 / -1;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 1.5px solid #fbbf24;
+        min-height: auto;
+      }
+
+      .info-item-full:hover {
+        background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+        border-color: #f59e0b;
+      }
+
+      .info-item-full.blue {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border: 1.5px solid #3b82f6;
+      }
+
+      .info-item-full.blue:hover {
+        background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+        border-color: #2563eb;
+      }
+
+      .info-item-full.blue .info-label {
+        color: #1e40af;
+      }
+
+      .info-item-full.blue .info-value-jobs {
+        color: #1e3a8a;
+        font-weight: 600;
+      }
+
+      .info-value-jobs {
+        color: #92400e;
+        font-weight: 500;
+        font-size: 14px;
       }
 
       .info-label {
@@ -667,134 +754,160 @@ try {
         background: #d1fae5;
         color: #065f46;
       }
-        .task-badge {
-          display: inline-block;
-          padding: 4px 8px;
-          border-radius: 12px;
-          font-size: 10px;
-          font-weight: 600;
-        }
 
-        .type-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 16px;
-          border-radius: 16px;
-          font-size: 14px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: white;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          border: 2px solid rgba(255, 255, 255, 0.3);
-        }
+      .task-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
 
-        .type-project {
-          background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-        }
+      .task-badge:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
 
-        .type-task {
-          background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-        }
+      .status-待接单 {
+        background: linear-gradient(
+          135deg,
+          rgba(102, 126, 234, 0.95) 0%,
+          rgba(118, 75, 162, 0.95) 100%
+        );
+        color: white;
+        border: 1.5px solid rgba(255, 255, 255, 0.3);
+      }
 
-        .tag-wrap {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-wrap: wrap;
-          margin-top: 12px;
-          position: relative;
-          z-index: 1;
-        }
+      .tag-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 0;
+        position: relative;
+        z-index: 1;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="detail-wrap">
-        <Debug data={task} />
+        <!-- <Debug data={task} /> -->
 
         <div class="detail-header">
-			<div>
-          		<a href="/" class="back-button"> ← 返回任务列表 </a>		
-			</div>
-			<div>
-				{
-					task.orderType && (
-						<span class={`type-badge ${isProject(task.orderType) ? 'type-project' : 'type-task'}`}>
-							{isProject(task.orderType) ? '📁 项目' : '📋 任务'}
-						</span>
-					)
-				}
-			</div>
-          <div class="detail-title">{taskName}</div>
-		  <div class="tag-wrap">
-          	<div class={`task-badge status-${task.statusInfo || '待接单'}`}>💼 {task.statusInfo || '待接单'}</div>
-			
+          <div>
+            <a href="/" class="back-button"> ← 返回任务列表 </a>
+          </div>
+          <div class="detail-title">
+            {
+              task.orderType && (
+                <span
+                  class={`type-badge ${isProject(task.orderType) ? "type-project" : "type-task"}`}
+                >
+                  {isProject(task.orderType) ? "📁 项目" : "📋 任务"}
+                </span>
+              )
+            }
+            <span class="title-text">{taskName}</span>
+          </div>
+          <div class="tag-wrap">
+            <div class={`task-badge status-${task.statusInfo || "待接单"}`}>
+              💼 {task.statusInfo || "待接单"}
+            </div>
 			{
-			task.button_info && (
-				<span class={`tag tag-overdue tag-overdue-${task.button_color}`}>{task.button_info}</span>
-			)
+				task.hallTypeTitle && (
+					<span class="tag tag-type-blue">{task.hallTypeTitle}</span>
+				)
 			}
-			{
-				task.timeout && <span class="tag tag-pending-2d">{task.timeout}</span>
-			}
-		  </div>
+            {
+              task.button_info && (
+                <span
+                  class={`tag tag-overdue tag-overdue-${task.button_color}`}
+                >
+                  {task.button_info}
+                </span>
+              )
+            }
+            {
+              task.timeout && (
+                <span class="tag tag-pending-2d">{task.timeout}</span>
+              )
+            }
+          </div>
         </div>
 
         <div class="detail-content">
           <!-- 基本信息 -->
           <div class="detail-card">
             <div class="section-title">📋 基本信息</div>
+              {task.positionlistarr && task.positionlistarr.length > 0 && (
+                <div class="info-item info-item-full blue" style="margin-bottom: 12px;">
+                  <span class="info-label">👔 可接单岗位</span>
+                  <span class="info-value info-value-jobs">{task.positionlistarr.map((item: any) => {
+					return item.position
+				  }).join('、')}</span>
+                </div>
+              )}
             <div class="info-grid">
               <div class="info-item">
                 <span class="info-label">🏢 发布公司</span>
-                <span class="info-value">资海科技集团百度责任有限公司</span>
+                <span class="info-value">{task.company || '-'}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">👤 发布人</span>
-                <span class="info-value">资海云</span>
+                <span class="info-value">{task.username || '公司主账号发布'}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">📅 发布时间</span>
-                <span class="info-value">2024-10-30</span>
+                <span class="info-value">{task.ordertime || '-'}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">📅 接单时间</span>
-                <span class="info-value">2024-11-01</span>
+                <span class="info-value">{task.performtime || '-'}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">⏰ 截止日期</span>
-                <span class="info-value">2024-10-31</span>
+                <span class="info-label">📅 截止日期</span>
+                <span class="info-value">{task.enddatatime || '-'}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">⏰ {getTypeName(task.orderType)}工期</span>
+                <span class="info-value">{task.hall_duration ? `${task.hall_duration}个工作日` : '-'}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">📅 完成时间</span>
+                <span class="info-value">{task.completiontime || '-'}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">🔢 项目编号</span>
-                <span class="info-value">003</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">⚡ 工期</span>
-                <span class="info-value">2个工作日</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">📋 项目属性</span>
-                <span class="info-value">测试</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">🎯 状态</span>
-                <span class="info-value">
-                  <span class="status-badge status-待接单">💼 待接单</span>
-                </span>
+                <span class="info-value">{task.statusInfo === '待接单' ? getTypeName(task.orderType) + '接取后展示' : task.hall_orderNumber ?? '-'}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">💰 总金额</span>
-                <span class="info-value">203.00</span>
+                <span class="info-value">¥{ getTotalMoney(task) || '0.00' }</span>
               </div>
             </div>
+			{task.description && (
+			<div class="info-item info-item-full" style="margin-top: 12px;">
+				<span class="info-label">备注</span>
+				<span class="info-value info-value-jobs">{task.description}</span>
+			</div>
+			)}
 
-            <div class="description-section">
-              <div class="description-label">💡 项目描述</div>
-              <div class="description-text">可接单项目的: web前端、PHP</div>
-            </div>
+			<!-- 附件展示 -->
+			{task.attachments && task.attachments.length > 0 && (
+				<div>
+					<div class="info-label">功能文档</div>
+					<div style="margin-top: 12px;">
+						<div class="info-label" style="margin-bottom: 8px;">📎 附件</div>
+						<AttachmentViewer attachments={task.attachments} />
+					</div>
+				</div>
+			)}
+
           </div>
 
           <!-- 佣金信息 -->
@@ -802,14 +915,24 @@ try {
             <div class="section-title">💰 佣金信息</div>
             <div class="salary-section">
               <div class="salary-card">
-                <div class="salary-label">💰 项目金额</div>
-                <div class="salary-value">¥ 203.00</div>
+                <div class="salary-label">💰 总佣金</div>
+                <div class="salary-value">¥ { getTotalMoney(task) || '0.00'}</div>
               </div>
               <div class="salary-card">
-                <div class="salary-label">🎯 基础佣金</div>
-                <div class="salary-value">¥ 203.00</div>
+                <div class="salary-label">💰 基础佣金</div>
+                <div class="salary-value">¥ { getBaseCommission(task) || '0.00'}</div>
+              </div>
+			  <div class="salary-card">
+                <div class="salary-label">💰 加价佣金</div>
+                <div class="salary-value">¥ { getAddCommission(task) || '0.00'}</div>
               </div>
             </div>
+			{task.desc && (
+			<div class="info-item info-item-full" style="margin-top: 12px;">
+				<span class="info-label">报价说明</span>
+				<span class="info-value info-value-jobs">{task.desc}</span>
+			</div>
+			)}
           </div>
 
           <!-- 客户信息 -->

@@ -1,4 +1,4 @@
-import { getTypeName, getTotalMoney, getBaseCommission } from './map';
+import { getTypeName, getTotalMoney, getBaseCommission, getAddCommission } from './map';
 import { removeTime } from './tool';
 import { isProject, showChangeTag} from './map';
 
@@ -11,10 +11,7 @@ export function createTaskCardHTML(task: any): string {
   const typeName = getTypeName(task.orderType);
   const totalMoney = getTotalMoney(task);
   const baseCommission = getBaseCommission(task);
-  const hallMoney = Number(task.hall_money).toLocaleString('zh-CN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+  const hallMoney = getAddCommission(task);
 
   // 判断是否为项目，添加对应的 CSS 类
   const isProjectType = isProject(task.orderType);

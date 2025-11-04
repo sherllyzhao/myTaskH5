@@ -28,6 +28,12 @@ export function getBaseCommission(task: any) {
   }
   return Number(task.bountymoney).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})
 }
+export function getAddCommission(task: any) {
+  return Number(task.hall_money).toLocaleString('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
 
 export function showChangeTag (data: any): boolean{
   let show = false
