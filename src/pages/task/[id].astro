@@ -1,6 +1,12 @@
 ---
 import { Debug } from "astro:components";
-import { isProject, getTypeName, getTotalMoney, getBaseCommission, getAddCommission } from "../../utils/map";
+import {
+  isProject,
+  getTypeName,
+  getTotalMoney,
+  getBaseCommission,
+  getAddCommission,
+} from "../../utils/map";
 import AttachmentViewer from "../../components/AttachmentViewer.astro";
 
 export async function getStaticPaths() {
@@ -52,6 +58,41 @@ try {
           : isProject(task.orderType)
             ? task.hall_customer + hall_orderNumber
             : task.name;
+    }
+  }
+} catch (e) {
+  console.log(e);
+}
+
+let custom: any = null;
+let customId: string | number = "";
+let showDemandFile: boolean = false;
+
+try {
+  const custormRes = await fetch(proxyUrl, {
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "",
+    },
+    method: "POST",
+    body: JSON.stringify({
+      path: `/taskorder/getCustomerByNumbersy`,
+      orderNumber: task.hall_orderNumber,
+    }),
+  });
+  if (custormRes.status === 401) {
+    // 在SSR环境下无法直接跳转，返回空数据让前端处理
+    task = {
+      data: {},
+      error: "未授权，请重新登录",
+      code: 401,
+    };
+  } else {
+    custom = await custormRes.json();
+    if (custom.code === 1) {
+      custom = custom.data || custom;
+	  customId = custom.item_id || "";
+	  showDemandFile = !!custom;
     }
   }
 } catch (e) {
@@ -796,7 +837,7 @@ try {
   <body>
     <div class="container">
       <div class="detail-wrap">
-        <!-- <Debug data={task} /> -->
+        <!-- <Debug data={custom} /> -->
 
         <div class="detail-header">
           <div>
@@ -818,11 +859,11 @@ try {
             <div class={`task-badge status-${task.statusInfo || "待接单"}`}>
               💼 {task.statusInfo || "待接单"}
             </div>
-			{
-				task.hallTypeTitle && (
-					<span class="tag tag-type-blue">{task.hallTypeTitle}</span>
-				)
-			}
+            {
+              task.hallTypeTitle && (
+                <span class="tag tag-type-blue">{task.hallTypeTitle}</span>
+              )
+            }
             {
               task.button_info && (
                 <span
@@ -844,70 +885,100 @@ try {
           <!-- 基本信息 -->
           <div class="detail-card">
             <div class="section-title">📋 基本信息</div>
-              {task.positionlistarr && task.positionlistarr.length > 0 && (
-                <div class="info-item info-item-full blue" style="margin-bottom: 12px;">
+            {
+              task.positionlistarr && task.positionlistarr.length > 0 && (
+                <div
+                  class="info-item info-item-full blue"
+                  style="margin-bottom: 12px;"
+                >
                   <span class="info-label">👔 可接单岗位</span>
-                  <span class="info-value info-value-jobs">{task.positionlistarr.map((item: any) => {
-					return item.position
-				  }).join('、')}</span>
+                  <span class="info-value info-value-jobs">
+                    {task.positionlistarr
+                      .map((item: any) => {
+                        return item.position;
+                      })
+                      .join("、")}
+                  </span>
                 </div>
-              )}
+              )
+            }
             <div class="info-grid">
               <div class="info-item">
                 <span class="info-label">🏢 发布公司</span>
-                <span class="info-value">{task.company || '-'}</span>
+                <span class="info-value">{task.company || "-"}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">👤 发布人</span>
-                <span class="info-value">{task.username || '公司主账号发布'}</span>
+                <span class="info-value"
+                  >{task.username || "公司主账号发布"}</span
+                >
               </div>
               <div class="info-item">
                 <span class="info-label">📅 发布时间</span>
-                <span class="info-value">{task.ordertime || '-'}</span>
+                <span class="info-value">{task.ordertime || "-"}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">📅 接单时间</span>
-                <span class="info-value">{task.performtime || '-'}</span>
+                <span class="info-value">{task.performtime || "-"}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">📅 截止日期</span>
-                <span class="info-value">{task.enddatatime || '-'}</span>
+                <span class="info-value">{task.enddatatime || "-"}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">⏰ {getTypeName(task.orderType)}工期</span>
-                <span class="info-value">{task.hall_duration ? `${task.hall_duration}个工作日` : '-'}</span>
+                <span class="info-label"
+                  >⏰ {getTypeName(task.orderType)}工期</span
+                >
+                <span class="info-value"
+                  >{
+                    task.hall_duration ? `${task.hall_duration}个工作日` : "-"
+                  }</span
+                >
               </div>
               <div class="info-item">
                 <span class="info-label">📅 完成时间</span>
-                <span class="info-value">{task.completiontime || '-'}</span>
+                <span class="info-value">{task.completiontime || "-"}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">🔢 项目编号</span>
-                <span class="info-value">{task.statusInfo === '待接单' ? getTypeName(task.orderType) + '接取后展示' : task.hall_orderNumber ?? '-'}</span>
+                <span class="info-value"
+                  >{
+                    task.statusInfo === "待接单"
+                      ? getTypeName(task.orderType) + "接取后展示"
+                      : (task.hall_orderNumber ?? "-")
+                  }</span
+                >
               </div>
               <div class="info-item">
                 <span class="info-label">💰 总金额</span>
-                <span class="info-value">¥{ getTotalMoney(task) || '0.00' }</span>
+                <span class="info-value">¥{getTotalMoney(task) || "0.00"}</span>
               </div>
             </div>
-			{task.description && (
-			<div class="info-item info-item-full" style="margin-top: 12px;">
-				<span class="info-label">备注</span>
-				<span class="info-value info-value-jobs">{task.description}</span>
-			</div>
-			)}
+            {
+              task.description && (
+                <div class="info-item info-item-full" style="margin-top: 12px;">
+                  <span class="info-label">备注</span>
+                  <span class="info-value info-value-jobs">
+                    {task.description}
+                  </span>
+                </div>
+              )
+            }
 
-			<!-- 附件展示 -->
-			{task.attachments && task.attachments.length > 0 && (
-				<div>
-					<div class="info-label">功能文档</div>
-					<div style="margin-top: 12px;">
-						<div class="info-label" style="margin-bottom: 8px;">📎 附件</div>
-						<AttachmentViewer attachments={task.attachments} />
-					</div>
-				</div>
-			)}
-
+            <!-- 附件展示 -->
+            {
+              task.functionfilelist && task.functionfilelist.length > 0 && (
+                <div>
+                  <div class="info-label">功能文档</div>
+                  <div style="margin-top: 12px;">
+                    <div class="info-label" style="margin-bottom: 8px;">
+                      📎 附件
+                    </div>
+                    <AttachmentViewer attachments={task.functionfilelist} />
+                  </div>
+                </div>
+              )
+            }
           </div>
 
           <!-- 佣金信息 -->
@@ -916,55 +987,67 @@ try {
             <div class="salary-section">
               <div class="salary-card">
                 <div class="salary-label">💰 总佣金</div>
-                <div class="salary-value">¥ { getTotalMoney(task) || '0.00'}</div>
+                <div class="salary-value">
+                  ¥ {getTotalMoney(task) || "0.00"}
+                </div>
               </div>
               <div class="salary-card">
                 <div class="salary-label">💰 基础佣金</div>
-                <div class="salary-value">¥ { getBaseCommission(task) || '0.00'}</div>
+                <div class="salary-value">
+                  ¥ {getBaseCommission(task) || "0.00"}
+                </div>
               </div>
-			  <div class="salary-card">
+              <div class="salary-card">
                 <div class="salary-label">💰 加价佣金</div>
-                <div class="salary-value">¥ { getAddCommission(task) || '0.00'}</div>
+                <div class="salary-value">
+                  ¥ {getAddCommission(task) || "0.00"}
+                </div>
               </div>
             </div>
-			{task.desc && (
-			<div class="info-item info-item-full" style="margin-top: 12px;">
-				<span class="info-label">报价说明</span>
-				<span class="info-value info-value-jobs">{task.desc}</span>
-			</div>
-			)}
+            {
+              task.desc && (
+                <div class="info-item info-item-full" style="margin-top: 12px;">
+                  <span class="info-label">报价说明</span>
+                  <span class="info-value info-value-jobs">{task.desc}</span>
+                </div>
+              )
+            }
           </div>
 
           <!-- 客户信息 -->
-          <div class="detail-card client-info">
-            <div class="section-title">👤 客户信息</div>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">👤 客户名称</span>
-                <span class="info-value">测试成款</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">🔢 项目编号</span>
-                <span class="info-value">003</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">📞 手机号</span>
-                <span class="info-value">16633335555</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">👤 客户姓名</span>
-                <span class="info-value">李圣</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">📧 email</span>
-                <span class="info-value">未知</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">📍 联系地址</span>
-                <span class="info-value">未知</span>
-              </div>
-            </div>
-          </div>
+			{
+				custom && (
+					<div class="detail-card client-info">
+						<div class="section-title">👤 客户信息</div>
+						<div class="info-grid">
+						<div class="info-item">
+							<span class="info-label">👤 客户名称</span>
+							<span class="info-value">{custom?.customer?.customer_name ?? '-'}</span>
+						</div>
+						<div class="info-item">
+							<span class="info-label">🔢 项目编号</span>
+							<span class="info-value">{custom.hall_orderNumber ?? '-'}</span>
+						</div>
+						<div class="info-item">
+							<span class="info-label">📞 手机号</span>
+							<span class="info-value">{custom?.contact?.contact_phone ?? '-'}</span>
+						</div>
+						<div class="info-item">
+							<span class="info-label">👤 客户姓名</span>
+							<span class="info-value">{custom?.contact?.contacts ?? '-'}</span>
+						</div>
+						<div class="info-item">
+							<span class="info-label">📧 email</span>
+							<span class="info-value">{custom?.contact?.email ?? '-'}</span>
+						</div>
+						<div class="info-item">
+							<span class="info-label">📍 联系地址</span>
+							<span class="info-value">{custom?.contact?.contact_address ?? '-'}</span>
+						</div>
+						</div>
+					</div>
+				)
+			}
 
           <!-- 佣金修改记录 -->
           <div class="detail-card">

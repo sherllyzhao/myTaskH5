@@ -54,7 +54,7 @@ function getFileIcon(filename: string) {
                 src={file.url || file.path}
                 alt={file.name || file.filename}
                 class="attachment-thumbnail"
-                onclick={`openImagePreview('${file.url || file.path}')`}
+                onclick={`openImagePreview('${file.url || file.path || file.fileurl}')`}
               />
               <div class="attachment-name">{file.name || file.filename}</div>
             </div>
@@ -62,7 +62,7 @@ function getFileIcon(filename: string) {
         } else {
           return (
             <a
-              href={file.url || file.path}
+              href={file.url || file.path || file.fileurl}
               class="attachment-item attachment-file"
               download={file.name || file.filename}
               target="_blank"
