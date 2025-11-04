@@ -44,3 +44,6 @@ export function showChangeTag (data: any): boolean{
   }
   return show
 }
+export function isWaiting(task: any): boolean {
+  return task.statusInfo === "待接单"
+}

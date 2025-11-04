@@ -6,6 +6,7 @@ import {
   getTotalMoney,
   getBaseCommission,
   getAddCommission,
+  isWaiting,
 } from "../../utils/map";
 import AttachmentViewer from "../../components/AttachmentViewer.astro";
 
@@ -53,7 +54,7 @@ try {
         ? "（" + task.hall_orderNumber + "）"
         : "";
       taskName =
-        task.statusInfo === "待接单"
+        isWaiting(task)
           ? "接取后可见项目全称"
           : isProject(task.orderType)
             ? task.hall_customer + hall_orderNumber
@@ -943,7 +944,7 @@ try {
                 <span class="info-label">🔢 项目编号</span>
                 <span class="info-value"
                   >{
-                    task.statusInfo === "待接单"
+                    isWaiting(task)
                       ? getTypeName(task.orderType) + "接取后展示"
                       : (task.hall_orderNumber ?? "-")
                   }</span
@@ -1016,7 +1017,7 @@ try {
 
           <!-- 客户信息 -->
 			{
-				custom && (
+				custom && !isWaiting(task) && (
 					<div class="detail-card client-info">
 						<div class="section-title">👤 客户信息</div>
 						<div class="info-grid">
@@ -1050,28 +1051,32 @@ try {
 			}
 
           <!-- 佣金修改记录 -->
-          <div class="detail-card">
-            <div class="section-title">📊 佣金修改记录</div>
-            <div class="history-list">
-              <div class="history-item">
-                <div class="history-date">2025-06-28 15:14:30</div>
-                <div class="history-changes">
-                  <div class="history-change">
-                    <div class="history-label">总用金：</div>
-                    <div class="history-value">202.00</div>
-                  </div>
-                  <div class="history-change">
-                    <div class="history-label">基础佣金：</div>
-                    <div class="history-value">202.00</div>
-                  </div>
-                  <div class="history-change">
-                    <div class="history-label">加价佣金：</div>
-                    <div class="history-value">0.00</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+		   {
+				task.moneyeditlst && task.moneyeditlst.length > 0 && !isWaiting(task) && (
+					<div class="detail-card">
+						<div class="section-title">📊 佣金修改记录</div>
+							<div class="history-list">
+								<div class="history-item">
+									<div class="history-date">2025-06-28 15:14:30</div>
+									<div class="history-changes">
+									<div class="history-change">
+										<div class="history-label">总用金：</div>
+										<div class="history-value">202.00</div>
+									</div>
+									<div class="history-change">
+										<div class="history-label">基础佣金：</div>
+										<div class="history-value">202.00</div>
+									</div>
+									<div class="history-change">
+										<div class="history-label">加价佣金：</div>
+										<div class="history-value">0.00</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				)
+		   }
 
           <!-- 变更记录 -->
           <div class="detail-card">
