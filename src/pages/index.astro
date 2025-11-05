@@ -3,6 +3,7 @@ import FilterDrawer from "../components/FilterDrawer.astro";
 import MobilePicker from "../components/MobilePicker.astro";
 import FilterSection from "../components/FilterSection.astro";
 import { Debug } from "astro:components";
+import { isOldVersion, getTypeName } from "../utils/map";
 
 // 初始化空数据，由客户端加载
 
@@ -585,7 +586,7 @@ const filterGroups = [
     <div class="container">
       <div class="wrap">
         <!-- <Debug data={userInfo} /> -->
-        
+
         <div class="header">
           <div class="nav-tabs">
             <div class="nav-tab active">任务大厅</div>
@@ -724,14 +725,14 @@ const filterGroups = [
     <script :inline src="/js/cookies.js"></script>
 
     <!-- 用户信息全局变量 -->
-    <script is:inline define:vars={{ userInfo }}>
+    <script is:inline define:vars={{ userInfo, isOldVersion, getTypeName }}>
       // 将用户信息设置为全局变量
       window.currentUserInfo = userInfo;
       localStorage.setItem('currentUserInfo', JSON.stringify(userInfo));
       console.log('当前用户信息:', window.currentUserInfo);
 
       // 处理接任务的全局函数
-      window.handleTaskAccept = async function(event, taskId, taskCompanyId, taskCompanyName) {
+      window.handleTaskAccept = async function(event, taskId, taskCompanyId, taskCompanyName, task) {
         event.preventDefault();
 
         const currentUser = window.currentUserInfo;
@@ -747,7 +748,7 @@ const filterGroups = [
         const userCompanyName = currentUser?.companyInfo?.company_name || currentUser.companyName || '';
 
         // 检查是否为非本公司任务
-        if (taskCompanyId && userCompanyName && taskCompanyId !== userCompanyName) {
+        if (taskCompanyId && userCompanyName && taskCompanyName !== userCompanyName) {
           const taskCompanyText = taskCompanyName ? `"${taskCompanyName}"` : '其他公司';
           const userCompanyText = userCompanyName ? `您当前所属公司为"${userCompanyName}"` : '';
 
@@ -762,11 +763,16 @@ const filterGroups = [
         try {
           // 这里添加你的接任务API调用
           // 示例：
-          // const response = await fetch('/api/accept-task', {
-          //   method: 'POST',
-          //   headers: { 'Content-Type': 'application/json' },
-          //   body: JSON.stringify({ taskId })
-          // });
+          window.isOldVersion = isOldVersion;
+          if(isOldVersion(task)){
+            // 处理旧版本逻辑
+            alert(`该条${getTypeName(task)}为旧版本，请到PC端接取`);
+          }
+          const response = await fetch('/taskApi/taskorder/querytask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId })
+          });
 
           console.log('接取任务:', taskId);
           alert('任务接取成功！');
@@ -863,6 +869,13 @@ const filterGroups = [
 
                 if (tasks.length > 0) {
                   tasks.forEach((task: any) => {
+                    if (Object.prototype.toString.call(task.description) === '[object Array]') {
+                      task.description = task.description.map((d: any) => d.condition_title + '：' + d.condition)
+                      if (task.description.length > 0) {
+                        task.description = task.description.join('\n')
+                      }
+                    }
+
                     const taskHTML = createTaskCard(task);
                     taskListContainer.insertAdjacentHTML("beforeend", taskHTML);
                   });

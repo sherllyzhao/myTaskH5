@@ -96,7 +96,7 @@ export function createTaskCardHTML(task: any): string {
       <div class="task-actions">
         <button
           class="btn btn-primary"
-          onclick="handleTaskAccept(event, ${task.id}, '${task.company_id || ''}', '${task.company_name || ''}')"
+          onclick="handleTaskAccept(event, ${task.id}, '${task.company_id || ''}', '${task.company || ''}', '${task}')"
           data-task-id="${task.id}"
           data-company-id="${task.company_id || ''}"
           data-company-name="${task.company_name || ''}"
