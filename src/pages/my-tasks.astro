@@ -298,239 +298,241 @@
 	</head>
 	<body>
 		<div class="container">
-			<div class="header">
-				<div class="nav-tabs">
-					<div class="nav-tab" onclick="window.location.href='/'">任务大厅</div>
-					<div class="nav-tab active">我的任务</div>
-					<div class="nav-tab" onclick="window.location.href='/my-commission'">我的佣金</div>
-				</div>
-
-				<div class="profile-section">
-					<img src="/favicon.svg" alt="用户头像" class="avatar" />
-					<button class="profile-btn">👤 个人主页</button>
-				</div>
-			</div>
-
-			<div class="stats-grid">
-				<div class="stat-card">
-					<div class="stat-title">本月检单数</div>
-					<div class="stat-value">0</div>
-					<div class="stat-detail">项目：0 任务：7</div>
-				</div>
-				<div class="stat-card">
-					<div class="stat-title">本月佣金金额</div>
-					<div class="stat-value">2050.00元</div>
-					<div class="stat-detail">项目：0 任务：0</div>
-				</div>
-				<div class="stat-card">
-					<div class="stat-title">本月完结单数</div>
-					<div class="stat-value">0</div>
-					<div class="stat-detail">项目：0 任务：0</div>
-				</div>
-				<div class="stat-card">
-					<div class="stat-title">本月完结金额</div>
-					<div class="stat-value">0元</div>
-					<div class="stat-detail">项目：0 任务：0</div>
-				</div>
-			</div>
-
-			<div class="filters">
-				<div class="filter-content">
-					<div class="filter-row">
-						<div class="filter-group" data-icon="📝">
-							<input type="text" class="filter-select" placeholder="项目名称或项目编号" />
-						</div>
-						<div class="filter-group" data-icon="📋">
-							<select class="filter-select">
-								<option>全部项目和任务</option>
-							</select>
-						</div>
-						<div class="filter-group" data-icon="⚡">
-							<select class="filter-select">
-								<option>全部执行状态</option>
-							</select>
-						</div>
-						<div class="filter-group" data-icon="💰">
-							<select class="filter-select">
-								<option>开始金额</option>
-							</select>
-						</div>
-						<div class="filter-group" data-icon="💵">
-							<select class="filter-select">
-								<option>结束金额</option>
-							</select>
-						</div>
-					</div>
-					<div class="filter-row">
-						<div class="filter-group" data-icon="📅">
-							<select class="filter-select">
-								<option>发布时间-开始时间</option>
-							</select>
-						</div>
-					</div>
-					<div class="filter-row">
-						<div class="filter-group" data-icon="📅">
-							<select class="filter-select">
-								<option>发布时间-结束时间</option>
-							</select>
-						</div>
-					</div>
-					<div class="filter-row">
-						<div class="filter-group" data-icon="🤝">
-							<select class="filter-select">
-								<option>接单时间-开始时间</option>
-							</select>
-						</div>
-					</div>
-					<div class="filter-row">
-						<div class="filter-group" data-icon="🤝">
-							<select class="filter-select">
-								<option>接单时间-结束时间</option>
-							</select>
-						</div>
-					</div>
-					<div class="filter-row">
-						<div class="filter-group" data-icon="✅">
-							<select class="filter-select">
-								<option>完成时间-开始时间</option>
-							</select>
-						</div>
-					</div>
-					<div class="filter-row">
-						<div class="filter-group" data-icon="✅">
-							<select class="filter-select">
-								<option>完成时间-结束时间</option>
-							</select>
-						</div>
+			<div class="wrap">
+				<div class="header">
+					<div class="nav-tabs">
+						<div class="nav-tab" onclick="window.location.href='/'">任务大厅</div>
+						<div class="nav-tab active">我的任务</div>
+						<div class="nav-tab" onclick="window.location.href='/my-commission'">我的佣金</div>
 					</div>
 
-					<div class="search-tabs">
-						<button class="search-tab" data-icon="🔍">搜索</button>
-						<button class="search-tab secondary" data-icon="🔄">重置</button>
-						<button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">卡片展示</button>
-					</div>
-				</div>
-			</div>
-
-			<div class="content">
-				<div class="task-card card">
-					<div class="task-header">
-						<div class="task-title">尽经理收管出浩果平妖数据</div>
-						<div class="task-status status-剩余天">⏱️ 剩余天</div>
-					</div>
-
-					<div class="task-meta">
-						<div class="meta-item">
-							<div class="meta-label">📋 任务类型</div>
-							<div class="meta-value">前端开发</div>
-						</div>
-						<div class="meta-item">
-							<div class="meta-label">⚡ 工期</div>
-							<div class="meta-value">5工作日</div>
-						</div>
-					</div>
-
-					<div class="task-dates">
-						<div class="dates-row">
-							<span class="date-label">📅 开始日期</span>
-							<span class="date-value">2025-09-29</span>
-						</div>
-						<div class="dates-row">
-							<span class="date-label">🤝 接单日期</span>
-							<span class="date-value">2025-09-29</span>
-						</div>
-						<div class="dates-row">
-							<span class="date-label">⏰ 截止日期</span>
-							<span class="date-value">2025-10-11</span>
-						</div>
-					</div>
-
-					<div class="task-amounts">
-						<div class="amount-item">
-							<div class="amount-label">💰 总佣金</div>
-							<div class="amount-value">¥100.00</div>
-						</div>
-						<div class="amount-item">
-							<div class="amount-label">🎯 基础佣金</div>
-							<div class="amount-value">¥100.00</div>
-						</div>
-						<div class="amount-item">
-							<div class="amount-label">⭐ 加价佣金</div>
-							<div class="amount-value">¥0.00</div>
-						</div>
-					</div>
-
-					<div class="task-remarks">
-						1、处理日督查出浩果平妖数据<br/>
-						2、备片样审-收益片按排<br/>
-						增加判断环录请查查需的各片状...
-					</div>
-
-					<div class="task-action">
-						<button class="action-btn">🔍 查看详情</button>
+					<div class="profile-section">
+						<img src="/favicon.svg" alt="用户头像" class="avatar" />
+						<button class="profile-btn">👤 个人主页</button>
 					</div>
 				</div>
 
-				<div class="task-card card">
-					<div class="task-header">
-						<div class="task-title">建站道问题处理及优化0901-0910</div>
-						<div class="task-status status-逾期天">⚠️ 逾期天</div>
+				<div class="stats-grid">
+					<div class="stat-card">
+						<div class="stat-title">本月检单数</div>
+						<div class="stat-value">0</div>
+						<div class="stat-detail">项目：0 任务：7</div>
 					</div>
-
-					<div class="task-meta">
-						<div class="meta-item">
-							<div class="meta-label">📋 任务类型</div>
-							<div class="meta-value">前端开发</div>
-						</div>
-						<div class="meta-item">
-							<div class="meta-label">⚡ 工期</div>
-							<div class="meta-value">0工作日</div>
-						</div>
+					<div class="stat-card">
+						<div class="stat-title">本月佣金金额</div>
+						<div class="stat-value">2050.00元</div>
+						<div class="stat-detail">项目：0 任务：0</div>
 					</div>
-
-					<div class="task-dates">
-						<div class="dates-row">
-							<span class="date-label">📅 开始日期</span>
-							<span class="date-value">2025-09-29</span>
-						</div>
-						<div class="dates-row">
-							<span class="date-label">🤝 接单日期</span>
-							<span class="date-value">2025-09-29</span>
-						</div>
-						<div class="dates-row">
-							<span class="date-label">⏰ 截止日期</span>
-							<span class="date-value">2025-09-25</span>
-						</div>
+					<div class="stat-card">
+						<div class="stat-title">本月完结单数</div>
+						<div class="stat-value">0</div>
+						<div class="stat-detail">项目：0 任务：0</div>
 					</div>
-
-					<div class="task-amounts">
-						<div class="amount-item">
-							<div class="amount-label">💰 总佣金</div>
-							<div class="amount-value">¥100.00</div>
-						</div>
-						<div class="amount-item">
-							<div class="amount-label">🎯 基础佣金</div>
-							<div class="amount-value">¥100.00</div>
-						</div>
-						<div class="amount-item">
-							<div class="amount-label">⭐ 加价佣金</div>
-							<div class="amount-value">¥0.00</div>
-						</div>
-					</div>
-
-					<div class="task-remarks">
-						建站道问题处理及优化0901-0910
-					</div>
-
-					<div class="task-action">
-						<button class="action-btn">🔍 查看详情</button>
+					<div class="stat-card">
+						<div class="stat-title">本月完结金额</div>
+						<div class="stat-value">0元</div>
+						<div class="stat-detail">项目：0 任务：0</div>
 					</div>
 				</div>
 
-				<div class="pagination">
-					📊 共 6 条记录
-					<button class="page-btn">1</button>
-					每页 9 条
+				<div class="filters">
+					<div class="filter-content">
+						<div class="filter-row">
+							<div class="filter-group" data-icon="📝">
+								<input type="text" class="filter-select" placeholder="项目名称或项目编号" />
+							</div>
+							<div class="filter-group" data-icon="📋">
+								<select class="filter-select">
+									<option>全部项目和任务</option>
+								</select>
+							</div>
+							<div class="filter-group" data-icon="⚡">
+								<select class="filter-select">
+									<option>全部执行状态</option>
+								</select>
+							</div>
+							<div class="filter-group" data-icon="💰">
+								<select class="filter-select">
+									<option>开始金额</option>
+								</select>
+							</div>
+							<div class="filter-group" data-icon="💵">
+								<select class="filter-select">
+									<option>结束金额</option>
+								</select>
+							</div>
+						</div>
+						<div class="filter-row">
+							<div class="filter-group" data-icon="📅">
+								<select class="filter-select">
+									<option>发布时间-开始时间</option>
+								</select>
+							</div>
+						</div>
+						<div class="filter-row">
+							<div class="filter-group" data-icon="📅">
+								<select class="filter-select">
+									<option>发布时间-结束时间</option>
+								</select>
+							</div>
+						</div>
+						<div class="filter-row">
+							<div class="filter-group" data-icon="🤝">
+								<select class="filter-select">
+									<option>接单时间-开始时间</option>
+								</select>
+							</div>
+						</div>
+						<div class="filter-row">
+							<div class="filter-group" data-icon="🤝">
+								<select class="filter-select">
+									<option>接单时间-结束时间</option>
+								</select>
+							</div>
+						</div>
+						<div class="filter-row">
+							<div class="filter-group" data-icon="✅">
+								<select class="filter-select">
+									<option>完成时间-开始时间</option>
+								</select>
+							</div>
+						</div>
+						<div class="filter-row">
+							<div class="filter-group" data-icon="✅">
+								<select class="filter-select">
+									<option>完成时间-结束时间</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="search-tabs">
+							<button class="search-tab" data-icon="🔍">搜索</button>
+							<button class="search-tab secondary" data-icon="🔄">重置</button>
+							<button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">卡片展示</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="content">
+					<div class="task-card card">
+						<div class="task-header">
+							<div class="task-title">尽经理收管出浩果平妖数据</div>
+							<div class="task-status status-剩余天">⏱️ 剩余天</div>
+						</div>
+
+						<div class="task-meta">
+							<div class="meta-item">
+								<div class="meta-label">📋 任务类型</div>
+								<div class="meta-value">前端开发</div>
+							</div>
+							<div class="meta-item">
+								<div class="meta-label">⚡ 工期</div>
+								<div class="meta-value">5工作日</div>
+							</div>
+						</div>
+
+						<div class="task-dates">
+							<div class="dates-row">
+								<span class="date-label">📅 开始日期</span>
+								<span class="date-value">2025-09-29</span>
+							</div>
+							<div class="dates-row">
+								<span class="date-label">🤝 接单日期</span>
+								<span class="date-value">2025-09-29</span>
+							</div>
+							<div class="dates-row">
+								<span class="date-label">⏰ 截止日期</span>
+								<span class="date-value">2025-10-11</span>
+							</div>
+						</div>
+
+						<div class="task-amounts">
+							<div class="amount-item">
+								<div class="amount-label">💰 总佣金</div>
+								<div class="amount-value">¥100.00</div>
+							</div>
+							<div class="amount-item">
+								<div class="amount-label">🎯 基础佣金</div>
+								<div class="amount-value">¥100.00</div>
+							</div>
+							<div class="amount-item">
+								<div class="amount-label">⭐ 加价佣金</div>
+								<div class="amount-value">¥0.00</div>
+							</div>
+						</div>
+
+						<div class="task-remarks">
+							1、处理日督查出浩果平妖数据<br/>
+							2、备片样审-收益片按排<br/>
+							增加判断环录请查查需的各片状...
+						</div>
+
+						<div class="task-action">
+							<button class="action-btn">🔍 查看详情</button>
+						</div>
+					</div>
+
+					<div class="task-card card">
+						<div class="task-header">
+							<div class="task-title">建站道问题处理及优化0901-0910</div>
+							<div class="task-status status-逾期天">⚠️ 逾期天</div>
+						</div>
+
+						<div class="task-meta">
+							<div class="meta-item">
+								<div class="meta-label">📋 任务类型</div>
+								<div class="meta-value">前端开发</div>
+							</div>
+							<div class="meta-item">
+								<div class="meta-label">⚡ 工期</div>
+								<div class="meta-value">0工作日</div>
+							</div>
+						</div>
+
+						<div class="task-dates">
+							<div class="dates-row">
+								<span class="date-label">📅 开始日期</span>
+								<span class="date-value">2025-09-29</span>
+							</div>
+							<div class="dates-row">
+								<span class="date-label">🤝 接单日期</span>
+								<span class="date-value">2025-09-29</span>
+							</div>
+							<div class="dates-row">
+								<span class="date-label">⏰ 截止日期</span>
+								<span class="date-value">2025-09-25</span>
+							</div>
+						</div>
+
+						<div class="task-amounts">
+							<div class="amount-item">
+								<div class="amount-label">💰 总佣金</div>
+								<div class="amount-value">¥100.00</div>
+							</div>
+							<div class="amount-item">
+								<div class="amount-label">🎯 基础佣金</div>
+								<div class="amount-value">¥100.00</div>
+							</div>
+							<div class="amount-item">
+								<div class="amount-label">⭐ 加价佣金</div>
+								<div class="amount-value">¥0.00</div>
+							</div>
+						</div>
+
+						<div class="task-remarks">
+							建站道问题处理及优化0901-0910
+						</div>
+
+						<div class="task-action">
+							<button class="action-btn">🔍 查看详情</button>
+						</div>
+					</div>
+
+					<div class="pagination">
+						📊 共 6 条记录
+						<button class="page-btn">1</button>
+						每页 9 条
+					</div>
 				</div>
 			</div>
 		</div>

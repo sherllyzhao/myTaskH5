@@ -3,7 +3,7 @@ import FilterDrawer from "../components/FilterDrawer.astro";
 import MobilePicker from "../components/MobilePicker.astro";
 import FilterSection from "../components/FilterSection.astro";
 import { Debug } from "astro:components";
-import { isOldVersion, getTypeName } from "../utils/map";
+import ConfirmDialog from '../components/ConfirmDialog.astro';
 
 // 初始化空数据，由客户端加载
 
@@ -571,12 +571,6 @@ const filterGroups = [
         color: #374151;
       }
     </style>
-    <style>
-      .wrap{
-        height: 100%;
-        overflow: auto;
-      }
-    </style>
   </head>
   <body>
     <!-- 移动端选择器弹层 -->
@@ -720,19 +714,41 @@ const filterGroups = [
           </div>
         </Fragment>
       </FilterDrawer>
+
+      <ConfirmDialog
+          id="myDialog"
+          title="提示"
+          message="接单后需要根据内容指派，请及时把控工期进度。"
+          confirmText="确定"
+          cancelText="取消"
+        />
     </div>
 
     <script :inline src="/js/cookies.js"></script>
 
     <!-- 用户信息全局变量 -->
-    <script is:inline define:vars={{ userInfo, isOldVersion, getTypeName }}>
+    <script is:inline define:vars={{ userInfo }}>
       // 将用户信息设置为全局变量
       window.currentUserInfo = userInfo;
       localStorage.setItem('currentUserInfo', JSON.stringify(userInfo));
       console.log('当前用户信息:', window.currentUserInfo);
 
+      // 定义工具函数（从 map.ts 复制）
+      function isOldVersion(task) {
+        return task.orderType === 1;
+      }
+
+      function getTypeName(task) {
+        const typeNameMap = {
+          2: '项目',
+          1: '任务',
+          3: '任务',
+        };
+        return typeNameMap[task.orderType] || '未知';
+      }
+
       // 处理接任务的全局函数
-      window.handleTaskAccept = async function(event, taskId, taskCompanyId, taskCompanyName, task) {
+      window.handleTaskAccept = function(event, taskId, taskCompanyId, taskCompanyName, task) {
         event.preventDefault();
 
         const currentUser = window.currentUserInfo;
@@ -759,23 +775,45 @@ const filterGroups = [
           }
         }
 
+        // 检查是否为旧版本任务
+        if(isOldVersion(task)){
+          alert(`该条${getTypeName(task)}为旧版本，请到PC端接取`);
+          return;
+        }
+
         // 执行接任务的逻辑
         try {
-          // 这里添加你的接任务API调用
-          // 示例：
-          window.isOldVersion = isOldVersion;
-          if(isOldVersion(task)){
-            // 处理旧版本逻辑
-            alert(`该条${getTypeName(task)}为旧版本，请到PC端接取`);
-          }
-          const response = await fetch('/taskApi/taskorder/querytask', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ taskId })
-          });
+          const dialog = document.getElementById('myDialog');
+            dialog.show({
+              message: '接单后需要根据内容指派，请及时把控工期进度。',
+              onConfirm: async () => {
+                const response = await fetch('/taskApi/taskorder/addtask', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id: taskId, remark: '1', tokens: Cookies.get('employee_token') })
+                });
+
+                if(response.ok){
+                  if(response.status === 200){
+                    const res = await response.json();
+                    if(res.code === 1){
+                      // 处理成功逻辑
+                      alert('接单成功，祝您工作愉快！');
+                      window.location.reload();
+                    }else{
+                      alert(res.msg || res.message || "接取任务失败，请重试")
+                    }
+                  }
+                }else{
+                  alert('接取任务失败，请重试');
+                }
+              },
+              onCancel: () => {
+                console.log('用户点击了取消');
+              }
+            });
 
           console.log('接取任务:', taskId);
-          alert('任务接取成功！');
 
           // 刷新列表或跳转到任务详情页
           // window.location.reload();

@@ -1,0 +1,336 @@
+---
+interface Props {
+  id?: string;
+  title?: string;
+  message?: string;
+  confirmText?: string;
+  cancelText?: string;
+  loading?: boolean;
+}
+
+const {
+  id = 'confirmDialog',
+  title = '提示',
+  message = '',
+  confirmText = '确定',
+  cancelText = '取消',
+  loading = false,
+} = Astro.props as Props;
+---
+
+<div id={id} class="dialog-overlay" role="dialog" aria-modal="true" data-loading={loading ? 'true' : 'false'}>
+  <div class="dialog-container">
+    <div class="dialog-content">
+      {title && <div class="dialog-title">{title}</div>}
+      <div class="dialog-message">
+        <slot>{message}</slot>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="dialog-btn dialog-btn-cancel" type="button">
+        {cancelText}
+      </button>
+      <button class="dialog-btn dialog-btn-confirm" type="button">
+        <span class="btn-text">{confirmText}</span>
+        <span class="btn-spinner"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .dialog-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dialog-overlay.show {
+    display: flex;
+  }
+
+  .dialog-container {
+    background: #fff;
+    border-radius: 16px;
+    width: 85%;
+    max-width: 320px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    animation: dialogSlideIn 0.3s ease-out;
+  }
+
+  @keyframes dialogSlideIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .dialog-content {
+    padding: 20px;
+  }
+
+  .dialog-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .dialog-message {
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .dialog-actions {
+    display: flex;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .dialog-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    background: none;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dialog-btn:active {
+    background-color: #f3f4f6;
+  }
+
+  .dialog-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .dialog-btn:disabled:active {
+    background-color: transparent;
+  }
+
+  .dialog-btn-cancel {
+    color: #6b7280;
+    border-right: 1px solid #e5e7eb;
+  }
+
+  .dialog-btn-confirm {
+    color: #2563eb;
+    font-weight: 600;
+  }
+
+  .btn-text {
+    display: inline-block;
+  }
+
+  .btn-spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #2563eb;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spinner-rotate 0.6s linear infinite;
+    margin-left: 8px;
+  }
+
+  .dialog-btn-confirm.loading .btn-spinner {
+    display: inline-block;
+  }
+
+  @keyframes spinner-rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const el = document.currentScript && document.currentScript.previousElementSibling;
+    if (!el) return;
+
+    const confirmBtn = el.querySelector('.dialog-btn-confirm');
+    const cancelBtn = el.querySelector('.dialog-btn-cancel');
+    const messageEl = el.querySelector('.dialog-message');
+    const titleEl = el.querySelector('.dialog-title');
+    const confirmTextEl = confirmBtn?.querySelector('.btn-text');
+
+    let onConfirm = null;
+    let onCancel = null;
+    // 从 data-loading 属性读取初始加载状态
+    let isLoading = el.getAttribute('data-loading') === 'true';
+
+    // 设置加载状态
+    const setLoading = (loading) => {
+      isLoading = loading;
+      if (!confirmBtn) return;
+
+      // 同步更新 data-loading 属性
+      el.setAttribute('data-loading', loading ? 'true' : 'false');
+
+      if (loading) {
+        confirmBtn.classList.add('loading');
+        confirmBtn.disabled = true;
+        cancelBtn && (cancelBtn.disabled = true);
+      } else {
+        confirmBtn.classList.remove('loading');
+        confirmBtn.disabled = false;
+        cancelBtn && (cancelBtn.disabled = false);
+      }
+    };
+
+    // 监听 data-loading 属性变化（支持父组件通过属性控制）
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-loading') {
+          const newLoading = el.getAttribute('data-loading') === 'true';
+          if (newLoading !== isLoading) {
+            setLoading(newLoading);
+          }
+        }
+      });
+    });
+
+    observer.observe(el, { attributes: true });
+
+    // 应用初始加载状态
+    if (isLoading) {
+      setLoading(true);
+    }
+
+    // 显示弹窗
+    const show = (options = {}) => {
+      if (options.message !== undefined && messageEl) {
+        messageEl.textContent = String(options.message);
+      }
+      if (options.title !== undefined && titleEl) {
+        titleEl.textContent = String(options.title);
+      }
+      if (options.confirmText !== undefined && confirmTextEl) {
+        confirmTextEl.textContent = String(options.confirmText);
+      }
+      if (options.cancelText !== undefined && cancelBtn) {
+        cancelBtn.textContent = String(options.cancelText);
+      }
+      if (options.onConfirm) {
+        onConfirm = options.onConfirm;
+      }
+      if (options.onCancel) {
+        onCancel = options.onCancel;
+      }
+
+      // 重置加载状态
+      setLoading(false);
+
+      el.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    };
+
+    // 隐藏弹窗
+    const hide = () => {
+      el.classList.remove('show');
+      document.body.style.overflow = '';
+      setLoading(false);
+      onConfirm = null;
+      onCancel = null;
+    };
+
+    // 确定按钮点击
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', async () => {
+        if (isLoading) return;
+
+        if (typeof onConfirm === 'function') {
+          // 如果 onConfirm 返回 Promise，自动处理加载状态
+          const result = onConfirm();
+          if (result && typeof result.then === 'function') {
+            setLoading(true);
+            try {
+              await result;
+              hide();
+            } catch (error) {
+              setLoading(false);
+              // 不自动隐藏，让调用方处理错误
+            }
+          } else {
+            hide();
+          }
+        } else {
+          hide();
+        }
+      });
+    }
+
+    // 取消按钮点击
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        if (isLoading) return;
+
+        if (typeof onCancel === 'function') {
+          onCancel();
+        }
+        hide();
+      });
+    }
+
+    // 点击遮罩层关闭
+    el.addEventListener('click', (e) => {
+      if (isLoading) return;
+
+      if (e.target === el) {
+        if (typeof onCancel === 'function') {
+          onCancel();
+        }
+        hide();
+      }
+    });
+
+    // 绑定到元素实例
+    try {
+      // @ts-ignore
+      el.show = show;
+      // @ts-ignore
+      el.hide = hide;
+      // @ts-ignore
+      el.setLoading = setLoading;
+    } catch {}
+
+    // 暴露到 window.ConfirmDialog[id]
+    try {
+      const gid = el.id || 'anonymous';
+      const g = window;
+      // @ts-ignore
+      g.ConfirmDialog = g.ConfirmDialog || {};
+      // @ts-ignore
+      g.ConfirmDialog[gid] = { show, hide, setLoading };
+    } catch {}
+
+    // 清理
+    window.addEventListener('beforeunload', () => {
+      document.body.style.overflow = '';
+    });
+  })();
+</script>
