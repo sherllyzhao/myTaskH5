@@ -1,4 +1,12 @@
 ---
+import FilterDrawer from "../components/FilterDrawer.astro";
+import MobilePicker from "../components/MobilePicker.astro";
+import FilterSection from "../components/FilterSection.astro";
+import PageHeader from '../components/PageHeader.astro';
+import StatsGrid from '../components/StatsGrid.astro';
+import FilterBar from '../components/FilterBar.astro';
+import ConfirmDialog from '../components/ConfirmDialog.astro';
+
 // 初始化空数据,由客户端加载
 
 /* 统计 */
@@ -69,6 +77,126 @@ try {
 }
 
 const taskStats = taskStatsRes || {};
+
+// 筛选组件配置
+const filterGroups = [
+  {
+    title: "基础筛选",
+    items: [
+      {
+        type: "input",
+        icon: "📋",
+        name: "name",
+        placeholder: "项目名称或项目编号",
+        width: "full"
+      },
+      {
+        type: "picker",
+        icon: "📁",
+        name: "projectTask",
+        placeholder: "项目类型",
+        pickerKey: "projectTask",
+        width: "full",
+        defaultValue: '0',
+        options: [
+          {label: "全部项目和任务", value: "0"},
+          {label: "仅项目", value: "1"},
+          {label: "仅任务", value: "2"},
+        ]
+      },
+      {
+        type: "picker",
+        icon: "🔽",
+        name: "order",
+        placeholder: "排序",
+        pickerKey: "order",
+        width: "full",
+        defaultValue: "id",
+        options: [
+          {
+            label: '发布时间由近到远排序',
+            value: 'id',
+          },
+          {
+            label: '佣金变更时间由近到远排序',
+            value: 'commission_edittime',
+          },
+          {
+            label: '工期到期天数由近到远排序',
+            value: 'syday',
+          }
+        ]
+      },
+      {
+        type: "number",
+        icon: "💰",
+        name: "amountStart",
+        placeholder: "开始金额",
+        width: "half",
+      },
+      {
+        type: "number",
+        icon: "💰",
+        name: "amountEnd",
+        placeholder: "结束金额",
+        width: "half",
+      }
+    ]
+  },
+  {
+    title: "时间筛选",
+    items: [
+      {
+        type: "date-time-picker",
+        icon: "📅",
+        name: "publishStart",
+        placeholder: "发布开始",
+        pickerKey: "publishStart",
+        width: "half"
+      },
+      {
+        type: "date-time-picker",
+        icon: "📅",
+        name: "publishEnd",
+        placeholder: "发布结束",
+        pickerKey: "publishEnd",
+        width: "half"
+      },
+      {
+        type: "date-time-picker",
+        icon: "📅",
+        name: "deadlineStart",
+        placeholder: "截止开始",
+        pickerKey: "deadlineStart",
+        width: "half"
+      },
+      {
+        type: "date-time-picker",
+        icon: "📅",
+        name: "deadlineEnd",
+        placeholder: "截止结束",
+        pickerKey: "deadlineEnd",
+        width: "half"
+      },
+      {
+        type: "date-time-picker",
+        icon: "📅",
+        name: "orderStart",
+        placeholder: "接单开始",
+        pickerKey: "orderStart",
+        width: "half"
+      },
+      {
+        type: "date-time-picker",
+        icon: "📅",
+        name: "orderEnd",
+        placeholder: "接单结束",
+        pickerKey: "orderEnd",
+        width: "half"
+      }
+    ]
+  }
+];
 ---
 
 <html lang="zh-CN">
@@ -79,416 +207,21 @@ const taskStats = taskStatsRes || {};
 		<meta name="generator" content={Astro.generator} />
 		<title>我的任务</title>
 		<link rel="stylesheet" href="/common.css" />
+		<link rel="stylesheet" href="/task-styles.css" />
 		<script src="/js/auth.js" defer></script>
-		<style>
-			/* 我的任务页面特有样式 */
-			.task-card {
-				position: relative;
-				overflow: hidden;
-			}
-
-			.task-header {
-				display: flex;
-				justify-content: space-between;
-				align-items: flex-start;
-				margin-bottom: 16px;
-			}
-
-			.task-title {
-				font-size: 17px;
-				font-weight: 700;
-				color: #1e293b;
-				flex: 1;
-				margin-right: 12px;
-				line-height: 1.4;
-				background: linear-gradient(135deg, #667eea 0%, #764ba2 70%);
-				-webkit-background-clip: text;
-				-webkit-text-fill-color: transparent;
-				background-clip: text;
-			}
-
-			.task-status {
-				padding: 8px 16px;
-				border-radius: 25px;
-				font-size: 12px;
-				font-weight: 700;
-				white-space: nowrap;
-				letter-spacing: 0.5px;
-				text-transform: uppercase;
-				box-shadow:
-					0 4px 12px rgba(0, 0, 0, 0.15),
-					inset 0 1px 0 rgba(255, 255, 255, 0.3);
-				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-			}
-
-			.task-meta {
-				display: grid;
-				grid-template-columns: 1fr 1fr;
-				gap: 16px;
-				margin-bottom: 16px;
-				padding: 16px;
-				background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-				border-radius: 12px;
-				border: 1px solid #e2e8f0;
-			}
-
-			.meta-item {
-				text-align: center;
-			}
-
-			.meta-label {
-				color: #64748b;
-				font-weight: 600;
-				margin-bottom: 6px;
-				font-size: 12px;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-			}
-
-			.meta-value {
-				color: #1e293b;
-				font-weight: 700;
-				font-size: 14px;
-				background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-				-webkit-background-clip: text;
-				-webkit-text-fill-color: transparent;
-				background-clip: text;
-			}
-
-			.task-dates {
-				background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-				padding: 16px;
-				border-radius: 12px;
-				margin-bottom: 16px;
-				border: 2px solid #fbbf24;
-				position: relative;
-				overflow: hidden;
-			}
-
-			.task-dates::before {
-				content: '';
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				height: 3px;
-				background: linear-gradient(90deg, #f59e0b, #d97706, #b45309);
-			}
-
-			.dates-row {
-				display: flex;
-				justify-content: space-between;
-				font-size: 13px;
-				margin-bottom: 8px;
-				align-items: center;
-			}
-
-			.dates-row:last-child {
-				margin-bottom: 0;
-			}
-
-			.date-label {
-				color: #92400e;
-				font-weight: 600;
-				min-width: 80px;
-			}
-
-			.date-value {
-				color: #78350f;
-				font-weight: 700;
-				text-align: right;
-			}
-
-			.task-amounts {
-				display: grid;
-				grid-template-columns: 1fr 1fr 1fr;
-				gap: 12px;
-				margin-bottom: 16px;
-				padding: 20px;
-				background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
-				border-radius: 16px;
-				border: 2px solid #e9d5ff;
-				position: relative;
-				overflow: hidden;
-			}
-
-			.task-amounts::before {
-				content: '';
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				height: 3px;
-				background: linear-gradient(90deg, #c084fc, #a855f7, #9333ea);
-			}
-
-			.amount-item {
-				text-align: center;
-				position: relative;
-			}
-
-			.amount-item::after {
-				content: '';
-				position: absolute;
-				top: -10px;
-				left: 50%;
-				transform: translateX(-50%);
-				width: 4px;
-				height: 4px;
-				background: #a855f7;
-				border-radius: 50%;
-				opacity: 0.6;
-			}
-
-			.amount-label {
-				font-size: 10px;
-				color: #7c3aed;
-				font-weight: 600;
-				margin-bottom: 6px;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-			}
-
-			.amount-value {
-				font-size: 14px;
-				font-weight: 800;
-				background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%);
-				-webkit-background-clip: text;
-				-webkit-text-fill-color: transparent;
-				background-clip: text;
-			}
-
-			.task-remarks {
-				font-size: 13px;
-				color: #475569;
-				line-height: 1.5;
-				margin-bottom: 20px;
-				background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-				padding: 16px;
-				border-radius: 12px;
-				border-left: 4px solid #0ea5e9;
-				font-style: italic;
-				position: relative;
-			}
-
-			.task-remarks::before {
-				content: '💬';
-				position: absolute;
-				top: 12px;
-				left: 12px;
-				font-size: 16px;
-			}
-
-			.task-remarks {
-				padding-left: 40px;
-			}
-
-			.task-action {
-				text-align: center;
-			}
-
-			.task-action .action-btn {
-				width: 100%;
-				padding: 16px 20px;
-				font-size: 15px;
-				font-weight: 600;
-				border-radius: 16px;
-				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-				box-shadow:
-					0 8px 24px rgba(102, 126, 234, 0.3),
-					inset 0 1px 0 rgba(255, 255, 255, 0.2);
-				transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-				position: relative;
-				overflow: hidden;
-			}
-
-			.task-action .action-btn::before {
-				content: '';
-				position: absolute;
-				top: 0;
-				left: -100%;
-				width: 100%;
-				height: 100%;
-				background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-				transition: left 0.6s;
-			}
-
-			.task-action .action-btn:hover {
-				transform: translateY(-3px) scale(1.05);
-				box-shadow:
-					0 16px 40px rgba(102, 126, 234, 0.4),
-					inset 0 1px 0 rgba(255, 255, 255, 0.3);
-			}
-
-			.task-action .action-btn:hover::before {
-				left: 100%;
-			}
-
-			/* 卡片装饰元素 */
-			.task-card::after {
-				content: '';
-				position: absolute;
-				bottom: -50%;
-				left: -50%;
-				width: 200%;
-				height: 200%;
-				background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
-				transform: rotate(45deg);
-				opacity: 0;
-				transition: all 0.4s ease;
-			}
-
-			.task-card:hover::after {
-				opacity: 1;
-				bottom: -40%;
-				left: -40%;
-			}
-
-			.task-card:hover {
-				transform: translateY(-8px) scale(1.02);
-			}
-
-			.task-card:hover .task-title {
-				background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-				-webkit-background-clip: text;
-				-webkit-text-fill-color: transparent;
-				background-clip: text;
-			}
-
-			.task-card:hover .amount-value {
-				animation: number-glow 2s ease-in-out infinite;
-			}
-
-			@keyframes number-glow {
-				0%, 100% { transform: scale(1); }
-				50% { transform: scale(1.05); }
-			}
-		</style>
 	</head>
 	<body>
+		<!-- 移动端选择器弹层 -->
+		<MobilePicker />
+
+		<script is:inline src="/js/drawer.js"></script>
 		<div class="container">
 			<div class="wrap">
-				<div class="header">
-					<div class="nav-tabs">
-						<div class="nav-tab" onclick="window.location.href='/'">任务大厅</div>
-						<div class="nav-tab active">我的任务</div>
-						<div class="nav-tab" onclick="window.location.href='/my-commission'">我的佣金</div>
-					</div>
+				<PageHeader userInfo={userInfo} currentTab="tasks" />
 
-					<div class="profile-section">
-						<img src={userInfo?.memberInfo?.avatar || '/favicon.svg'} alt="用户头像" class="avatar" />
-						<a href="/profile" class="profile-btn">个人主页</a>
-					</div>
-				</div>
+				<StatsGrid taskStats={taskStats} />
 
-				<div class="stats-grid">
-					<div class="stat-card">
-						<div class="stat-title">本月抢单数</div>
-						<div class="stat-detail">
-							<div>项目：<span class="stat-value">{taskStats?.qd_num?.xmnum || 0}</span></div>
-							<div>任务：<span class="stat-value">{taskStats?.qd_num?.rwnum || 0}</span></div>
-						</div>
-					</div>
-					<div class="stat-card">
-						<div class="stat-title">本月佣金金额</div>
-						<div class="stat-detail">
-							<div>项目：<span class="stat-value"><i>￥</i>{taskStats?.qd_price?.xmprice || 0}</span></div>
-							<div>任务：<span class="stat-value"><i>￥</i>{taskStats?.qd_price?.rwprice || 0}</span></div>
-						</div>
-					</div>
-					<div class="stat-card">
-						<div class="stat-title">本月完结单数</div>
-						<div class="stat-detail">
-							<div>项目：<span class="stat-value">{taskStats?.end_num?.xmnum || 0}</span></div>
-							<div>任务：<span class="stat-value">{taskStats?.end_num?.rwnum || 0}</span></div>
-						</div>
-					</div>
-					<div class="stat-card">
-						<div class="stat-title">本月完结金额</div>
-						<div class="stat-detail">
-							<div>项目：<span class="stat-value"><i>￥</i>{taskStats?.end_price?.xmprice || 0}</span></div>
-							<div>任务：<span class="stat-value"><i>￥</i>{taskStats?.end_price?.rwprice || 0}</span></div>
-						</div>
-					</div>
-				</div>
-
-				<div class="filters">
-					<div class="filter-content">
-						<div class="filter-row">
-							<div class="filter-group" data-icon="📝">
-								<input type="text" class="filter-select" placeholder="项目名称或项目编号" />
-							</div>
-							<div class="filter-group" data-icon="📋">
-								<select class="filter-select">
-									<option>全部项目和任务</option>
-								</select>
-							</div>
-							<div class="filter-group" data-icon="⚡">
-								<select class="filter-select">
-									<option>全部执行状态</option>
-								</select>
-							</div>
-							<div class="filter-group" data-icon="💰">
-								<select class="filter-select">
-									<option>开始金额</option>
-								</select>
-							</div>
-							<div class="filter-group" data-icon="💵">
-								<select class="filter-select">
-									<option>结束金额</option>
-								</select>
-							</div>
-						</div>
-						<div class="filter-row">
-							<div class="filter-group" data-icon="📅">
-								<select class="filter-select">
-									<option>发布时间-开始时间</option>
-								</select>
-							</div>
-						</div>
-						<div class="filter-row">
-							<div class="filter-group" data-icon="📅">
-								<select class="filter-select">
-									<option>发布时间-结束时间</option>
-								</select>
-							</div>
-						</div>
-						<div class="filter-row">
-							<div class="filter-group" data-icon="🤝">
-								<select class="filter-select">
-									<option>接单时间-开始时间</option>
-								</select>
-							</div>
-						</div>
-						<div class="filter-row">
-							<div class="filter-group" data-icon="🤝">
-								<select class="filter-select">
-									<option>接单时间-结束时间</option>
-								</select>
-							</div>
-						</div>
-						<div class="filter-row">
-							<div class="filter-group" data-icon="✅">
-								<select class="filter-select">
-									<option>完成时间-开始时间</option>
-								</select>
-							</div>
-						</div>
-						<div class="filter-row">
-							<div class="filter-group" data-icon="✅">
-								<select class="filter-select">
-									<option>完成时间-结束时间</option>
-								</select>
-							</div>
-						</div>
-
-						<div class="search-tabs">
-							<button class="search-tab" data-icon="🔍">搜索</button>
-							<button class="search-tab secondary" data-icon="🔄">重置</button>
-							<button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">卡片展示</button>
-						</div>
-					</div>
-				</div>
+				<FilterBar />
 
 				<div class="content">
 					<!-- 任务列表容器 - 状态元素将自动创建 -->
@@ -497,9 +230,35 @@ const taskStats = taskStatsRes || {};
 					</div>
 				</div>
 			</div>
+
+			<!-- 筛选器抽屉组件 -->
+			<FilterDrawer id="filterDrawer" title="筛选条件">
+				<Fragment slot="header">
+					<h3 class="filter-drawer-title">筛选条件</h3>
+					<button class="filter-drawer-close" onclick="closeFilterDrawer()">✕</button>
+				</Fragment>
+
+				<!-- 筛选组件 -->
+				<FilterSection groups={filterGroups} />
+
+				<Fragment slot="footer">
+					<div class="filter-actions">
+						<button class="filter-btn filter-btn-secondary" onclick="resetFilters()">🔄 重置</button>
+						<button class="filter-btn filter-btn-primary" onclick="applyFilters(window.loadInitialData)">🔍 应用筛选</button>
+					</div>
+				</Fragment>
+			</FilterDrawer>
+
+			<ConfirmDialog
+				id="myDialog"
+				title="提示"
+				message="接单后需要根据内容指派，请及时把控工期进度。"
+				confirmText="确定"
+				cancelText="取消"
+			/>
 		</div>
 
-		<script is:inline src="/js/cookies.js"></script>
+		<script :inline src="/js/cookies.js"></script>
 
 		<!-- 用户信息全局变量 -->
 		<script is:inline define:vars={{ userInfo }}>

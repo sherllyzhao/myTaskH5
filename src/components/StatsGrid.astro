@@ -1,0 +1,38 @@
+---
+interface Props {
+	taskStats: any;
+}
+
+const { taskStats = {} } = Astro.props;
+---
+
+<div class="stats-grid">
+	<div class="stat-card">
+		<div class="stat-title">本月抢单数</div>
+		<div class="stat-detail">
+			<div>项目：<span class="stat-value">{taskStats?.qd_num?.xmnum || 0}</span></div>
+			<div>任务：<span class="stat-value">{taskStats?.qd_num?.rwnum || 0}</span></div>
+		</div>
+	</div>
+	<div class="stat-card">
+		<div class="stat-title">本月佣金金额</div>
+		<div class="stat-detail">
+			<div>项目：<span class="stat-value"><i>￥</i>{taskStats?.qd_price?.xmprice || 0}</span></div>
+			<div>任务：<span class="stat-value"><i>￥</i>{taskStats?.qd_price?.rwprice || 0}</span></div>
+		</div>
+	</div>
+	<div class="stat-card">
+		<div class="stat-title">本月完结单数</div>
+		<div class="stat-detail">
+			<div>项目：<span class="stat-value">{taskStats?.end_num?.xmnum || 0}</span></div>
+			<div>任务：<span class="stat-value">{taskStats?.end_num?.rwnum || 0}</span></div>
+		</div>
+	</div>
+	<div class="stat-card">
+		<div class="stat-title">本月完结金额</div>
+		<div class="stat-detail">
+			<div>项目：<span class="stat-value"><i>￥</i>{taskStats?.end_price?.xmprice || 0}</span></div>
+			<div>任务：<span class="stat-value"><i>￥</i>{taskStats?.end_price?.rwprice || 0}</span></div>
+		</div>
+	</div>
+</div>

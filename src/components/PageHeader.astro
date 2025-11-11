@@ -1,0 +1,36 @@
+---
+interface Props {
+	userInfo: any;
+	currentTab: 'hall' | 'tasks' | 'commission';
+}
+
+const { userInfo, currentTab } = Astro.props;
+---
+
+<div class="header">
+	<div class="nav-tabs">
+		<div
+			class={`nav-tab ${currentTab === 'hall' ? 'active' : ''}`}
+			onclick="window.location.href='/'"
+		>
+			任务大厅
+		</div>
+		<div
+			class={`nav-tab ${currentTab === 'tasks' ? 'active' : ''}`}
+			onclick="window.location.href='/my-tasks'"
+		>
+			我的任务
+		</div>
+		<div
+			class={`nav-tab ${currentTab === 'commission' ? 'active' : ''}`}
+			onclick="window.location.href='/my-commission'"
+		>
+			我的佣金
+		</div>
+	</div>
+
+	<div class="profile-section">
+		<img src={userInfo?.memberInfo?.avatar || '/favicon.svg'} alt="用户头像" class="avatar" />
+		<a href="/profile" class="profile-btn">个人主页</a>
+	</div>
+</div>
