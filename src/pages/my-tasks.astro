@@ -1,5 +1,74 @@
 ---
+// 初始化空数据,由客户端加载
 
+/* 统计 */
+let taskStatsRes: any;
+let userInfo: any = null;
+const proxyUrl = `${Astro.url.origin}/proxy`;
+const proxyChina9Url = `${Astro.url.origin}/proxyChina9`;
+
+try {
+  // 获取用户信息
+  const userInfoResponse = await fetch(proxyChina9Url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Cookie": Astro.request.headers.get("cookie") || "",
+    },
+    body: JSON.stringify({
+      path: "/user/infoClient",
+    }),
+  });
+
+  if (userInfoResponse.status === 200) {
+    const userInfoResult = await userInfoResponse.json();
+    if (userInfoResult.code === 200) {
+      userInfo = userInfoResult.data;
+    }
+  }
+} catch (error: any) {
+  console.error("❌ 获取用户信息失败:", error);
+}
+
+try {
+  // 统计数据
+  const statsResponse = await fetch(proxyUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Cookie": Astro.request.headers.get("cookie") || "",
+    },
+    body: JSON.stringify({
+      path: "/taskorder/monthinfo",
+    }),
+  });
+  // 检查HTTP状态码401
+  if (statsResponse.status === 401) {
+    // 在SSR环境下无法直接跳转,返回空数据让前端处理
+    taskStatsRes = {
+      list: [],
+      total: 0,
+      error: "未授权,请重新登录",
+      code: 401,
+    };
+  } else {
+    const statsRes = await statsResponse.json();
+    // 检查业务状态码401
+    if (statsRes.code === 401) {
+      taskStatsRes = {
+        data: {},
+        error: "未授权,请重新登录",
+        code: 401,
+      };
+    } else if (statsRes.code === 1) {
+      taskStatsRes = statsRes.data || statsRes;
+    }
+  }
+} catch (error: any) {
+  console.error("❌ SSR Error:", error);
+}
+
+const taskStats = taskStatsRes || {};
 ---
 
 <html lang="zh-CN">
@@ -307,31 +376,39 @@
 					</div>
 
 					<div class="profile-section">
-						<img src="/favicon.svg" alt="用户头像" class="avatar" />
-						<button class="profile-btn">👤 个人主页</button>
+						<img src={userInfo?.memberInfo?.avatar || '/favicon.svg'} alt="用户头像" class="avatar" />
+						<a href="/profile" class="profile-btn">个人主页</a>
 					</div>
 				</div>
 
 				<div class="stats-grid">
 					<div class="stat-card">
-						<div class="stat-title">本月检单数</div>
-						<div class="stat-value">0</div>
-						<div class="stat-detail">项目：0 任务：7</div>
+						<div class="stat-title">本月抢单数</div>
+						<div class="stat-detail">
+							<div>项目：<span class="stat-value">{taskStats?.qd_num?.xmnum || 0}</span></div>
+							<div>任务：<span class="stat-value">{taskStats?.qd_num?.rwnum || 0}</span></div>
+						</div>
 					</div>
 					<div class="stat-card">
 						<div class="stat-title">本月佣金金额</div>
-						<div class="stat-value">2050.00元</div>
-						<div class="stat-detail">项目：0 任务：0</div>
+						<div class="stat-detail">
+							<div>项目：<span class="stat-value"><i>￥</i>{taskStats?.qd_price?.xmprice || 0}</span></div>
+							<div>任务：<span class="stat-value"><i>￥</i>{taskStats?.qd_price?.rwprice || 0}</span></div>
+						</div>
 					</div>
 					<div class="stat-card">
 						<div class="stat-title">本月完结单数</div>
-						<div class="stat-value">0</div>
-						<div class="stat-detail">项目：0 任务：0</div>
+						<div class="stat-detail">
+							<div>项目：<span class="stat-value">{taskStats?.end_num?.xmnum || 0}</span></div>
+							<div>任务：<span class="stat-value">{taskStats?.end_num?.rwnum || 0}</span></div>
+						</div>
 					</div>
 					<div class="stat-card">
 						<div class="stat-title">本月完结金额</div>
-						<div class="stat-value">0元</div>
-						<div class="stat-detail">项目：0 任务：0</div>
+						<div class="stat-detail">
+							<div>项目：<span class="stat-value"><i>￥</i>{taskStats?.end_price?.xmprice || 0}</span></div>
+							<div>任务：<span class="stat-value"><i>￥</i>{taskStats?.end_price?.rwprice || 0}</span></div>
+						</div>
 					</div>
 				</div>
 
@@ -414,127 +491,258 @@
 				</div>
 
 				<div class="content">
-					<div class="task-card card">
-						<div class="task-header">
-							<div class="task-title">尽经理收管出浩果平妖数据</div>
-							<div class="task-status status-剩余天">⏱️ 剩余天</div>
-						</div>
-
-						<div class="task-meta">
-							<div class="meta-item">
-								<div class="meta-label">📋 任务类型</div>
-								<div class="meta-value">前端开发</div>
-							</div>
-							<div class="meta-item">
-								<div class="meta-label">⚡ 工期</div>
-								<div class="meta-value">5工作日</div>
-							</div>
-						</div>
-
-						<div class="task-dates">
-							<div class="dates-row">
-								<span class="date-label">📅 开始日期</span>
-								<span class="date-value">2025-09-29</span>
-							</div>
-							<div class="dates-row">
-								<span class="date-label">🤝 接单日期</span>
-								<span class="date-value">2025-09-29</span>
-							</div>
-							<div class="dates-row">
-								<span class="date-label">⏰ 截止日期</span>
-								<span class="date-value">2025-10-11</span>
-							</div>
-						</div>
-
-						<div class="task-amounts">
-							<div class="amount-item">
-								<div class="amount-label">💰 总佣金</div>
-								<div class="amount-value">¥100.00</div>
-							</div>
-							<div class="amount-item">
-								<div class="amount-label">🎯 基础佣金</div>
-								<div class="amount-value">¥100.00</div>
-							</div>
-							<div class="amount-item">
-								<div class="amount-label">⭐ 加价佣金</div>
-								<div class="amount-value">¥0.00</div>
-							</div>
-						</div>
-
-						<div class="task-remarks">
-							1、处理日督查出浩果平妖数据<br/>
-							2、备片样审-收益片按排<br/>
-							增加判断环录请查查需的各片状...
-						</div>
-
-						<div class="task-action">
-							<button class="action-btn">🔍 查看详情</button>
-						</div>
-					</div>
-
-					<div class="task-card card">
-						<div class="task-header">
-							<div class="task-title">建站道问题处理及优化0901-0910</div>
-							<div class="task-status status-逾期天">⚠️ 逾期天</div>
-						</div>
-
-						<div class="task-meta">
-							<div class="meta-item">
-								<div class="meta-label">📋 任务类型</div>
-								<div class="meta-value">前端开发</div>
-							</div>
-							<div class="meta-item">
-								<div class="meta-label">⚡ 工期</div>
-								<div class="meta-value">0工作日</div>
-							</div>
-						</div>
-
-						<div class="task-dates">
-							<div class="dates-row">
-								<span class="date-label">📅 开始日期</span>
-								<span class="date-value">2025-09-29</span>
-							</div>
-							<div class="dates-row">
-								<span class="date-label">🤝 接单日期</span>
-								<span class="date-value">2025-09-29</span>
-							</div>
-							<div class="dates-row">
-								<span class="date-label">⏰ 截止日期</span>
-								<span class="date-value">2025-09-25</span>
-							</div>
-						</div>
-
-						<div class="task-amounts">
-							<div class="amount-item">
-								<div class="amount-label">💰 总佣金</div>
-								<div class="amount-value">¥100.00</div>
-							</div>
-							<div class="amount-item">
-								<div class="amount-label">🎯 基础佣金</div>
-								<div class="amount-value">¥100.00</div>
-							</div>
-							<div class="amount-item">
-								<div class="amount-label">⭐ 加价佣金</div>
-								<div class="amount-value">¥0.00</div>
-							</div>
-						</div>
-
-						<div class="task-remarks">
-							建站道问题处理及优化0901-0910
-						</div>
-
-						<div class="task-action">
-							<button class="action-btn">🔍 查看详情</button>
-						</div>
-					</div>
-
-					<div class="pagination">
-						📊 共 6 条记录
-						<button class="page-btn">1</button>
-						每页 9 条
+					<!-- 任务列表容器 - 状态元素将自动创建 -->
+					<div id="taskListContainer">
+						<!-- 任务列表将由客户端动态加载 -->
 					</div>
 				</div>
 			</div>
 		</div>
+
+		<script is:inline src="/js/cookies.js"></script>
+
+		<!-- 用户信息全局变量 -->
+		<script is:inline define:vars={{ userInfo }}>
+			// 将用户信息设置为全局变量
+			window.currentUserInfo = userInfo;
+			localStorage.setItem('currentUserInfo', JSON.stringify(userInfo));
+			console.log('当前用户信息:', window.currentUserInfo);
+		</script>
+
+		<!-- 触底加载脚本 -->
+		<script>
+			import { createTaskCardHTML } from "../utils/taskCardTemplate";
+			import { getCookie } from "../utils/tool";
+			import { createListStateManager } from "../utils/listStateManager";
+
+			// 全局变量定义
+			let currentPage = 0; // 从0开始,第一次加载就是第1页
+			let isLoading = false;
+			let hasMore = true;
+			const limit = 10;
+
+			// 请求配置 - 使用 myorderindex 接口
+			const requestConfig = {
+				path: "/taskorder/myorderindex",
+				enterpriseSide: "pc"
+			};
+
+			// 获取 DOM 元素
+			const taskListContainer = document.getElementById("taskListContainer");
+
+			// ===== 初始化状态管理器 =====
+			const stateManager = createListStateManager();
+
+			// 创建任务卡片 HTML - 使用共享模板函数
+			function createTaskCard(task: any) {
+				return createTaskCardHTML(task);
+			}
+
+			// 全局加载数据函数
+			window.loadInitialData = async function(formData: any = {}) {
+				if (isLoading) return;
+
+				isLoading = true;
+				hasMore = true;
+
+				// 使用状态管理器显示加载状态
+				if (stateManager) {
+					stateManager.onRequestStart();
+				}
+
+				try {
+					currentPage = 1;
+
+					// 发送请求
+					const response = await fetch(`/proxy`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							...requestConfig,
+							page: currentPage,
+							limit: limit,
+							...formData
+						}),
+					});
+
+					if (response.status === 401) {
+						window.location.href = "/login";
+						return;
+					}
+
+					const result = await response.json();
+
+					if (result.code === 401) {
+						window.location.href = "/login";
+						return;
+					}
+
+					if (result.code === 1) {
+						const tasks = result.data?.data || [];
+						const total = result.data?.total || result.data?.count || 0;
+
+						// 清空容器并添加新任务
+						if (taskListContainer) {
+							taskListContainer.innerHTML = "";
+
+							if (tasks.length > 0) {
+								tasks.forEach((task: any) => {
+									if (Object.prototype.toString.call(task.description) === '[object Array]') {
+										task.description = task.description.map((d: any) => d.condition_title + '：' + d.condition)
+										if (task.description.length > 0) {
+											task.description = task.description.join('\n')
+										}
+									}
+
+									const taskHTML = createTaskCard(task);
+									taskListContainer.insertAdjacentHTML("beforeend", taskHTML);
+								});
+							} else {
+								// 没有数据时显示提示
+								taskListContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">📭 暂无任务</div>';
+							}
+						}
+
+						// 使用状态管理器更新状态
+						const isComplete = stateManager.onRequestSuccess(total, tasks.length, limit);
+						hasMore = !isComplete;
+
+					} else {
+						console.error("加载失败:", result.msg || "未知错误");
+						if (taskListContainer) {
+							taskListContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #f56565;">❌ 加载失败</div>';
+						}
+						stateManager.onRequestError();
+					}
+				} catch (error) {
+					console.error("加载失败:", error);
+					if (taskListContainer) {
+						taskListContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #f56565;">❌ 网络错误</div>';
+					}
+					stateManager.onRequestError();
+				} finally {
+					isLoading = false;
+				}
+			}
+
+			const clientToken =
+				getCookie("token") || localStorage.getItem("token") || "";
+			const clientEmployeeToken =
+				getCookie("employee_token") ||
+				localStorage.getItem("employee_token") ||
+				"";
+
+			// 加载更多数据
+			window.loadMore = async function() {
+				if (isLoading || !hasMore) {
+					return;
+				}
+
+				isLoading = true;
+				stateManager.onRequestStart(); // 自动显示加载中状态
+
+				try {
+					currentPage += 1;
+
+					const response = await fetch(`/proxy`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							...requestConfig,
+							page: currentPage,
+							limit: limit
+						}),
+					});
+
+					if (response.status === 401) {
+						window.location.href = "/login";
+						return;
+					}
+
+					const result = await response.json();
+
+					if (result.code === 401 || result.code === 401) {
+						window.location.href = "/login";
+						return;
+					}
+
+					if (result.code === 1) {
+						const newTasks = result.data?.data || [];
+						const total = result.data?.total || result.data?.count || 0;
+
+						// 添加新任务到列表
+						if (newTasks.length > 0) {
+							newTasks.forEach((task: any) => {
+								const taskHTML = createTaskCard(task);
+								taskListContainer &&
+									taskListContainer.insertAdjacentHTML("beforeend", taskHTML);
+							});
+						}
+
+						// 计算当前已加载总数
+						const currentLoaded = (taskListContainer?.children.length || 0);
+
+						// 使用状态管理器更新状态
+						const isComplete = stateManager.onRequestSuccess(total, currentLoaded, limit);
+						hasMore = !isComplete;
+
+					} else {
+						console.error("加载失败:", result.msg || "未知错误");
+						stateManager.onRequestError();
+						hasMore = false;
+					}
+				} catch (error) {
+					console.error("加载失��:", error);
+					stateManager.onRequestError();
+					hasMore = false;
+				} finally {
+					isLoading = false;
+				}
+			}
+
+			// 检测是否到达底部
+			function checkScrollBottom() {
+				// 获取 .wrap 滚动容器
+				const wrapElement = document.querySelector('.wrap');
+				if (!wrapElement) return;
+
+				// 获取滚动位置
+				const scrollTop = wrapElement.scrollTop;
+				const scrollHeight = wrapElement.scrollHeight;
+				const clientHeight = wrapElement.clientHeight;
+
+				// 距离底部还有 200px 时就开始加载
+				if (scrollTop + clientHeight >= scrollHeight - 200) {
+					window.loadMore();
+				}
+			}
+
+			// 防抖函数
+			function debounce(func: (...args: any[]) => void, wait: number) {
+				let timeout: any;
+				return function executedFunction(...args: any[]) {
+					const later = () => {
+						clearTimeout(timeout);
+						func(...args);
+					};
+					clearTimeout(timeout);
+					timeout = setTimeout(later, wait);
+				};
+			}
+
+			// 监听 .wrap 元素的滚动事件（使用防抖）
+			const debouncedScroll = debounce(checkScrollBottom, 200);
+			const wrapElement = document.querySelector('.wrap');
+			if (wrapElement) {
+				wrapElement.addEventListener("scroll", debouncedScroll);
+			}
+
+			// 页面加载时立即获取初始数据
+			window.loadInitialData();
+		</script>
 	</body>
 </html>
