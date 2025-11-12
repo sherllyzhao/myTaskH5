@@ -148,26 +148,6 @@
     color: #fff;
   }
 
-  .mobile-picker-trigger {
-    width: 100%;
-    display: block;
-    text-align: left;
-    padding: 12px 14px 12px 40px;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    font-size: 16px;
-    color: #374151;
-    transition: all 0.2s ease;
-  }
-
-  .mobile-picker-trigger.selected {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #667eea;
-    font-weight: 600;
-  }
-
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -470,73 +450,23 @@
         }
       }
     } else {
-      // 内置选项配置
-      const optionsConfig = {
-        "projectTask": [
-          {label: "全部项目和任务", value: 0},
-          {label: "仅项目", value: 1},
-          {label: "仅任务", value: 2}
-        ],
-        "order": [
-          {label: '发布时间由近到远排序', value: 'id'},
-          {label: '佣金变更时间由近到远排序', value: 'commission_edittime'},
-          {label: '工期到期天数由近到远排序', value: 'syday'}
-        ],
-        "amountStart": [
-          {label: "不限", value: 0},
-          {label: "¥100", value: 1},
-          {label: "¥500", value: 2},
-          {label: "¥1000", value: 3}
-        ],
-        "amountEnd": [
-          {label: "不限", value: 0},
-          {label: "¥1000", value: 1},
-          {label: "¥5000", value: 2},
-          {label: "¥10000", value: 3}
-        ],
-        "publishStart": [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ],
-        "publishEnd": [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ],
-        "deadlineStart": [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ],
-        "deadlineEnd": [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ],
-        "orderStart": [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ],
-        "orderEnd": [
-          {label: "不限", value: 0},
-          {label: "今天", value: 1},
-          {label: "近7天", value: 2},
-          {label: "近30天", value: 3}
-        ]
-      };
-      
-      // 根据 key 获取对应的选项
-      let options = optionsConfig[key] || [
-        { label: "选项1", value: "1" },
-        { label: "选项2", value: "2" }
-      ];
+      // 从全局配置中获取选项（由页面注入）
+      let options = [];
+
+      if (window.filterGroupsConfig) {
+        // 从全局配置中查找对应的选项
+        const allItems = window.filterGroupsConfig.flatMap(group => group.items);
+        const matchedItem = allItems.find(item => item.pickerKey === key);
+        options = matchedItem?.options || [];
+      }
+
+      // 如果没有找到配置，使用默认值
+      if (options.length === 0) {
+        options = [
+          { label: "选项1", value: "1" },
+          { label: "选项2", value: "2" }
+        ];
+      }
       
       if (title) title.textContent = trigger?.textContent || "请选择";
       if (list) list.innerHTML = "";

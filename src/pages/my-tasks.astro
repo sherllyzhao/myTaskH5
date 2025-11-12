@@ -106,12 +106,29 @@ const filterGroups = [
       },
       {
         type: "picker",
+        icon: "✅",
+        name: "status",
+        placeholder: "执行状态",
+        pickerKey: "status",
+        width: "full",
+        defaultValue: '',
+        options: [
+					{value: "1", label: '已接单'},
+					{value: "2", label: '核对中'},
+					{value: "3", label: '待质检'},
+					{value: "4", label: '已完结'},
+					{value: "5", label: '已逾期'},
+					{value: "6", label: '已转移'},
+        ]
+      },
+      {
+        type: "picker",
         icon: "🔽",
         name: "order",
         placeholder: "排序",
         pickerKey: "order",
         width: "full",
-        defaultValue: "id",
+        defaultValue: "",
         options: [
           {
             label: '发布时间由近到远排序',
@@ -193,6 +210,22 @@ const filterGroups = [
         placeholder: "接单结束",
         pickerKey: "orderEnd",
         width: "half"
+      },
+      {
+        type: "date-time-picker",
+        icon: "📅",
+        name: "completeStart",
+        placeholder: "完成开始",
+        pickerKey: "completeStart",
+        width: "half"
+      },
+      {
+        type: "date-time-picker",
+        icon: "📅",
+        name: "completeEnd",
+        placeholder: "完成结束",
+        pickerKey: "completeEnd",
+        width: "half"
       }
     ]
   }
@@ -260,6 +293,12 @@ const filterGroups = [
 
 		<script :inline src="/js/cookies.js"></script>
 
+		<!-- 筛选器配置全局变量 -->
+		<script is:inline define:vars={{ filterGroups }}>
+			// 将筛选器配置设置为全局变量，供 MobilePicker 使用
+			window.filterGroupsConfig = filterGroups;
+		</script>
+
 		<!-- 用户信息全局变量 -->
 		<script is:inline define:vars={{ userInfo }}>
 			// 将用户信息设置为全局变量
@@ -273,6 +312,24 @@ const filterGroups = [
 			import { createTaskCardHTML } from "../utils/taskCardTemplate";
 			import { getCookie } from "../utils/tool";
 			import { createListStateManager } from "../utils/listStateManager";
+
+			// ===== 页面字段配置 =====
+			// 设置为全局变量，供 getFilterFormData 使用
+			window.pageFieldConfig = {
+				singleFields: {
+					name: 'name',
+					orderType: 'projectTask',
+					status: 'status',
+					sort: 'order',
+				},
+				rangeFields: {
+					ordertime: ['publishStart', 'publishEnd'],
+					enddatatime: ['deadlineStart', 'deadlineEnd'],
+					performtime: ['orderStart', 'orderEnd'],
+					completiontime: ['completeStartStart', 'completeStartEnd'],
+					bountymoney: ['amountStart', 'amountEnd']
+				}
+			};
 
 			// 全局变量定义
 			let currentPage = 0; // 从0开始,第一次加载就是第1页
@@ -322,7 +379,10 @@ const filterGroups = [
 							...requestConfig,
 							page: currentPage,
 							limit: limit,
-							...formData
+							...formData,
+							order: 'desc',
+							hall_type: '',
+							status: formData.status ?? ''
 						}),
 					});
 

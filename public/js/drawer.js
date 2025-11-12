@@ -29,21 +29,46 @@
       }
 
       // 全局筛选工具函数 - 直接复制utils中的逻辑
-      window.getFilterFormData = function() {
+      // 默认字段配置
+      const defaultFieldConfig = {
+        // 单值字段: { 返回字段名: 表单name属性 }
+        singleFields: {
+          name: 'name',
+          orderType: 'projectTask',
+          sort: 'order'
+        },
+        // 范围字段: { 返回字段名: [开始name, 结束name] }
+        rangeFields: {
+          moneyInput: ['amountStart', 'amountEnd'],
+          ordertime: ['publishStart', 'publishEnd'],
+          enddatatime: ['deadlineStart', 'deadlineEnd'],
+          performtime: ['orderStart', 'orderEnd']
+        }
+      };
+
+      window.getFilterFormData = function(fieldConfig = defaultFieldConfig) {
         const getValue = (name) => {
           const element = document.querySelector(`[name='${name}']`);
           return element?.getAttribute('data-value') || '';
         };
 
-        return {
-          name: getValue('name'),
-          orderType: getValue('projectTask'),
-          sort: getValue('order'),
-          moneyInput: [getValue('amountStart'), getValue('amountEnd')].filter(item => item !== ''),
-          ordertime: [getValue('publishStart'), getValue('publishEnd')].filter(item => item !== ''),
-          enddatatime: [getValue('deadlineStart'), getValue('deadlineEnd')].filter(item => item !== ''),
-          performtime: [getValue('orderStart'), getValue('orderEnd')].filter(item => item !== '')
-        };
+        const result = {};
+
+        // 处理单值字段
+        if (fieldConfig.singleFields) {
+          Object.entries(fieldConfig.singleFields).forEach(([resultKey, formName]) => {
+            result[resultKey] = getValue(formName);
+          });
+        }
+
+        // 处理范围字段
+        if (fieldConfig.rangeFields) {
+          Object.entries(fieldConfig.rangeFields).forEach(([resultKey, formNames]) => {
+            result[resultKey] = formNames.map(name => getValue(name)).filter(item => item !== '');
+          });
+        }
+
+        return result;
       };
 
       // 全局 getValue 函数
@@ -57,7 +82,9 @@
       }
 
       function applyFilters(callback) {
-        const formData = window.getFilterFormData();
+        // 优先使用页面级配置，如果没有则使用默认配置
+        const fieldConfig = window.pageFieldConfig || undefined;
+        const formData = window.getFilterFormData(fieldConfig);
         console.log('筛选数据:', formData);
 
         // 显示手动加载指示器

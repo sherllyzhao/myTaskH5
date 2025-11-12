@@ -57,3 +57,35 @@ export function isWaiting(task: any): boolean {
 export function isOldVersion(task: any): boolean {
   return task.orderType === 1
 }
+/**
+ * 区分抢单还是下发
+ * @param {Object} row 行数据
+ * @returns {Boolean | String}
+ */
+export function getTaskPublishType(task: any): boolean | string {
+  // 判断是否是任务，orderType为1,3是任务，1是已废弃的版本的任务
+  if(+task.orderType === 3){
+    // 判断有没有项目id，有是项目下的任务，没有是单独发的任务
+    if(task.proid === 0){
+      return '单独下发'
+    }
+  }
+  return false
+}
+/**
+     * !20240202 工期预警
+     * @param {number | string} status
+     * @returns
+     */
+export function earlyWarningOfConstructionPeriod (status: number | string) : string {
+  // 根据status参数的值，返回不同的字符串
+  if (status) {
+    const warnMap: Record<number | string, string> = {
+      1: 'blue',
+      2: 'green',
+      3: 'red'
+    }
+    return warnMap[status] || ''
+  }
+  return ''
+}

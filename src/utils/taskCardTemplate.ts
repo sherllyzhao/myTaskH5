@@ -1,4 +1,4 @@
-import { getTypeName, getTotalMoney, getBaseCommission, getAddCommission } from './map';
+import { getTypeName, getTotalMoney, getBaseCommission, getAddCommission, getTaskPublishType, isWaiting, earlyWarningOfConstructionPeriod } from './map';
 import { removeTime } from './tool';
 import { isProject, showChangeTag} from './map';
 
@@ -17,16 +17,38 @@ export function createTaskCardHTML(task: any): string {
   const isProjectType = isProject(task.orderType);
   const cardTypeClass = isProjectType ? 'card-type-project' : 'card-type-task';
 
+  // 处理项目名称
+  const isWaitingTask = isWaiting(task);
+  const hallOrderNumber = task.hall_orderNumber ? '（' + task.hall_orderNumber + '）' : '';
+  const projectName = isWaitingTask ? getTypeName(task.orderType) + "接取后展示" : task.hall_customer + hallOrderNumber;
+
+  // 立即接取按钮
+  const acceptButton = isWaitingTask
+    ? `<button
+          class="btn btn-primary"
+          onclick="handleTaskAccept(event, ${task.id}, '${task.company_id || ''}', '${task.company || ''}', '${task}')"
+          data-task-id="${task.id}"
+          data-company-id="${task.company_id || ''}"
+          data-company-name="${task.company_name || ''}"
+        >🚀 立即接取</button>`
+    : '';
+
   // 处理可选标签
   const changeTag = showChangeTag(task)
     ? `<span class="tag tag-changes">🔄 有变更</span>`
     : '';
   const buttonInfoTag = task.button_info
-    ? `<span class="tag tag-overdue tag-overdue-${task.button_color}">${task.button_info}</span>`
+    ? `<span class="tag tag-overdue tag-overdue-${earlyWarningOfConstructionPeriod(task.button_color)}">${task.button_info}</span>`
     : '';
 
   const timeoutTag = task.timeout
     ? `<span class="tag tag-pending-2d">${task.timeout}</span>`
+    : '';
+
+    // 处理是否单独下发
+    const publishType = getTaskPublishType(task);
+    const publishTypeRow = publishType
+    ? `<span class="tag tag-button-info">${publishType}</span>`
     : '';
 
   // 处理接单日期（仅在 status > 1 时显示）
@@ -48,12 +70,13 @@ export function createTaskCardHTML(task: any): string {
   return `
     <div class="task-card card ${cardTypeClass}">
       <div class="task-badge status-${task.statusInfo || '待接单'}">💼 ${task.statusInfo || '待接单'}</div>
-      <div class="task-title">接取后可见项目全称</div>
+      <div class="task-title">${projectName}</div>
 
       <div class="task-tags">
         ${changeTag}
         ${buttonInfoTag}
         ${timeoutTag}
+        ${publishTypeRow}
       </div>
 
       <div class="task-info">
@@ -94,13 +117,7 @@ export function createTaskCardHTML(task: any): string {
       ${descriptionRow}
 
       <div class="task-actions">
-        <button
-          class="btn btn-primary"
-          onclick="handleTaskAccept(event, ${task.id}, '${task.company_id || ''}', '${task.company || ''}', '${task}')"
-          data-task-id="${task.id}"
-          data-company-id="${task.company_id || ''}"
-          data-company-name="${task.company_name || ''}"
-        >🚀 立即接取</button>
+        ${acceptButton}
         <a href="/task/${task.id}/" class="btn btn-secondary">👁️ 查看详情</a>
       </div>
     </div>

@@ -334,6 +334,7 @@
 
 .mobile-picker-trigger {
 	width: 100%;
+	flex: 1;
 	display: block;
 	text-align: left;
 	padding: 12px 14px 12px 40px;
@@ -342,4 +343,17 @@
 	background: #fff;
 	font-size: 16px;
 	color: #374151;
+	transition: all 0.2s ease;
+	cursor: pointer;
+}
+
+.mobile-picker-trigger:hover {
+	border-color: #667eea;
+}
+
+.mobile-picker-trigger.selected {
+	border-color: #667eea;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	color: #667eea;
+	font-weight: 600;
 }

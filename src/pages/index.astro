@@ -270,6 +270,12 @@ const filterGroups = [
 
     <script :inline src="/js/cookies.js"></script>
 
+    <!-- 筛选器配置全局变量 -->
+    <script is:inline define:vars={{ filterGroups }}>
+      // 将筛选器配置设置为全局变量，供 MobilePicker 使用
+      window.filterGroupsConfig = filterGroups;
+    </script>
+
     <!-- 用户信息全局变量 -->
     <script is:inline define:vars={{ userInfo }}>
       // 将用户信息设置为全局变量
@@ -376,6 +382,22 @@ const filterGroups = [
       import { createTaskCardHTML } from "../utils/taskCardTemplate";
       import { getCookie } from "../utils/tool";
       import { createListStateManager } from "../utils/listStateManager";
+
+      // ===== 页面字段配置 =====
+      // 设置为全局变量，供 getFilterFormData 使用
+      window.pageFieldConfig = {
+        singleFields: {
+          name: 'name',
+          orderType: 'projectTask',
+          sort: 'order'
+        },
+        rangeFields: {
+          moneyInput: ['amountStart', 'amountEnd'],
+          ordertime: ['publishStart', 'publishEnd'],
+          enddatatime: ['deadlineStart', 'deadlineEnd'],
+          performtime: ['orderStart', 'orderEnd']
+        }
+      };
 
       // 全局变量定义
       let currentPage = 0; // 从0开始,第一次加载就是第1页

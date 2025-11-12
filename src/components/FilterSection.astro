@@ -26,12 +26,13 @@ interface Props {
 
 const { groups } = Astro.props;
 
-const getPickerLabel = (value: string | undefined) => {
-  if (value) {
-    const option: FilterItem | undefined = groups.flatMap((group: FilterGroup) => group.items).find((item: FilterItem) => '' + item.pickerKey === '' + item.pickerKey && '' + item.defaultValue === '' + value);
-    return option?.options?.find((opt: { value: string; label: string; }) => '' + opt.value === '' + value)?.label || value;
+// 获取选择器的显示标签
+const getPickerLabel = (item: FilterItem, value: string | undefined) => {
+  if (value && item.options) {
+    const option = item.options.find((opt: { value: string; label: string; }) => '' + opt.value === '' + value);
+    return option?.label || value;
   }
-  return ''; 
+  return '';
 }
 ---
 
@@ -81,10 +82,10 @@ const getPickerLabel = (value: string | undefined) => {
                   class="mobile-picker-trigger"
                   type="button"
                   data-picker={item.pickerKey}
-                  name={item.name} 
+                  name={item.name}
                   data-value={item.defaultValue || ''}
                 >
-                  {getPickerLabel(item.defaultValue) || item.placeholder || '请选择'}
+                  {getPickerLabel(item, item.defaultValue) || item.placeholder || '请选择'}
                 </button>
               )}
             </div>
@@ -152,30 +153,6 @@ const getPickerLabel = (value: string | undefined) => {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  .mobile-picker-trigger {
-    flex: 1;
-    text-align: left;
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    font-size: 16px;
-    color: #374151;
-    transition: all 0.2s ease;
-    cursor: pointer;
-  }
-
-  .mobile-picker-trigger:hover {
-    border-color: #667eea;
-  }
-
-  .mobile-picker-trigger.selected {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #667eea;
-    font-weight: 600;
   }
 
   /* 两列布局 */
