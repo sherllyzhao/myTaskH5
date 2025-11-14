@@ -33,11 +33,11 @@
 /* 精美的头部设计 - 增强视觉效果 */
 .detail-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 70%, #8b5cf6 100%);
-  padding: 28px 24px 48px;
+  padding: 24px 24px 36px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .detail-header::before {
@@ -95,13 +95,13 @@
   line-height: 1.5;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   word-break: break-word;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   letter-spacing: 0.3px;
 }
 
 .detail-content {
-  padding: 0 16px 24px 16px;
-  margin-top: -8px;
+  padding: 0 20px 24px 20px;
+  margin-top: -24px;
   position: relative;
   z-index: 10;
   background: transparent;
@@ -111,17 +111,26 @@
 .detail-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafb 100%);
   border-radius: 20px;
-  padding: 24px 20px;
-  margin-bottom: 16px;
+  padding: 26px 22px;
+  margin-bottom: 18px;
   box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.06),
-    0 2px 6px rgba(0, 0, 0, 0.03),
+    0 6px 16px rgba(0, 0, 0, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   border: 2px solid rgba(226, 232, 240, 0.8);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(10px);
+}
+
+/* 第一个卡片特殊样式 - 增强与头部的连接感 */
+.detail-card:first-child {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(102, 126, 234, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  border: 2px solid rgba(102, 126, 234, 0.15);
 }
 
 .detail-card::before {
@@ -163,10 +172,10 @@
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -176,7 +185,7 @@
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
 }
 
 .info-item {
@@ -239,8 +248,8 @@
 .info-label {
   color: #64748b;
   font-weight: 600;
-  font-size: 11px;
-  margin-bottom: 6px;
+  font-size: 12px;
+  margin-bottom: 10px;
   letter-spacing: 0.5px;
 }
 
@@ -255,8 +264,8 @@
 .salary-section {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  margin: 16px 0;
+  gap: 14px;
+  margin: 18px 0;
 }
 
 /* 佣金卡片 - 保持柔和的紫色 */
@@ -388,7 +397,7 @@
 .history-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .history-item {
@@ -460,7 +469,7 @@
 .change-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .change-item {
@@ -507,33 +516,17 @@
   padding-left: 8px;
 }
 
-/* 执行信息卡片 - 柔和紫色 */
-.detail-card:has(.execution-list) {
-  /* 继承父级样式，不需要特殊背景色 */
-}
-
-.detail-card:has(.execution-list)::before {
-  background: linear-gradient(90deg, #a78bfa, #8b5cf6) !important;
-  height: 4px !important;
-}
-
-.detail-card:has(.execution-list) .section-title {
-  color: #7c3aed;
-  font-size: 16px;
-  font-weight: 700;
-}
-
 .execution-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: 14px;
+  gap: 16px;
+  margin-top: 16px;
 }
 
 .execution-item {
   background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: 16px;
+  padding: 18px;
   border: 1px solid #e2e8f0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
@@ -549,7 +542,7 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #a78bfa, #8b5cf6);
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
 }
 
 .execution-item:hover {
@@ -578,30 +571,30 @@
 }
 
 .execution-amount {
-  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   padding: 5px 12px;
   border-radius: 14px;
   font-weight: 700;
   font-size: 12px;
-  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .execution-details {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 14px;
   padding-left: 8px;
 }
 
 .execution-detail {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   background: rgba(248, 250, 252, 0.5);
-  padding: 10px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 10px;
   border: 1px solid #f1f5f9;
   transition: all 0.3s ease;
 }
@@ -609,14 +602,6 @@
 .execution-detail:hover {
   background: rgba(248, 250, 252, 0.8);
   border-color: #e2e8f0;
-}
-
-.execution-detail-label {
-  color: #7c3aed;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
 }
 
 .execution-detail-value {
@@ -651,7 +636,7 @@
 }
 
 .execution-action-btn {
-  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border: none;
   padding: 6px 14px;
@@ -660,12 +645,12 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .execution-action-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
 }
 
 .execution-status {
@@ -701,23 +686,6 @@
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
   color: #065f46;
   border: 1px solid #6ee7b7;
-}
-
-.task-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-
-.status-待接单 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
 }
 
 .tag-wrap {

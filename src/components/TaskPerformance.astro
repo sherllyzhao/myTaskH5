@@ -1,0 +1,354 @@
+---
+// 执行信息组件 - 用于显示任务执行的详细信息
+interface Props {
+  data?: any;
+}
+
+const { data } = Astro.props;
+
+// 示例数据结构，实际应该从 props 传入
+const executionData = data || {
+  items: [
+    {
+      address: '测试',
+      username: '测试',
+      password: '测试',
+      attachment: '/images/certificate.png',
+      status: '核对中',
+      createTime: '2025-06-28 15:38:19',
+      auditTime: '-'
+    }
+  ]
+};
+---
+
+<div class="detail-card">
+  <div class="execution-header-wrapper">
+    <div class="section-title">⚡ 执行信息</div>
+    <button class="edit-address-btn">📝 编辑功能地址</button>
+  </div>
+
+  <div class="execution-table">
+    {executionData.items && executionData.items.map((item: any) => (
+      <div class="execution-row">
+        <!-- 地址 - 占满整行 -->
+        <div class="execution-field execution-field-full">
+          <div class="field-label">🔗 地址</div>
+          <div class="field-value">
+            <a href={item.address} class="link-value" target="_blank">{item.address}</a>
+          </div>
+        </div>
+
+        <!-- 2列布局开始 -->
+        <div class="execution-grid">
+          <!-- 用户名 -->
+          <div class="execution-field">
+            <div class="field-label">👤 用户名</div>
+            <div class="field-value">{item.username || '-'}</div>
+          </div>
+
+          <!-- 密码 -->
+          <div class="execution-field">
+            <div class="field-label">🔐 密码</div>
+            <div class="field-value password-field">
+              <span class="password-text">{item.password || '-'}</span>
+              <button class="copy-btn" data-copy={item.password}>📋</button>
+            </div>
+          </div>
+
+          <!-- 状态 -->
+          <div class="execution-field">
+            <div class="field-label">🔍 状态</div>
+            <div class="field-value">
+              <span class={`status-badge status-${item.status}`}>
+                {item.status || '-'}
+              </span>
+            </div>
+          </div>
+
+          <!-- 附件 -->
+          <div class="execution-field">
+            <div class="field-label">📎 附件</div>
+            <div class="field-value">
+              {item.attachment ? (
+                <a href={item.attachment} target="_blank" class="attachment-link">
+                  <img src={item.attachment} alt="附件" class="attachment-preview" />
+                </a>
+              ) : (
+                <span>-</span>
+              )}
+            </div>
+          </div>
+
+          <!-- 创建时间 -->
+          <div class="execution-field">
+            <div class="field-label">📅 创建时间</div>
+            <div class="field-value">{item.createTime || '-'}</div>
+          </div>
+
+          <!-- 审核时间 -->
+          <div class="execution-field">
+            <div class="field-label">⏰ 审核时间</div>
+            <div class="field-value">{item.auditTime || '-'}</div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .execution-header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .edit-address-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  }
+
+  .edit-address-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
+  }
+
+  .execution-table {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .execution-row {
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border-radius: 12px;
+    padding: 16px;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .execution-row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #3b82f6, #2563eb);
+  }
+
+  .execution-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+  }
+
+  .execution-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .execution-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  }
+
+  .execution-field:hover {
+    background: linear-gradient(135deg, #fafbfc 0%, #f8fafc 100%);
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
+
+  .execution-field-full {
+    grid-column: 1 / -1;
+    margin-bottom: 14px;
+    padding-left: 8px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .execution-field-full:hover {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .execution-field:last-child {
+    margin-bottom: 0;
+  }
+
+  .field-label {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .field-value {
+    color: #1e293b;
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  .link-value {
+    color: #3b82f6;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .link-value:hover {
+    color: #2563eb;
+    text-decoration: underline;
+  }
+
+  .password-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .password-text {
+    flex: 1;
+    font-family: monospace;
+  }
+
+  .copy-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .copy-btn:hover {
+    background: #e2e8f0;
+    transform: scale(1.05);
+  }
+
+  .attachment-link {
+    display: inline-block;
+    transition: transform 0.3s ease;
+  }
+
+  .attachment-link:hover {
+    transform: scale(1.05);
+  }
+
+  .attachment-preview {
+    max-width: 80px;
+    height: auto;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .status-核对中 {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #fcd34d;
+  }
+
+  .status-已通过 {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+  }
+
+  .status-未通过 {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+  }
+
+  .status-待处理 {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    color: #3730a3;
+    border: 1px solid #a5b4fc;
+  }
+
+  /* 响应式设计 */
+  @media (max-width: 480px) {
+    .execution-header-wrapper {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .edit-address-btn {
+      width: 100%;
+    }
+
+    .execution-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .attachment-preview {
+      max-width: 100px;
+    }
+  }
+</style>
+
+<script>
+  // 复制密码功能
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const button = e.target as HTMLButtonElement;
+      const textToCopy = button.getAttribute('data-copy');
+
+      if (textToCopy) {
+        try {
+          await navigator.clipboard.writeText(textToCopy);
+          const originalText = button.textContent;
+          button.textContent = '✅';
+          setTimeout(() => {
+            button.textContent = originalText;
+          }, 2000);
+        } catch (err) {
+          console.error('复制失败:', err);
+        }
+      }
+    });
+  });
+
+  // 编辑功能地址按钮事件
+  document.querySelector('.edit-address-btn')?.addEventListener('click', () => {
+    // TODO: 实现编辑功能地址的逻辑
+    alert('编辑功能地址');
+  });
+</script>

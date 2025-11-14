@@ -1462,6 +1462,18 @@ body::after {
   box-shadow: 0 2px 12px rgba(255, 152, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+.task-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
 /* 状态徽章按状态上色（覆盖默认样式） */
 .task-badge.status-待接单 {
   background: linear-gradient(135deg, #ffb74d 0%, #fb8c00 100%);
