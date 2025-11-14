@@ -1,0 +1,50 @@
+---
+interface Props {
+  fileList?: {
+    fileurl: string;
+    filename: string;
+  }[];
+}
+
+const { fileList } = Astro.props;
+---
+<div class="attachment-list">
+  {fileList && fileList.length ? fileList.map((file: any) => (
+		  <a href={file.fileurl} target="_blank" class="attachment-link">
+			  <img src={file.fileurl} alt="附件" class="attachment-preview" />
+			  <span class="attachment-name">{file.filename}</span>
+		  </a>
+  )) : (
+		  <span>-</span>
+  )}
+</div>
+
+<style>
+    .attachment-list{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .attachment-link {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+        color: #3b82f6;
+        transition: transform 0.3s ease;
+    }
+
+    .attachment-link:hover {
+        transform: scale(1.05);
+    }
+
+    .attachment-preview {
+        max-width: 80px;
+        height: auto;
+        border-radius: 8px;
+        border: 2px solid #e2e8f0;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+</style>

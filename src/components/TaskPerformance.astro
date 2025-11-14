@@ -1,5 +1,6 @@
 ---
 import {Debug} from "astro:components";
+import AttachmentList from "./AttachmentList.astro";
 
 // 执行信息组件 - 用于显示任务执行的详细信息
 interface Props {
@@ -62,8 +63,10 @@ if(data.appendlog){
           <!-- 用户名 -->
           <div class="execution-field">
             <div class="field-label">👤 用户名</div>
-            <div class="field-value">{item.username || '-'}</div>
-            <button class="copy-btn" data-copy={item.password}>📋</button>
+	          <div class="field-value username-field">
+                <div class="field-value username-text">{item.username || '-'}</div>
+                <button class="copy-btn" data-copy={item.username}>📋</button>
+	          </div>
           </div>
 
           <!-- 密码 -->
@@ -79,7 +82,7 @@ if(data.appendlog){
           <div class="execution-field">
             <div class="field-label">🔍 状态</div>
             <div class="field-value">
-              <span class={`.task-badge status-${item.statustxt}`}>
+              <span class={`task-badge status-${item.statustxt}`}>
                 {item.statustxt || '-'}
               </span>
             </div>
@@ -101,13 +104,7 @@ if(data.appendlog){
           <div class="execution-field">
             <div class="field-label">📎 附件</div>
             <div class="field-value">
-              {item.filelist && item.filelist.length ? item.filelist.map((file: string) => (
-                <a href={file} target="_blank" class="attachment-link">
-                  <img src={file} alt="附件" class="attachment-preview" />
-                </a>
-              )) : (
-                <span>-</span>
-              )}
+                <AttachmentList fileList={item.filelist} />
             </div>
           </div>
         </div>
@@ -252,13 +249,15 @@ if(data.appendlog){
     text-decoration: underline;
   }
 
-  .password-field {
+  .password-field,
+  .username-field {
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
-  .password-text {
+  .password-text,
+  .username-text{
     flex: 1;
     font-family: monospace;
   }
@@ -276,23 +275,6 @@ if(data.appendlog){
   .copy-btn:hover {
     background: #e2e8f0;
     transform: scale(1.05);
-  }
-
-  .attachment-link {
-    display: inline-block;
-    transition: transform 0.3s ease;
-  }
-
-  .attachment-link:hover {
-    transform: scale(1.05);
-  }
-
-  .attachment-preview {
-    max-width: 80px;
-    height: auto;
-    border-radius: 8px;
-    border: 2px solid #e2e8f0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   }
 
   .status-badge {

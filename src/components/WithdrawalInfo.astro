@@ -15,12 +15,14 @@ const withdrawalData = data || {
 
 <div class="detail-card">
   <div class="section-title">💳 提现信息</div>
-
-  <div class="withdrawal-content">
-    <div class="withdrawal-status">
-      {withdrawalData.status} 申请时间 :{withdrawalData.applyTime}
-    </div>
-  </div>
+	  {
+		data?.withdraw?.toString() === "false" && <button>申请提现</button>
+	  }
+	<div class="withdrawal-content">
+		<div class="withdrawal-status">
+          {withdrawalData.status} 申请时间 :{withdrawalData.applyTime}
+		</div>
+	</div>
 </div>
 
 <style>
