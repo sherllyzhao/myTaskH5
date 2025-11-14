@@ -5,27 +5,50 @@ interface Props {
 }
 
 const { data } = Astro.props;
-
-// 示例数据结构
-const withdrawalData = data || {
-  status: '已申请清现，待打款',
-  applyTime: '2025-11-14 10:04:39'
-};
 ---
 
 <div class="detail-card">
   <div class="section-title">💳 提现信息</div>
 	  {
-		data?.withdraw?.toString() === "false" && <button>申请提现</button>
+		data?.withdraw?.toString() === "false" && <button class="withdrawal-btn">申请提现</button>
 	  }
-	<div class="withdrawal-content">
-		<div class="withdrawal-status">
-          {withdrawalData.status} 申请时间 :{withdrawalData.applyTime}
-		</div>
-	</div>
+	{
+		(data?.withdraw?.toString() === "0" || data?.withdraw?.toString() === "1") && (
+			<div class="withdrawal-content">
+				<div class="withdrawal-status">
+					{data.withdrawText}
+				</div>
+			</div>
+		)
+	}
 </div>
 
 <style>
+  .withdrawal-btn {
+    width: 100%;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+
+  .withdrawal-btn:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .withdrawal-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  }
+
   .withdrawal-content {
     padding: 16px;
     background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);

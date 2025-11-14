@@ -416,7 +416,7 @@ try {
 
           <!-- 提现信息 -->
           {
-            !isWaiting(task) && !isProject(task.orderType) && (<WithdrawalInfo />)
+            !isWaiting(task) && !isProject(task.orderType) && (<WithdrawalInfo data={task} />)
           }
         </div>
 
