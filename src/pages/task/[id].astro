@@ -7,11 +7,14 @@ import {
   getBaseCommission,
   getAddCommission,
   isWaiting,
-earlyWarningOfConstructionPeriod,
+  earlyWarningOfConstructionPeriod,
+  isOldVersion,
 } from "../../utils/map";
 import AttachmentViewer from "../../components/AttachmentViewer.astro";
 import ProjectPerformance from "../../components/ProjectPerformance.astro";
 import TaskPerformance from "../../components/TaskPerformance.astro";
+import WithdrawalInfo from "../../components/WithdrawalInfo.astro";
+import AcceptanceRecord from "../../components/AcceptanceRecord.astro";
 
 export async function getStaticPaths() {
   return [{ params: { id: "" } }];
@@ -59,7 +62,7 @@ try {
       taskName =
         isWaiting(task)
           ? "接取后可见项目全称"
-          : isProject(task.orderType)
+          : !isOldVersion(task.orderType)
             ? task.hall_customer + hall_orderNumber
             : task.name;
     }
@@ -123,28 +126,28 @@ try {
   <body>
     <div class="container">
       <div class="detail-wrap">
-        <!-- <Debug data={custom} /> -->
+	      <!--<Debug data={task} />-->
 
         <div class="detail-header">
           <div class="detail-title">
-            {
-              task.orderType && (
-                <div>
-                  <span
-                    class={`type-badge ${isProject(task.orderType) ? "type-project" : "type-task"}`}
-                  >
-                    {isProject(task.orderType) ? "📁 项目" : "📋 任务"}
-                  </span>
-                </div>
-              )
-            }
-            <div class="title-text">
-              {taskName}
+            <div>
+              {
+                task.orderType && (
+                    <span
+                      class={`type-badge ${isProject(task.orderType) ? "type-project" : "type-task"}`}
+                    >
+                      {isProject(task.orderType) ? "📁 项目" : "📋 任务"}
+                    </span>
+                )
+              }
               {
                 task.statusInfo && <div class={`task-badge status-${task.statusInfo || "待接单"}`}>
-			      💼 {task.statusInfo || "待接单"}
-                </div>
+			              💼 {task.statusInfo || "待接单"}
+		              </div>
               }
+            </div>
+            <div class="title-text">
+              <span>{taskName}</span>
             </div>
             <div class="tag-wrap">
               {
@@ -370,7 +373,7 @@ try {
 
           <!-- 变更记录 -->
 		   {
-				!isWaiting(task) && (
+				!isWaiting(task) && isProject(task.orderType) && (
 					<div class="detail-card">
 						<div class="section-title">📝 变更记录</div>
 						<div class="change-list">
@@ -395,12 +398,23 @@ try {
 				)
 		   }
 
-
           <!-- 执行信息 -->
           {
             !isWaiting(task) && (
-               isProject(task.orderType) ? (<ProjectPerformance />) : (<TaskPerformance />)
+               isProject(task.orderType) ? (<ProjectPerformance data={task} />) : (<TaskPerformance data={task} />)
             )
+          }
+
+          <!-- 验收记录 -->
+          {
+            !isWaiting(task) && isProject(task.orderType) && (
+	          <AcceptanceRecord/>
+            )
+          }
+
+          <!-- 提现信息 -->
+          {
+            !isWaiting(task) && (<WithdrawalInfo />)
           }
         </div>
 

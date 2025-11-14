@@ -1,0 +1,105 @@
+---
+// 验收记录组件
+interface AcceptanceItem {
+  date: string;
+  content: string;
+}
+
+interface Props {
+  records?: AcceptanceItem[];
+}
+
+const { records } = Astro.props;
+
+// 示例数据
+const acceptanceRecords = records || [
+  {
+    date: '2023-11-03 11:46:28',
+    content: '满意度测试'
+  }
+];
+---
+
+<div class="detail-card">
+  <div class="section-title">📋 验收记录</div>
+
+  <div class="acceptance-list">
+    {acceptanceRecords.map((record) => (
+      <div class="acceptance-item">
+        <div class="acceptance-header">
+          <span class="acceptance-indicator"></span>
+          <span class="acceptance-date">{record.date}</span>
+        </div>
+        <div class="acceptance-content">
+          {record.content}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .acceptance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .acceptance-item {
+    padding: 16px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .acceptance-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #94a3b8, #64748b);
+  }
+
+  .acceptance-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+  }
+
+  .acceptance-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-left: 8px;
+  }
+
+  .acceptance-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    flex-shrink: 0;
+  }
+
+  .acceptance-date {
+    color: #475569;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .acceptance-content {
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.6;
+    font-weight: 500;
+    padding-left: 8px;
+  }
+</style>

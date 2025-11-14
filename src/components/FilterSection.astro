@@ -71,9 +71,10 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
                 <button
                   class="mobile-picker-trigger date-time-picker"
                   type="button"
-                  name={item.name} 
+                  name={item.name}
                   data-picker="date-time"
                   data-value={item.defaultValue || ''}
+                  data-placeholder={item.placeholder || '选择日期时间'}
                 >
                   {item.defaultValue || item.placeholder || '选择日期时间'}
                 </button>
@@ -84,6 +85,7 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
                   data-picker={item.pickerKey}
                   name={item.name}
                   data-value={item.defaultValue || ''}
+                  data-placeholder={item.placeholder || '请选择'}
                 >
                   {getPickerLabel(item, item.defaultValue) || item.placeholder || '请选择'}
                 </button>

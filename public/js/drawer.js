@@ -21,8 +21,8 @@
         const inputs = document.querySelectorAll(".filter-input");
 
         selects.forEach((select) => {
-          select.setAttribute("data-value", "");
-          select.textContent = select.getAttribute("data-default") || "请选择";
+          select.removeAttribute("data-value");
+          select.textContent = select.getAttribute("data-placeholder") || "请选择";
           select.classList.remove("selected");
         });
         inputs.forEach((input) => (input.value = ""));

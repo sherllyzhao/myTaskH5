@@ -1,0 +1,41 @@
+---
+// 提现信息组件
+interface Props {
+  data?: any;
+}
+
+const { data } = Astro.props;
+
+// 示例数据结构
+const withdrawalData = data || {
+  status: '已申请清现，待打款',
+  applyTime: '2025-11-14 10:04:39'
+};
+---
+
+<div class="detail-card">
+  <div class="section-title">💳 提现信息</div>
+
+  <div class="withdrawal-content">
+    <div class="withdrawal-status">
+      {withdrawalData.status} 申请时间 :{withdrawalData.applyTime}
+    </div>
+  </div>
+</div>
+
+<style>
+  .withdrawal-content {
+    padding: 16px;
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+
+  .withdrawal-status {
+    color: #1e293b;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+</style>

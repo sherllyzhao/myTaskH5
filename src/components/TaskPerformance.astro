@@ -1,4 +1,6 @@
 ---
+import {Debug} from "astro:components";
+
 // 执行信息组件 - 用于显示任务执行的详细信息
 interface Props {
   data?: any;
@@ -7,19 +9,34 @@ interface Props {
 const { data } = Astro.props;
 
 // 示例数据结构，实际应该从 props 传入
-const executionData = data || {
-  items: [
-    {
-      address: '测试',
-      username: '测试',
-      password: '测试',
-      attachment: '/images/certificate.png',
-      status: '核对中',
-      createTime: '2025-06-28 15:38:19',
-      auditTime: '-'
-    }
-  ]
-};
+const executionData: any[] = [];
+
+if(data.appendlog){
+  let annex = data.appendlog.annex ? data.appendlog.annex.split(',') : []
+  let username = data.appendlog.username ? data.appendlog.username.split(',') : []
+  let password = data.appendlog.password ? data.appendlog.password.split(',') : []
+  annex.forEach((item: {
+    annex: string;
+    username: string;
+    password: string;
+    statustxt: string;
+    status: string;
+    filelist: string;
+    audittime: string;
+    createtime: string;
+}, index: number) => {
+    executionData.push({
+      annex: item,
+      username: username[index],
+      password: password[index],
+      statustxt: data.appendlog?.statustxt,
+      status: data.appendlog?.status,
+      filelist: data.appendlog?.filelist,
+      audittime: data.appendlog?.audittime,
+      createtime: data.appendlog?.createtime,
+    })
+  })
+}
 ---
 
 <div class="detail-card">
@@ -28,23 +45,25 @@ const executionData = data || {
     <button class="edit-address-btn">📝 编辑功能地址</button>
   </div>
 
-  <div class="execution-table">
-    {executionData.items && executionData.items.map((item: any) => (
-      <div class="execution-row">
-        <!-- 地址 - 占满整行 -->
-        <div class="execution-field execution-field-full">
-          <div class="field-label">🔗 地址</div>
-          <div class="field-value">
-            <a href={item.address} class="link-value" target="_blank">{item.address}</a>
-          </div>
-        </div>
+  <!--<Debug data={data} />-->
 
-        <!-- 2列布局开始 -->
+  <div class="execution-table">
+    {executionData && executionData.length > 0 ? executionData.map((item: any) => (
+      <div class="execution-row">
         <div class="execution-grid">
+          <!-- 地址 -->
+          <div class="execution-field">
+            <div class="field-label">🔗 地址</div>
+            <div class="field-value">
+              <a href={item.annex} class="link-value" target="_blank">{item.annex}</a>
+            </div>
+          </div>
+
           <!-- 用户名 -->
           <div class="execution-field">
             <div class="field-label">👤 用户名</div>
             <div class="field-value">{item.username || '-'}</div>
+            <button class="copy-btn" data-copy={item.password}>📋</button>
           </div>
 
           <!-- 密码 -->
@@ -60,23 +79,9 @@ const executionData = data || {
           <div class="execution-field">
             <div class="field-label">🔍 状态</div>
             <div class="field-value">
-              <span class={`status-badge status-${item.status}`}>
-                {item.status || '-'}
+              <span class={`.task-badge status-${item.statustxt}`}>
+                {item.statustxt || '-'}
               </span>
-            </div>
-          </div>
-
-          <!-- 附件 -->
-          <div class="execution-field">
-            <div class="field-label">📎 附件</div>
-            <div class="field-value">
-              {item.attachment ? (
-                <a href={item.attachment} target="_blank" class="attachment-link">
-                  <img src={item.attachment} alt="附件" class="attachment-preview" />
-                </a>
-              ) : (
-                <span>-</span>
-              )}
             </div>
           </div>
 
@@ -89,11 +94,33 @@ const executionData = data || {
           <!-- 审核时间 -->
           <div class="execution-field">
             <div class="field-label">⏰ 审核时间</div>
-            <div class="field-value">{item.auditTime || '-'}</div>
+            <div class="field-value">{item.audittime || '-'}</div>
+          </div>
+
+          <!-- 附件 -->
+          <div class="execution-field">
+            <div class="field-label">📎 附件</div>
+            <div class="field-value">
+              {item.filelist && item.filelist.length ? item.filelist.map((file: string) => (
+                <a href={file} target="_blank" class="attachment-link">
+                  <img src={file} alt="附件" class="attachment-preview" />
+                </a>
+              )) : (
+                <span>-</span>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    ))}
+    )) : (
+      <div class="execution-row">
+        <div class="execution-grid">
+          <div class="execution-field execution-field-full">
+            <div class="field-label">⚠️ 暂无执行记录</div>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
 </div>
 
