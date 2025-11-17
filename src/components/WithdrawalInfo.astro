@@ -5,23 +5,33 @@ interface Props {
 }
 
 const { data } = Astro.props;
+
+const showWithdrawalInfo = () => {
+  const withdrawalInfo = data?.withdraw?.toString();
+  const showStatus = ['false', '0', '1'];
+  return showStatus.includes(withdrawalInfo);
+}
 ---
 
-<div class="detail-card">
-  <div class="section-title">💳 提现信息</div>
-	  {
-		data?.withdraw?.toString() === "false" && <button class="withdrawal-btn">申请提现</button>
-	  }
-	{
-		(data?.withdraw?.toString() === "0" || data?.withdraw?.toString() === "1") && (
-			<div class="withdrawal-content">
-				<div class="withdrawal-status">
-					{data.withdrawText}
-				</div>
-			</div>
-		)
-	}
-</div>
+{
+  showWithdrawalInfo() && (
+  <div class="detail-card">
+    <div class="section-title">💳 提现信息</div>
+    {
+      data?.withdraw?.toString() === "false" && <button class="withdrawal-btn">申请提现</button>
+    }
+    {
+      (data?.withdraw?.toString() === "0" || data?.withdraw?.toString() === "1") && (
+				    <div class="withdrawal-content">
+					    <div class="withdrawal-status">
+                          {data.withdrawText}
+					    </div>
+				    </div>
+      )
+    }
+  </div>
+  )
+}
 
 <style>
   .withdrawal-btn {

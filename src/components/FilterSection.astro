@@ -1,13 +1,16 @@
 ---
 // 筛选项类型定义
+
+import AlertBar from "./AlertBar.astro";
 interface FilterItem {
-  type: 'input' | 'number' | 'picker' | 'date-time-picker';
+  type: 'input' | 'number' | 'picker' | 'date-time-picker' | 'file';
   icon: string;
   name: string;
   placeholder?: string;
   width?: 'full' | 'half';
   pickerKey?: string;
   defaultValue?: string;
+  accept?: string; // 文件类型限制，例如: "image/*", ".pdf,.doc,.docx", "image/png,image/jpeg"
   options?: {
     value: string;
     label: string;
@@ -44,29 +47,45 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
       <div class={`filter-grid ${group.items.some((item: FilterItem) => item.width === 'half') ? 'two-cols' : ''}`}>
         {group.items.map((item, index) => {
           const itemClass = `filter-item ${item.width === 'half' ? 'half-width' : 'full-width'}`;
-          
+
           return (
             <div class={itemClass}>
               <span class="filter-item-icon">{item.icon}</span>
-              
+
               {item.type === 'input' ? (
-                <input 
-                  type="text" 
-                  class="filter-input" 
-                  name={item.name} 
+                <input
+                  type="text"
+                  class="filter-input"
+                  name={item.name}
                   placeholder={item.placeholder || ''}
                   value={item.defaultValue || ''}
                 />
               ) : item.type === 'number' ? (
-                <input 
-                  type="number" 
-                  class="filter-input" 
-                  name={item.name} 
+                <input
+                  type="number"
+                  class="filter-input"
+                  name={item.name}
                   placeholder={item.placeholder || ''}
                   value={item.defaultValue || ''}
                   min="0"
                   step="1"
                 />
+              ) : item.type === 'file' ? (
+                <div class="file-upload-wrapper">
+                  <input
+                    type="file"
+                    class="file-input"
+                    id={`file-${item.name}`}
+                    name={item.name}
+                    accept={item.accept || '*/*'}
+                    onchange="onFileChange(event)"
+                  />
+                  <label for={`file-${item.name}`} class="file-label">
+                    <span class="file-display" data-name={item.name} data-placeholder={item.placeholder || '选择文件'}>
+                      {item.placeholder || '选择文件'}
+                    </span>
+                  </label>
+                </div>
               ) : item.type === 'date-time-picker' ? (
                 <button
                   class="mobile-picker-trigger date-time-picker"
@@ -96,7 +115,45 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
       </div>
     </div>
   ))}
+  <AlertBar type="error" id="errorBar" autoClose={true} />
+  <AlertBar type="success" id="successBar" autoClose={true} />
 </div>
+
+<script is:inline>
+    async function onFileChange(e) {
+      const target = e.target;
+      const file = target.files?.[0];
+      const fileDisplay = document.querySelector(`.file-display[data-name="${target.name}"]`);
+
+      if (fileDisplay) {
+        if (file) {
+          fileDisplay.textContent = file.name;
+          fileDisplay.classList.add('has-file');
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('name', file.name);
+          const result = await fetch('/taskApi/ajax/upload', {
+            method: 'POST',
+            body: formData
+          })
+          if (result.ok){
+            const data = await result.json();
+            if (data.code === 200) {
+              (successBar)?.show?.('文件上传成功');
+            } else {
+              (errorBar)?.show?.('文件上传失败');
+            }
+          } else {
+            (errorBar)?.show?.('文件上传失败');
+          }
+        } else {
+          const placeholder = fileDisplay.getAttribute('data-placeholder') || '选择文件';
+          fileDisplay.textContent = placeholder;
+          fileDisplay.classList.remove('has-file');
+        }
+      }
+    }
+</script>
 
 <style is:global>
   .filter-container {
@@ -162,9 +219,86 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
     grid-template-columns: 1fr 1fr;
   }
 
-  @media (max-width: 768px) {    
+  /* 文件上传样式 */
+  .file-upload-wrapper {
+    flex: 1;
+    display: flex;
+  }
+
+  .file-input {
+    position: absolute;
+    opacity: 0;
+    width: 0.1px;
+    height: 0.1px;
+    overflow: hidden;
+    z-index: -1;
+  }
+
+  .file-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 12px 14px 12px 40px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    font-size: 16px;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .file-label:hover {
+    border-color: #d1d5db;
+  }
+
+  .file-input:focus + .file-label {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .file-display {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-display.has-file {
+    color: #374151;
+    font-weight: 500;
+  }
+
+  @media (max-width: 768px) {
     .filter-item.half-width {
       grid-column: span 1;
     }
   }
 </style>
+
+<script>
+  // 文件上传处理
+  document.addEventListener('DOMContentLoaded', () => {
+    const fileInputs = document.querySelectorAll('.file-input');
+
+    fileInputs.forEach((input) => {
+      input.addEventListener('change', (e) => {
+        const target = e.target as HTMLInputElement;
+        const file = target.files?.[0];
+        const fileDisplay = document.querySelector(`.file-display[data-name="${target.name}"]`);
+
+        if (fileDisplay) {
+          if (file) {
+            fileDisplay.textContent = file.name;
+            fileDisplay.classList.add('has-file');
+          } else {
+            const placeholder = fileDisplay.getAttribute('data-placeholder') || '选择文件';
+            fileDisplay.textContent = placeholder;
+            fileDisplay.classList.remove('has-file');
+          }
+        }
+      });
+    });
+  });
+</script>

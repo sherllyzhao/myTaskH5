@@ -15,6 +15,8 @@ import ProjectPerformance from "../../components/ProjectPerformance.astro";
 import TaskPerformance from "../../components/TaskPerformance.astro";
 import WithdrawalInfo from "../../components/WithdrawalInfo.astro";
 import AcceptanceRecord from "../../components/AcceptanceRecord.astro";
+import FilterDrawer from "../../components/FilterDrawer.astro";
+import AddExecution from "../../components/AddExecution.astro";
 
 export async function getStaticPaths() {
   return [{ params: { id: "" } }];
@@ -429,6 +431,31 @@ try {
           <a href="javascript:history.back()" class="action-btn action-btn-secondary">← 返回列表</a>
         </div>
       </div>
+
+	    <FilterDrawer id="filterDrawer" title="编辑功能地址">
+		    <Fragment slot="header">
+			    <h3 class="filter-drawer-title">编辑功能地址</h3>
+			    <button class="filter-drawer-close" onclick="closeFilterDrawer()"
+			    >✕</button
+			    >
+		    </Fragment>
+
+            <AddExecution data={task} />
+
+		    <Fragment slot="footer">
+			    <div class="filter-actions">
+				    <button
+						    class="filter-btn filter-btn-secondary"
+						    onclick="resetFilters()">🔄 重置</button
+				    >
+				    <button
+						    class="filter-btn filter-btn-primary"
+						    onclick="applyFilters(window.loadInitialData)">🚀 添加</button
+				    >
+			    </div>
+		    </Fragment>
+	    </FilterDrawer>
     </div>
+    <script is:inline src="/js/drawer.js"></script>
   </body>
 </html>

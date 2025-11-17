@@ -1,6 +1,8 @@
 ---
 import {Debug} from "astro:components";
 import AttachmentList from "./AttachmentList.astro";
+import FilterDrawer from "./FilterDrawer.astro";
+import FilterSection from "./FilterSection.astro";
 
 // 执行信息组件 - 用于显示任务执行的详细信息
 interface Props {
@@ -43,7 +45,7 @@ if(data.appendlog){
 <div class="detail-card">
   <div class="execution-header-wrapper">
     <div class="section-title">⚡ 执行信息</div>
-    <button class="edit-address-btn">📝 编辑功能地址</button>
+    <button class="edit-address-btn" onclick="openFilterDrawer()">📝 编辑功能地址</button>
   </div>
 
   <!--<Debug data={data} />-->
@@ -359,11 +361,5 @@ if(data.appendlog){
         }
       }
     });
-  });
-
-  // 编辑功能地址按钮事件
-  document.querySelector('.edit-address-btn')?.addEventListener('click', () => {
-    // TODO: 实现编辑功能地址的逻辑
-    alert('编辑功能地址');
   });
 </script>

@@ -1,0 +1,110 @@
+---
+import FilterSection from "./FilterSection.astro";
+interface Props {
+  data?: any;
+  isAngance?: boolean;
+  username?: string;
+  totalMoney?: number;
+}
+
+const {data, isAngance = false, username, totalMoney} = Astro.props;
+
+const filterGroups = [
+  {
+    title: "执行信息1",
+    items: [
+      {
+        type: "input",
+        icon: "📋",
+        name: "input[0]",
+        placeholder: "附件地址",
+        width: "full"
+      },
+      {
+        type: "input",
+        icon: "👤",
+        name: "account[0]",
+        placeholder: "账号",
+        width: "full"
+      },
+      {
+        type: "input",
+        icon: "🔑",
+        name: "password[0]",
+        placeholder: "密码",
+        width: "full"
+      },
+      {
+        type: "file",
+        icon: "📎",
+        name: "file[0]",
+        placeholder: "上传附件",
+        accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt", // 限制文件类型：图片、PDF、Office文档
+        width: "full"
+      },
+    ]
+  },
+]
+---
+<div>
+  {
+    isAngance &&
+		  <div>
+			  <div class="flex items-center justify-start gap-2">
+				  <div class="text-2xl font-bold">员工姓名</div>
+				  <div>{username}</div>
+			  </div>
+			  <div class="flex items-center justify-start gap-2">
+				  <div class="text-2xl font-bold">总佣金</div>
+				  <div>{totalMoney}</div>
+			  </div>
+		  </div>
+  }
+	<FilterSection groups={filterGroups}/>
+</div>
+
+<style>
+    .flex {
+        display: flex;
+    }
+    .items-center {
+        align-items: center;
+    }
+    .justify-start {
+        justify-content: flex-start;
+    }
+    .gap-2 {
+        gap: 0.5rem;
+    }
+    .text-2xl {
+        font-size: 1.5rem;
+        line-height: 2rem;
+    }
+    .font-bold {
+        font-weight: 700;
+    }
+    /* 员工信息卡片样式 */
+    .flex.items-center.justify-start.gap-2 {
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 12px;
+        margin-bottom: 8px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .text-2xl.font-bold {
+        color: #1e293b;
+        min-width: 80px;
+    }
+    .flex.items-center.justify-start.gap-2 > div:last-child {
+        color: #475569;
+        font-weight: 500;
+        font-size: 1.125rem;
+    }
+    /* 总佣金特殊样式 */
+    .flex.items-center.justify-start.gap-2:last-child > div:last-child {
+        color: #059669;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+</style>
