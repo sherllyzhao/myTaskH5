@@ -1,7 +1,7 @@
 ---
-// 筛选项类型定义
-
 import AlertBar from "./AlertBar.astro";
+
+// 筛选项类型定义
 interface FilterItem {
   type: 'input' | 'number' | 'picker' | 'date-time-picker' | 'file';
   icon: string;
@@ -25,6 +25,9 @@ interface FilterGroup {
 
 interface Props {
   groups: FilterGroup[];
+  canAdd?: boolean;
+  onAdd?: () => void;
+  onDelete?: () => void;
 }
 
 const { groups } = Astro.props;
@@ -115,6 +118,12 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
       </div>
     </div>
   ))}
+        {canAdd && (
+          <div class="filter-btn-wrapper">
+            <button class="filter-btn filter-btn-primary" onclick={onAdd}>＋ 添加</button>
+              <button class="filter-btn filter-btn-danger" onclick={onDelete}>－ 删除</button>
+          </div>
+        )}
   <AlertBar type="error" id="errorBar" autoClose={true} />
   <AlertBar type="success" id="successBar" autoClose={true} />
 </div>
