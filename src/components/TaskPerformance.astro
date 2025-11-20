@@ -45,12 +45,12 @@ if(data.appendlog){
 <div class="detail-card">
   <div class="execution-header-wrapper">
     <div class="section-title">⚡ 执行信息</div>
-    <button class="edit-address-btn" onclick="openFilterDrawer()">📝 编辑功能地址</button>
   </div>
 
   <!--<Debug data={data} />-->
 
   <div class="execution-table">
+    <button class="edit-address-btn" onclick="openFilterDrawer()">📝 编辑功能地址</button>
     {executionData && executionData.length > 0 ? executionData.map((item: any) => (
       <div class="execution-row">
         <div class="execution-grid">

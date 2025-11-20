@@ -1,27 +1,6 @@
 ---
 import AlertBar from "./AlertBar.astro";
-
-// 筛选项类型定义
-interface FilterItem {
-  type: 'input' | 'number' | 'picker' | 'date-time-picker' | 'file';
-  icon: string;
-  name: string;
-  placeholder?: string;
-  width?: 'full' | 'half';
-  pickerKey?: string;
-  defaultValue?: string;
-  accept?: string; // 文件类型限制，例如: "image/*", ".pdf,.doc,.docx", "image/png,image/jpeg"
-  options?: {
-    value: string;
-    label: string;
-  }[]
-}
-
-// 筛选组配置
-interface FilterGroup {
-  title: string;
-  items: FilterItem[];
-}
+import type { FilterItem, FilterGroup } from "../types/filter";
 
 interface Props {
   groups: FilterGroup[];
@@ -30,7 +9,7 @@ interface Props {
   onDelete?: () => void;
 }
 
-const { groups } = Astro.props;
+const {groups, canAdd, onAdd, onDelete} = Astro.props;
 
 // 获取选择器的显示标签
 const getPickerLabel = (item: FilterItem, value: string | undefined) => {
@@ -120,8 +99,8 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
   ))}
         {canAdd && (
           <div class="filter-btn-wrapper">
-            <button class="filter-btn filter-btn-primary" onclick={onAdd}>＋ 添加</button>
-              <button class="filter-btn filter-btn-danger" onclick={onDelete}>－ 删除</button>
+            <button class="filter-btn filter-btn-primary" id="addBtn">＋ 添加</button>
+            <button class="filter-btn filter-btn-danger" id="deleteBtn">－ 删除</button>
           </div>
         )}
   <AlertBar type="error" id="errorBar" autoClose={true} />
@@ -279,9 +258,56 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
     font-weight: 500;
   }
 
+  /* 按钮样式 */
+  .filter-btn-wrapper {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    justify-content: center;
+  }
+
+  .filter-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+  }
+
+  .filter-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .filter-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .filter-btn-danger {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+  }
+
+  .filter-btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+  }
+
   @media (max-width: 768px) {
     .filter-item.half-width {
       grid-column: span 1;
+    }
+
+    .filter-btn-wrapper {
+      flex-direction: column;
+    }
+
+    .filter-btn {
+      min-width: auto;
     }
   }
 </style>
@@ -309,5 +335,23 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
         }
       });
     });
+
+    // 添加和删除按钮事件处理
+    const addBtn = document.getElementById('addBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        // 触发自定义事件，让父组件监听
+        window.dispatchEvent(new CustomEvent('filterAdd'));
+      });
+    }
+
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => {
+        // 触发自定义事件，让父组件监听
+        window.dispatchEvent(new CustomEvent('filterDelete'));
+      });
+    }
   });
 </script>

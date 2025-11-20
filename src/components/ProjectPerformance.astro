@@ -1,108 +1,943 @@
 ---
+interface Props {
+  data?: Record<string, any>;
+}
 
+type AnyRecord = Record<string, any>;
+
+const { data }: Props = Astro.props;
+
+const pickArray = (source: AnyRecord | undefined | null, keys: string[]) => {
+  if (!source) return [];
+  for (const key of keys) {
+    const value = source[key];
+    if (Array.isArray(value) && value.length) {
+      return value;
+    }
+  }
+  for (const key of keys) {
+    const value = source[key];
+    if (Array.isArray(value)) {
+      return value;
+    }
+  }
+  return [];
+};
+
+const normalizeStatusMeta = (status?: string) => {
+  const value = (status || "").toLowerCase();
+  if (!status) {
+    return { className: "status-default", key: "unknown" };
+  }
+  if (/(完成|验收|通过|生效|success|done)/.test(status)) {
+    return { className: "status-success", key: "done" };
+  }
+  if (/(驳回|失败|关闭|拒绝|reject|refuse|cancel)/.test(status)) {
+    return { className: "status-danger", key: "rejected" };
+  }
+  if (/(待|未|排队|pending|todo)/.test(status)) {
+    return { className: "status-pending", key: "pending" };
+  }
+  if (/(暂停|挂起|hold)/.test(status)) {
+    return { className: "status-offline", key: "paused" };
+  }
+  if (/(进行|处理中|执行|开发|design|制作)/.test(value)) {
+    return { className: "status-info", key: "in-progress" };
+  }
+  return { className: "status-default", key: "unknown" };
+};
+
+const formatAmountLabel = (value: any) => {
+  if (value === null || value === undefined || value === "") {
+    return "¥ 0.00";
+  }
+  if (typeof value === "number") {
+    return `¥ ${value.toFixed(2)}`;
+  }
+  const parsed = Number(value);
+  if (!Number.isNaN(parsed)) {
+    return `¥ ${parsed.toFixed(2)}`;
+  }
+  const text = String(value);
+  return /^¥/.test(text) ? text : `¥ ${text}`;
+};
+
+const normalizeExecution = (item: AnyRecord, index: number) => {
+  const stageName = item.stage || item.stageName || item.name || `执行阶段 ${index + 1}`;
+  const stageType = item.stageType || item.type || item.taskType || item.category || "";
+  const statusText = item.statusText || item.statustxt || item.status || "进行中";
+  const statusMeta = normalizeStatusMeta(statusText);
+  const rawAddress = item.address || item.functionAddress || item.link || item.annex || "";
+
+  return {
+    id: item.id ?? item.stageId ?? index,
+    stageName,
+    stageType,
+    amountLabel: formatAmountLabel(item.amount ?? item.money ?? item.reward ?? item.fee ?? 0),
+    publishTime: item.publishTime ?? item.createTime ?? item.createtime ?? item.orderTime ?? "-",
+    reviewTime: item.reviewTime ?? item.auditTime ?? item.audittime ?? "-",
+    applicant: item.applicant ?? item.customer ?? item.username ?? "",
+    reviewer: item.reviewer ?? item.auditUser ?? item.handler ?? "",
+    functionAddress: rawAddress || "-",
+    functionLink: typeof rawAddress === "string" && /^https?:\/\//i.test(rawAddress) ? rawAddress : "",
+    statusText,
+    statusClass: statusMeta.className,
+    statusKey: statusMeta.key,
+    satisfactionLabel: item.satisfaction ?? item.satisfactionLevel ?? "-",
+    satisfactionScore: item.satisfactionScore ?? item.satisfactionStars ?? "",
+    remark: item.remark ?? item.description ?? "",
+  };
+};
+
+const normalizeDispatchTask = (item: AnyRecord, index: number) => {
+  const statusText = item.statusText ?? item.status ?? "进行中";
+  const statusMeta = normalizeStatusMeta(statusText);
+
+  return {
+    id: item.id ?? item.taskId ?? index,
+    name: item.name ?? item.title ?? `子任务 ${index + 1}`,
+    module: item.module ?? item.groupName ?? item.category ?? "执行模块",
+    type: item.type ?? item.taskType ?? "",
+    publishTime: item.publishTime ?? item.createTime ?? item.createtime ?? "-",
+    deadline: item.deadline ?? item.endTime ?? item.expectTime ?? "-",
+    owner: item.owner ?? item.executor ?? item.username ?? "",
+    amountLabel: formatAmountLabel(item.amount ?? item.money ?? item.reward ?? "-"),
+    description: item.description ?? item.remark ?? "",
+    statusText,
+    statusKey: statusMeta.key,
+    statusClass: statusMeta.className,
+  };
+};
+
+const executionCandidates = pickArray(data, [
+  "projectExecutions",
+  "executionList",
+  "projectExecutionList",
+  "executionlist",
+  "stageList",
+  "projectLogList",
+  "projectLog",
+]);
+
+const dispatchCandidates = pickArray(data, [
+  "dispatchTasks",
+  "issueTaskList",
+  "issueTasks",
+  "projectIssueList",
+  "taskIssueList",
+  "pendingIssueList",
+]);
+
+const fallbackExecutions = [
+  {
+    id: "stage-fallback-1",
+    stageName: "方案梳理",
+    stageType: "需求设计",
+    amountLabel: "¥ 0.00",
+    publishTime: "2024-12-28 09:13:42",
+    reviewTime: "未上传",
+    applicant: "李设计",
+    reviewer: "-",
+    functionAddress: "功能清单 V1",
+    functionLink: "",
+    statusText: "未审核",
+    statusClass: "status-pending",
+    statusKey: "pending",
+    satisfactionLabel: "-",
+    satisfactionScore: "-",
+    remark: "等待客户提供最终资料。",
+  },
+  {
+    id: "stage-fallback-2",
+    stageName: "网站制作",
+    stageType: "开发交付",
+    amountLabel: "¥ 0.50",
+    publishTime: "2024-11-04 10:00:59",
+    reviewTime: "2024-11-04 10:53:15",
+    applicant: "资海云",
+    reviewer: "项目经理",
+    functionAddress: "投产查看",
+    functionLink: "",
+    statusText: "已验收",
+    statusClass: "status-success",
+    statusKey: "done",
+    satisfactionLabel: "评分",
+    satisfactionScore: "1",
+    remark: "客户反馈良好，准备上线。",
+  },
+];
+
+const fallbackDispatchTasks = [
+  {
+    id: "dispatch-fallback-1",
+    name: "首页 Banner 设计",
+    module: "UI / 视觉",
+    type: "设计",
+    publishTime: "2024-11-05 09:00",
+    deadline: "2024-11-05 18:00",
+    owner: "张三",
+    amountLabel: "¥ 300.00",
+    description: "输出两版视觉稿，保留编辑源文件。",
+    statusText: "进行中",
+    statusKey: "in-progress",
+    statusClass: "status-info",
+  },
+  {
+    id: "dispatch-fallback-2",
+    name: "功能架构整理",
+    module: "产品",
+    type: "规划",
+    publishTime: "2024-11-02 10:20",
+    deadline: "2024-11-03 17:30",
+    owner: "李四",
+    amountLabel: "¥ 420.00",
+    description: "梳理 PC + 移动端交互流程，标记接口。",
+    statusText: "待接收",
+    statusKey: "pending",
+    statusClass: "status-pending",
+  },
+  {
+    id: "dispatch-fallback-3",
+    name: "上线巡检",
+    module: "交付",
+    type: "验收",
+    publishTime: "2024-10-30 09:30",
+    deadline: "2024-10-31 10:00",
+    owner: "王工",
+    amountLabel: "¥ 180.00",
+    description: "检查 SSL、404 页面以及主流浏览器兼容性。",
+    statusText: "已完成",
+    statusKey: "done",
+    statusClass: "status-success",
+  },
+];
+
+const executionList =
+  executionCandidates.length > 0
+    ? executionCandidates.map(normalizeExecution)
+    : fallbackExecutions;
+
+const dispatchTaskList =
+  dispatchCandidates.length > 0
+    ? dispatchCandidates.map(normalizeDispatchTask)
+    : fallbackDispatchTasks;
+
+const fallbackInProgressCount =
+  executionList.filter((item) => item.statusKey === "in-progress").length || 0;
+
+const fallbackDoneCount =
+  executionList.filter((item) => item.statusKey === "done").length || 0;
+
+const fallbackSatisfactionText = executionList.length ? "良好" : "-";
+
+const summaryStats = [
+  {
+    label: "进行中",
+    value: data?.projectStats?.inProgress ?? fallbackInProgressCount,
+    desc: "当前执行阶段",
+  },
+  {
+    label: "已完成",
+    value: data?.projectStats?.done ?? fallbackDoneCount,
+    desc: "验收通过阶段",
+  },
+  {
+    label: "满意度",
+    value: data?.projectStats?.satisfaction ?? fallbackSatisfactionText,
+    desc: "客户反馈",
+  },
+];
+
+const dispatchFilterOptions = [
+  { key: "all", label: "全部" },
+  { key: "in-progress", label: "进行中" },
+  { key: "pending", label: "待接收" },
+  { key: "done", label: "已完成" },
+];
+
+const defaultFilterKey = dispatchFilterOptions[0]?.key ?? "all";
+const modalId = "project-dispatch-modal";
 ---
-<div class="detail-card">
-	<div class="section-title">⚡ 执行信息</div>
-	<div class="execution-list">
-		<!-- 设计任务 -->
-		<div class="execution-item">
-			<div class="execution-header">
-				<div class="execution-type">
-					<span class="execution-status status-设计">🎨 设计</span>
-				</div>
-				<div class="execution-amount">¥ 0.00</div>
-			</div>
-			<div class="execution-details">
-				<div class="execution-detail">
-					<span class="info-label">📅 发布时间</span>
-					<span class="execution-detail-value"
-					>2024-12-28<br />09:13:42</span
-					>
-				</div>
-				<div class="execution-detail">
-					<span class="info-label">📤 验收时间</span>
-					<span class="execution-detail-value">未上传</span>
-				</div>
-				<div class="execution-detail">
-					<span class="info-label">🔍 状态</span>
-					<span class="execution-detail-value">未审核</span>
-				</div>
-				<div class="execution-detail">
-					<span class="info-label">🔗 功能地址</span>
-					<span class="execution-detail-value">1</span>
-				</div>
-			</div>
-			<div class="execution-actions">
-				<div class="execution-satisfaction">
-					<span>满意度:</span>
-					<span class="satisfaction-stars">-</span>
-				</div>
-				<button class="execution-action-btn">新增</button>
-			</div>
-		</div>
 
-		<!-- 网站制作任务 -->
-		<div class="execution-item">
-			<div class="execution-header">
-				<div class="execution-type">
-								<span class="execution-status status-网站制作"
-								>💻 网站制作</span
-								>
-				</div>
-				<div class="execution-amount">¥ 0.50</div>
-			</div>
-			<div class="execution-details">
-				<div class="execution-detail">
-					<span class="info-label">👤 申请人</span>
-					<span class="execution-detail-value">资海云</span>
-				</div>
-				<div class="execution-detail">
-					<span class="info-label">📅 发布时间</span>
-					<span class="execution-detail-value"
-					>2024-11-04<br />10:00:59</span
-					>
-				</div>
-				<div class="execution-detail">
-					<span class="info-label">📤 验收时间</span>
-					<span class="execution-detail-value"
-					>2024-11-04<br />10:42:39</span
-					>
-				</div>
-				<div class="execution-detail">
-					<span class="info-label">🔍 状态</span>
-					<span class="execution-detail-value">
-								<span class="execution-status status-已验收"
-								>✅ 已验收</span
-								>
-								</span>
-				</div>
-				<div class="execution-detail">
-					<span class="info-label">🔗 功能地址</span>
-					<span class="execution-detail-value">停生查看</span>
-				</div>
-				<div class="execution-detail">
-					<span class="info-label">📝 验收情况</span>
-					<span class="execution-detail-value">排权关</span>
-				</div>
-				<div class="execution-detail">
-					<span class="info-label">⏰ 完成时间</span>
-					<span class="execution-detail-value"
-					>2024-11-04<br />10:53:15</span
-					>
-				</div>
-				<div class="execution-detail">
-					<span class="info-label">🔍 审核时间</span>
-					<span class="execution-detail-value">-</span>
-				</div>
-			</div>
-			<div class="execution-actions">
-				<div class="execution-satisfaction">
-					<span>满意度:</span>
-					<span class="satisfaction-stars">⭐</span>
-					<span>1</span>
-				</div>
-				<button class="execution-action-btn">新增</button>
-			</div>
-		</div>
-	</div>
+<div class="detail-card project-performance-card">
+  <div class="section-top">
+    <div>
+      <div class="section-title">⚡ 项目执行</div>
+      <p class="section-subtitle">移动端视角实时掌握每个执行阶段</p>
+    </div>
+    <button class="dispatch-btn" type="button" data-open-dispatch>下发任务</button>
+  </div>
+
+  <div class="summary-grid">
+    {summaryStats.map((stat) => (
+      <div class="summary-item">
+        <div class="summary-label">{stat.label}</div>
+        <div class="summary-value">{stat.value}</div>
+        <div class="summary-desc">{stat.desc}</div>
+      </div>
+    ))}
+  </div>
+
+  <div class="execution-mobile-list">
+    {executionList.length > 0 ? (
+      executionList.map((stage) => (
+        <div class="execution-card" data-status-key={stage.statusKey}>
+          <div class="execution-card-header">
+            <div class="execution-stage">
+              <span class="stage-name">{stage.stageName}</span>
+              {stage.stageType && <span class="stage-type">{stage.stageType}</span>}
+            </div>
+            <div class="execution-status">
+              <span class="amount-label">{stage.amountLabel}</span>
+              <span class={`status-badge ${stage.statusClass}`}>{stage.statusText}</span>
+            </div>
+          </div>
+
+          <div class="execution-card-body">
+            <div class="meta-row">
+              <span class="meta-label">申请人</span>
+              <span class="meta-value">{stage.applicant || "-"}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">发布时间</span>
+              <span class="meta-value">{stage.publishTime || "-"}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">验收时间</span>
+              <span class="meta-value">{stage.reviewTime || "未验收"}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">功能地址</span>
+              <span class="meta-value">
+                {stage.functionLink ? (
+                  <a
+                    href={stage.functionLink}
+                    class="meta-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {stage.functionAddress}
+                  </a>
+                ) : (
+                  stage.functionAddress || "-"
+                )}
+              </span>
+            </div>
+          </div>
+
+          {stage.remark && <div class="execution-remark">{stage.remark}</div>}
+
+          <div class="execution-card-footer">
+            <div class="satisfaction">
+              <span class="meta-label">满意度</span>
+              <span class="satisfaction-score">
+                {stage.satisfactionScore || stage.satisfactionLabel || "-"}
+              </span>
+            </div>
+            <button class="ghost-btn" type="button">记录进度</button>
+          </div>
+        </div>
+      ))
+    ) : (
+      <div class="empty-state">
+        <div class="empty-icon">🗂️</div>
+        <div class="empty-title">暂未创建执行阶段</div>
+        <p class="empty-desc">点击右上角「下发任务」即可新建阶段</p>
+      </div>
+    )}
+  </div>
 </div>
+
+<div class="dispatch-modal" id={modalId} aria-hidden="true" role="dialog">
+  <div class="dispatch-modal-content">
+    <div class="dispatch-modal-header">
+      <div>
+        <div class="modal-title">任务下发</div>
+        <p class="modal-desc">选择子任务并同步给执行人</p>
+      </div>
+      <button class="modal-close" type="button" data-close-dispatch aria-label="关闭弹窗">×</button>
+    </div>
+
+    <div class="dispatch-filter-list">
+      {dispatchFilterOptions.map((filter, index) => (
+        <button
+          class={`dispatch-filter-btn ${index === 0 ? "active" : ""}`}
+          type="button"
+          data-dispatch-filter={filter.key}
+        >
+          {filter.label}
+        </button>
+      ))}
+    </div>
+
+    <div class="dispatch-task-list">
+      {dispatchTaskList.length > 0 ? (
+        dispatchTaskList.map((task) => (
+          <div class="dispatch-task-card" data-status-key={task.statusKey}>
+            <div class="task-card-header">
+              <div>
+                <div class="task-title">{task.name}</div>
+                <div class="task-module">
+                  {task.module}
+                  {task.type ? ` · ${task.type}` : ""}
+                </div>
+              </div>
+              <span class={`status-badge ${task.statusClass}`}>{task.statusText}</span>
+            </div>
+
+            <div class="task-meta-grid">
+              <div class="meta-row">
+                <span class="meta-label">执行人</span>
+                <span class="meta-value">{task.owner || "-"}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">发布时间</span>
+                <span class="meta-value">{task.publishTime || "-"}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">截止时间</span>
+                <span class="meta-value">{task.deadline || "-"}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">预算</span>
+                <span class="meta-value">{task.amountLabel || "-"}</span>
+              </div>
+            </div>
+
+            {task.description && <div class="task-description">{task.description}</div>}
+
+            <div class="task-actions">
+              <button class="ghost-btn ghost-small" type="button">查看要求</button>
+              <button class="primary-btn" type="button">立即下发</button>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div class="empty-state small">
+          <div class="empty-icon">📝</div>
+          <div class="empty-title">暂无可下发的任务</div>
+          <p class="empty-desc">前往后台创建执行内容后即可在此推送。</p>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
+<style>
+  :global(body.dispatch-modal-open) {
+    overflow: hidden;
+  }
+
+  .project-performance-card {
+    border-radius: 20px;
+    padding: 20px 16px;
+    background: #ffffff;
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+    border: 1px solid #e2e8f0;
+  }
+
+  .section-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .section-subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+  }
+
+  .dispatch-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(120deg, #2563eb, #4c1d95);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .dispatch-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+  }
+
+  .summary-grid {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 12px;
+  }
+
+  .summary-item {
+    padding: 12px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+  }
+
+  .summary-label {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+
+  .summary-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .summary-desc {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .execution-mobile-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .execution-card {
+    border-radius: 18px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  }
+
+  .execution-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .execution-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stage-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .stage-type {
+    display: inline-flex;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  .execution-status {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .amount-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+
+  .status-success {
+    color: #047857;
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+  }
+
+  .status-info {
+    color: #1d4ed8;
+    background: #e0f2fe;
+    border-color: #bfdbfe;
+  }
+
+  .status-pending {
+    color: #92400e;
+    background: #fef3c7;
+    border-color: #fde68a;
+  }
+
+  .status-danger {
+    color: #b91c1c;
+    background: #fee2e2;
+    border-color: #fecaca;
+  }
+
+  .status-offline {
+    color: #475569;
+    background: #e2e8f0;
+    border-color: #cbd5f5;
+  }
+
+  .status-default {
+    color: #475569;
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+  }
+
+  .execution-card-body {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: #475569;
+  }
+
+  .meta-label {
+    color: #94a3b8;
+    min-width: 70px;
+  }
+
+  .meta-value {
+    flex: 1;
+    text-align: right;
+    color: #0f172a;
+    word-break: break-all;
+  }
+
+  .meta-link {
+    color: #2563eb;
+    text-decoration: none;
+  }
+
+  .meta-link:hover {
+    text-decoration: underline;
+  }
+
+  .execution-remark {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .execution-card-footer {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .satisfaction-score {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-left: 6px;
+  }
+
+  .ghost-btn,
+  .primary-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .ghost-btn {
+    background: #f8fafc;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+
+  .ghost-btn:active,
+  .primary-btn:active {
+    transform: scale(0.97);
+  }
+
+  .ghost-small {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .primary-btn {
+    background: linear-gradient(120deg, #2563eb, #7c3aed);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+  }
+
+  .empty-state {
+    padding: 32px 12px;
+    text-align: center;
+    color: #94a3b8;
+    border-radius: 16px;
+    border: 1px dashed #cbd5f5;
+    background: #f8fafc;
+  }
+
+  .empty-state.small {
+    padding: 24px 12px;
+  }
+
+  .empty-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .empty-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .empty-desc {
+    font-size: 13px;
+    color: #94a3b8;
+  }
+
+  .dispatch-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 16px;
+    z-index: 999;
+  }
+
+  .dispatch-modal.active {
+    display: flex;
+  }
+
+  .dispatch-modal-content {
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    background: #ffffff;
+    border-radius: 20px 20px 12px 12px;
+    padding: 20px 16px 24px;
+    overflow-y: auto;
+    box-shadow: 0 -10px 40px rgba(15, 23, 42, 0.25);
+  }
+
+  .dispatch-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .modal-desc {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .modal-close {
+    border: none;
+    background: #f8fafc;
+    border-radius: 999px;
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    color: #475569;
+  }
+
+  .dispatch-filter-list {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+
+  .dispatch-filter-btn {
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #475569;
+  }
+
+  .dispatch-filter-btn.active {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+  }
+
+  .dispatch-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dispatch-task-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px;
+    background: #ffffff;
+  }
+
+  .task-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .task-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .task-module {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .task-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .task-description {
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .task-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  @media (min-width: 640px) {
+    .project-performance-card {
+      padding: 24px;
+    }
+
+    .dispatch-modal {
+      align-items: center;
+    }
+
+    .dispatch-modal-content {
+      border-radius: 24px;
+    }
+  }
+</style>
+
+<script is:inline define:vars={modalId, defaultFilterKey}>
+  (() => {
+    const modalId = JSON.stringify(modalId);
+    const defaultFilterKey = JSON.stringify(defaultFilterKey);
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    const openButtons = document.querySelectorAll("[data-open-dispatch]");
+    const closeButtons = modal.querySelectorAll("[data-close-dispatch]");
+    const filterButtons = modal.querySelectorAll("[data-dispatch-filter]");
+    const taskCards = modal.querySelectorAll("[data-status-key]");
+
+    const toggleModal = (open) => {
+      modal.classList.toggle("active", open);
+      document.body.classList.toggle("dispatch-modal-open", open);
+    };
+
+    openButtons.forEach((button) => {
+      button.addEventListener("click", () => toggleModal(true));
+    });
+
+    closeButtons.forEach((button) => {
+      button.addEventListener("click", () => toggleModal(false));
+    });
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        toggleModal(false);
+      }
+    });
+
+    const applyFilter = (targetKey) => {
+      filterButtons.forEach((button) => {
+        const key = button.getAttribute("data-dispatch-filter");
+        const isActive = key === targetKey;
+        if (isActive) {
+          button.classList.add("active");
+        } else {
+          button.classList.remove("active");
+        }
+      });
+
+      taskCards.forEach((card) => {
+        const statusKey = card.getAttribute("data-status-key") || "all";
+        if (targetKey === "all" || statusKey === targetKey) {
+          card.removeAttribute("hidden");
+        } else {
+          card.setAttribute("hidden", "true");
+        }
+      });
+    };
+
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const selected = button.getAttribute("data-dispatch-filter") || "all";
+        applyFilter(selected);
+      });
+    });
+
+    applyFilter(defaultFilterKey);
+  })();
+</script>

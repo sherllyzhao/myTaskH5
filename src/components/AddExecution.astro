@@ -9,42 +9,44 @@ interface Props {
 
 const {data, isAngance = false, username, totalMoney} = Astro.props;
 
-const filterGroups = [
-  {
-    title: "执行信息1",
-    items: [
-      {
-        type: "input",
-        icon: "📋",
-        name: "input[0]",
-        placeholder: "附件地址",
-        width: "full"
-      },
-      {
-        type: "input",
-        icon: "👤",
-        name: "account[0]",
-        placeholder: "账号",
-        width: "full"
-      },
-      {
-        type: "input",
-        icon: "🔑",
-        name: "password[0]",
-        placeholder: "密码",
-        width: "full"
-      },
-      {
-        type: "file",
-        icon: "📎",
-        name: "file[0]",
-        placeholder: "上传附件",
-        accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt", // 限制文件类型：图片、PDF、Office文档
-        width: "full"
-      },
-    ]
-  },
-]
+// 初始的筛选组模板
+const createFilterGroup = (index: number) => ({
+  title: `执行信息${index + 1}`,
+  items: [
+    {
+      type: "input",
+      icon: "📋",
+      name: `input[${index}]`,
+      placeholder: "附件地址",
+      width: "full"
+    },
+    {
+      type: "input",
+      icon: "👤",
+      name: `account[${index}]`,
+      placeholder: "账号",
+      width: "full"
+    },
+    {
+      type: "input",
+      icon: "🔑",
+      name: `password[${index}]`,
+      placeholder: "密码",
+      width: "full"
+    },
+    {
+      type: "file",
+      icon: "📎",
+      name: `file[${index}]`,
+      placeholder: "上传附件",
+      accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt",
+      width: "full"
+    },
+  ]
+});
+
+// 初始化一个筛选组
+const initialFilterGroups = [createFilterGroup(0)];
 ---
 <div>
   {
@@ -60,7 +62,9 @@ const filterGroups = [
 			  </div>
 		  </div>
   }
-	<FilterSection groups={filterGroups}/>
+	<div id="filterContainer">
+		<!-- 动态内容将在这里生成 -->
+	</div>
 </div>
 
 <style>
@@ -107,4 +111,262 @@ const filterGroups = [
         font-weight: 600;
         font-size: 1.25rem;
     }
+
+    /* 动态组容器样式 */
+    #filterContainer {
+        position: relative;
+    }
+
+    .execution-group {
+        margin-bottom: 24px;
+        padding: 20px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        background: #fafafa;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .execution-group:hover {
+        border-color: #d1d5db;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .execution-group.removing {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
 </style>
+
+<script>
+  // 动态管理执行信息组
+  class ExecutionManager {
+    constructor() {
+      this.groups = [];
+      this.nextIndex = 1;
+      this.container = document.getElementById('filterContainer');
+      this.init();
+    }
+
+    init() {
+      // 监听添加和删除事件
+      window.addEventListener('filterAdd', () => this.addGroup());
+      window.addEventListener('filterDelete', () => this.removeGroup());
+
+      // 初始化第一个组
+      this.addGroup();
+    }
+
+    createFilterGroup(index) {
+      return {
+        title: `执行信息${index + 1}`,
+        items: [
+          {
+            type: "input",
+            icon: "📋",
+            name: `input[${index}]`,
+            placeholder: "附件地址",
+            width: "full"
+          },
+          {
+            type: "input",
+            icon: "👤",
+            name: `account[${index}]`,
+            placeholder: "账号",
+            width: "full"
+          },
+          {
+            type: "input",
+            icon: "🔑",
+            name: `password[${index}]`,
+            placeholder: "密码",
+            width: "full"
+          },
+          {
+            type: "file",
+            icon: "📎",
+            name: `file[${index}]`,
+            placeholder: "上传附件",
+            accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt",
+            width: "full"
+          },
+        ]
+      };
+    }
+
+    addGroup() {
+      const groupIndex = this.groups.length;
+      const newGroup = this.createFilterGroup(groupIndex);
+      this.groups.push(newGroup);
+
+      // 创建新的组元素
+      const groupElement = this.createGroupElement(newGroup, groupIndex);
+
+      // 如果是第一个组，替换现有内容，否则添加到末尾
+      if (this.groups.length === 1) {
+        this.container.innerHTML = '';
+        this.container.appendChild(groupElement);
+      } else {
+        // 在按钮前插入新组
+        const existingButtons = this.container.querySelector('.filter-btn-wrapper');
+        if (existingButtons) {
+          this.container.insertBefore(groupElement, existingButtons.parentElement);
+        } else {
+          this.container.appendChild(groupElement);
+        }
+      }
+
+      // 重新渲染按钮
+      this.renderButtons();
+
+      // 重新绑定文件上传事件
+      this.bindFileEvents(groupElement);
+
+      console.log(`添加了执行信息${groupIndex + 1}`);
+    }
+
+    removeGroup() {
+      if (this.groups.length <= 1) {
+        alert('至少需要保留一个执行信息组');
+        return;
+      }
+
+      const lastIndex = this.groups.length - 1;
+      this.groups.pop();
+
+      // 移除最后一个组的DOM元素
+      const groupElements = this.container.querySelectorAll('.execution-group');
+      const lastGroup = groupElements[groupElements.length - 1];
+
+      if (lastGroup) {
+        lastGroup.classList.add('removing');
+        setTimeout(() => {
+          lastGroup.remove();
+          this.renderButtons();
+        }, 300);
+      }
+
+      console.log(`删除了执行信息${lastIndex + 1}`);
+    }
+
+    createGroupElement(group, index) {
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'execution-group';
+      groupDiv.innerHTML = `
+        <div class="filter-section">
+          <h4 class="filter-section-title">${group.title}</h4>
+          <div class="filter-grid">
+            ${group.items.map(item => this.createItemHTML(item)).join('')}
+          </div>
+        </div>
+      `;
+      return groupDiv;
+    }
+
+    createItemHTML(item) {
+      const itemClass = `filter-item ${item.width === 'half' ? 'half-width' : 'full-width'}`;
+
+      if (item.type === 'input') {
+        return `
+          <div class="${itemClass}">
+            <span class="filter-item-icon">${item.icon}</span>
+            <input
+              type="text"
+              class="filter-input"
+              name="${item.name}"
+              placeholder="${item.placeholder || ''}"
+            />
+          </div>
+        `;
+      } else if (item.type === 'file') {
+        return `
+          <div class="${itemClass}">
+            <span class="filter-item-icon">${item.icon}</span>
+            <div class="file-upload-wrapper">
+              <input
+                type="file"
+                class="file-input"
+                id="file-${item.name}"
+                name="${item.name}"
+                accept="${item.accept || '*/*'}"
+              />
+              <label for="file-${item.name}" class="file-label">
+                <span class="file-display" data-name="${item.name}" data-placeholder="${item.placeholder || '选择文件'}">
+                  ${item.placeholder || '选择文件'}
+                </span>
+              </label>
+            </div>
+          </div>
+        `;
+      }
+      return '';
+    }
+
+    renderButtons() {
+      // 移除现有按钮
+      const existingButtons = this.container.querySelector('.filter-btn-wrapper');
+      if (existingButtons) {
+        existingButtons.parentElement.remove();
+      }
+
+      // 创建新按钮
+      const buttonContainer = document.createElement('div');
+      buttonContainer.innerHTML = `
+        <div class="filter-btn-wrapper">
+          <button class="filter-btn filter-btn-primary" id="addBtn">＋ 添加</button>
+          <button class="filter-btn filter-btn-danger" id="deleteBtn">－ 删除</button>
+        </div>
+      `;
+
+      this.container.appendChild(buttonContainer);
+
+      // 重新绑定按钮事件
+      this.bindButtonEvents();
+    }
+
+    bindButtonEvents() {
+      const addBtn = document.getElementById('addBtn');
+      const deleteBtn = document.getElementById('deleteBtn');
+
+      if (addBtn) {
+        addBtn.addEventListener('click', () => {
+          window.dispatchEvent(new CustomEvent('filterAdd'));
+        });
+      }
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+          window.dispatchEvent(new CustomEvent('filterDelete'));
+        });
+      }
+    }
+
+    bindFileEvents(container) {
+      const fileInputs = container.querySelectorAll('.file-input');
+
+      fileInputs.forEach((input) => {
+        input.addEventListener('change', (e) => {
+          const target = e.target;
+          const file = target.files?.[0];
+          const fileDisplay = container.querySelector(`.file-display[data-name="${target.name}"]`);
+
+          if (fileDisplay) {
+            if (file) {
+              fileDisplay.textContent = file.name;
+              fileDisplay.classList.add('has-file');
+            } else {
+              const placeholder = fileDisplay.getAttribute('data-placeholder') || '选择文件';
+              fileDisplay.textContent = placeholder;
+              fileDisplay.classList.remove('has-file');
+            }
+          }
+        });
+      });
+    }
+  }
+
+  // 页面加载完成后初始化
+  document.addEventListener('DOMContentLoaded', () => {
+    new ExecutionManager();
+  });
+</script>
