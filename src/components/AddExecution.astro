@@ -1,5 +1,4 @@
 ---
-import FilterSection from "./FilterSection.astro";
 interface Props {
   data?: any;
   isAngance?: boolean;
@@ -67,7 +66,7 @@ const initialFilterGroups = [createFilterGroup(0)];
 	</div>
 </div>
 
-<style>
+<style is:global>
     .flex {
         display: flex;
     }
@@ -135,6 +134,170 @@ const initialFilterGroups = [createFilterGroup(0)];
     .execution-group.removing {
         opacity: 0.5;
         transform: scale(0.98);
+    }
+
+    /* FilterSection 样式 - 从FilterSection.astro复制过来 */
+    .filter-section {
+        margin-bottom: 24px;
+    }
+
+    .filter-section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 12px;
+    }
+
+    .filter-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr;
+    }
+
+    .filter-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-item.half-width {
+        grid-column: span 1;
+    }
+
+    .filter-item.full-width {
+        grid-column: span 2;
+    }
+
+    .filter-item-icon {
+        font-size: 16px;
+        min-width: 20px;
+        text-align: center;
+    }
+
+    .filter-input {
+        flex: 1;
+        padding: 12px 14px 12px 40px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        font-size: 16px;
+        color: #374151;
+        transition: all 0.2s ease;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* 两列布局 */
+    .filter-grid.two-cols {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* 文件上传样式 */
+    .file-upload-wrapper {
+        flex: 1;
+        display: flex;
+    }
+
+    .file-input {
+        position: absolute;
+        opacity: 0;
+        width: 0.1px;
+        height: 0.1px;
+        overflow: hidden;
+        z-index: -1;
+    }
+
+    .file-label {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        padding: 12px 14px 12px 40px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        font-size: 16px;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .file-label:hover {
+        border-color: #d1d5db;
+    }
+
+    .file-input:focus + .file-label {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .file-display {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-display.has-file {
+        color: #374151;
+        font-weight: 500;
+    }
+
+    /* 按钮样式 */
+    .filter-btn-wrapper {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+        justify-content: center;
+    }
+
+    .filter-btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        border: none;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-width: 120px;
+    }
+
+    .filter-btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .filter-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .filter-btn-danger {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .filter-btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .filter-item.half-width {
+            grid-column: span 1;
+        }
+
+        .filter-btn-wrapper {
+            flex-direction: column;
+        }
+
+        .filter-btn {
+            min-width: auto;
+        }
     }
 </style>
 
