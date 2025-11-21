@@ -109,6 +109,37 @@ try {
 } catch (e) {
   console.log(e);
 }
+
+
+// 示例数据结构，实际应该从 props 传入
+const executionData: any[] = [];
+
+if(task.appendlog){
+  let annex = task.appendlog.annex ? task.appendlog.annex.split(',') : []
+  let username = task.appendlog.username ? task.appendlog.username.split(',') : []
+  let password = task.appendlog.password ? task.appendlog.password.split(',') : []
+  annex.forEach((item: {
+    annex: string;
+    username: string;
+    password: string;
+    statustxt: string;
+    status: string;
+    filelist: string;
+    audittime: string;
+    createtime: string;
+  }, index: number) => {
+    executionData.push({
+      annex: item,
+      username: username[index],
+      password: password[index],
+      statustxt: task.appendlog?.statustxt,
+      status: task.appendlog?.status,
+      filelist: task.appendlog?.filelist,
+      audittime: task.appendlog?.audittime,
+      createtime: task.appendlog?.createtime,
+    })
+  })
+}
 ---
 
 <html lang="zh-CN">
@@ -405,7 +436,7 @@ try {
           <!-- 执行信息 -->
           {
             !isWaiting(task) && (
-               isProject(task.orderType) ? (<ProjectPerformance data={task} />) : (<TaskPerformance data={task} />)
+               isProject(task.orderType) ? (<ProjectPerformance data={task} />) : (<TaskPerformance data={task} executionData={executionData} />)
             )
           }
 
@@ -440,20 +471,7 @@ try {
 			    >
 		    </Fragment>
 
-            <AddExecution data={task} />
-
-		    <Fragment slot="footer">
-			    <div class="filter-actions">
-				    <button
-						    class="filter-btn filter-btn-secondary"
-						    onclick="resetFilters()">🔄 重置</button
-				    >
-				    <button
-						    class="filter-btn filter-btn-primary"
-						    onclick="applyFilters(window.loadInitialData)">🚀 添加</button
-				    >
-			    </div>
-		    </Fragment>
+            <AddExecution data={task} executionData={executionData} />
 	    </FilterDrawer>
     </div>
     <script is:inline src="/js/drawer.js"></script>

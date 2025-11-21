@@ -14,7 +14,7 @@ import { createListStateManager } from "../utils/listStateManager";
  * @param {number} options.limit - 每页加载数量
  * @returns {Object} 加载器实例
  */
-export function createTaskListLoader(options) {
+export function createTaskListLoader(options: { apiPath: any; container: any; limit?: 10 | undefined; }) {
 	const { apiPath, container, limit = 10 } = options;
 
 	// 状态变量
@@ -35,7 +35,7 @@ export function createTaskListLoader(options) {
 	 * 加载初始数据
 	 * @param {Object} formData - 筛选表单数据
 	 */
-	async function loadInitialData(formData = {}) {
+	async function loadInitialData(formData: object = {}) {
 		if (isLoading) return;
 
 		isLoading = true;
@@ -84,11 +84,12 @@ export function createTaskListLoader(options) {
 					container.innerHTML = "";
 
 					if (tasks.length > 0) {
-						tasks.forEach((task) => {
+						tasks.forEach((task: { description: any[]; }) => {
 							// 处理描述字段
 							if (Object.prototype.toString.call(task.description) === '[object Array]') {
 								task.description = task.description.map((d) => d.condition_title + '：' + d.condition);
 								if (task.description.length > 0) {
+									// @ts-ignore
 									task.description = task.description.join('\n');
 								}
 							}
@@ -168,7 +169,7 @@ export function createTaskListLoader(options) {
 
 				// 添加新任务到列表
 				if (newTasks.length > 0) {
-					newTasks.forEach((task) => {
+					newTasks.forEach((task: any) => {
 						const taskHTML = createTaskCardHTML(task);
 						container && container.insertAdjacentHTML("beforeend", taskHTML);
 					});
@@ -217,11 +218,12 @@ export function createTaskListLoader(options) {
 	/**
 	 * 防抖函数
 	 */
-	function debounce(func, wait) {
-		let timeout;
-		return function executedFunction(...args) {
+	function debounce(func: { (): void; (arg0: any): void; }, wait: number | undefined) {
+		let timeout: string | number | NodeJS.Timeout | undefined;
+		return function executedFunction(...args: any[]) {
 			const later = () => {
 				clearTimeout(timeout);
+				// @ts-ignore
 				func(...args);
 			};
 			clearTimeout(timeout);

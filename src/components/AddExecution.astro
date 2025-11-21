@@ -1,53 +1,19 @@
 ---
+import AlertBar from "./AlertBar.astro";
+import {Debug} from "astro:components";
+
 interface Props {
   data?: any;
   isAngance?: boolean;
   username?: string;
   totalMoney?: number;
+	executionData?: any[];
 }
 
-const {data, isAngance = false, username, totalMoney} = Astro.props;
-
-// 初始的筛选组模板
-const createFilterGroup = (index: number) => ({
-  title: `执行信息${index + 1}`,
-  items: [
-    {
-      type: "input",
-      icon: "📋",
-      name: `input[${index}]`,
-      placeholder: "附件地址",
-      width: "full"
-    },
-    {
-      type: "input",
-      icon: "👤",
-      name: `account[${index}]`,
-      placeholder: "账号",
-      width: "full"
-    },
-    {
-      type: "input",
-      icon: "🔑",
-      name: `password[${index}]`,
-      placeholder: "密码",
-      width: "full"
-    },
-    {
-      type: "file",
-      icon: "📎",
-      name: `file[${index}]`,
-      placeholder: "上传附件",
-      accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt",
-      width: "full"
-    },
-  ]
-});
-
-// 初始化一个筛选组
-const initialFilterGroups = [createFilterGroup(0)];
+const {isAngance = false, username, totalMoney, data, executionData} = Astro.props;
 ---
-<div>
+<form id="executionForm">
+	<!--<Debug data={data}></Debug>-->
   {
     isAngance &&
 		  <div>
@@ -64,7 +30,15 @@ const initialFilterGroups = [createFilterGroup(0)];
 	<div id="filterContainer">
 		<!-- 动态内容将在这里生成 -->
 	</div>
-</div>
+
+	<AlertBar type="error" id="errorBar" autoClose={true}/>
+	<AlertBar type="success" id="successBar" autoClose={true}/>
+
+	<!-- 提交按钮 -->
+	<div class="submit-btn-wrapper">
+		<button type="submit" class="submit-btn">提交执行信息</button>
+	</div>
+</form>
 
 <style is:global>
     .flex {
@@ -246,6 +220,76 @@ const initialFilterGroups = [createFilterGroup(0)];
         color: #374151;
         font-weight: 500;
     }
+	/* 文件预览样式 */
+	.file-preview-container {
+		width: 100%;
+		padding: 12px;
+		background: #f8fafc;
+		border-radius: 8px;
+		border: 1px solid #e2e8f0;
+	}
+	.file-preview-label {
+		font-size: 14px;
+		font-weight: 600;
+		color: #475569;
+		margin-bottom: 8px;
+	}
+	.file-preview-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+	.file-preview-item {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		text-decoration: none;
+		transition: transform 0.3s ease;
+		position: relative;
+	}
+	.file-preview-item:hover {
+		transform: scale(1.05);
+	}
+	.file-preview-image {
+		max-width: 80px;
+		height: auto;
+		border-radius: 8px;
+		border: 2px solid #e2e8f0;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+		cursor: pointer;
+	}
+	.file-preview-name {
+		font-size: 12px;
+		color: #3b82f6;
+		max-width: 80px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		text-align: center;
+	}
+	.file-preview-remove {
+		position: absolute;
+		top: -6px;
+		right: -6px;
+		background: #ef4444;
+		color: white;
+		border: none;
+		border-radius: 50%;
+		width: 20px;
+		height: 20px;
+		font-size: 12px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s ease;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	}
+	.file-preview-remove:hover {
+		background: #dc2626;
+		transform: scale(1.1);
+	}
 
     /* 按钮样式 */
     .filter-btn-wrapper {
@@ -285,6 +329,39 @@ const initialFilterGroups = [createFilterGroup(0)];
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
     }
+	/* 提交按钮样式 */
+	.submit-btn-wrapper {
+		display: flex;
+		justify-content: center;
+		margin-top: 32px;
+		padding-top: 24px;
+		border-top: 2px solid #e5e7eb;
+	}
+	.submit-btn {
+		padding: 16px 48px;
+		border-radius: 12px;
+		border: none;
+		font-size: 18px;
+		font-weight: 700;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+		color: white;
+		box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+		min-width: 200px;
+	}
+	.submit-btn:hover {
+		transform: translateY(-3px);
+		box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+	}
+	.submit-btn:active {
+		transform: translateY(-1px);
+	}
+	.submit-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none;
+	}
 
     @media (max-width: 768px) {
         .filter-item.half-width {
@@ -301,98 +378,140 @@ const initialFilterGroups = [createFilterGroup(0)];
     }
 </style>
 
+<script is:inline define:vars={{executionData}}>
+	window.__EXECUTION_DATA__ = executionData;
+</script>
+
 <script>
   // 动态管理执行信息组
+  interface FilterItem {
+	  type: string;
+	  icon: string;
+	  name: string;
+	  placeholder: string;
+	  width: string;
+	  accept?: string;
+  }
+
+  interface FilterGroup {
+	  title: string;
+	  items: FilterItem[];
+  }
+
   class ExecutionManager {
-    constructor() {
-      this.groups = [];
-      this.nextIndex = 1;
-      this.container = document.getElementById('filterContainer');
-      this.init();
-    }
+	  groups: FilterGroup[];
+	  nextIndex: number;
+	  container: HTMLElement | null;
 
-    init() {
-      // 监听添加和删除事件
-      window.addEventListener('filterAdd', () => this.addGroup());
-      window.addEventListener('filterDelete', () => this.removeGroup());
+	  constructor() {
+		  this.groups = [];
+		  this.nextIndex = 1;
+		  this.container = document.getElementById('filterContainer');
+		  this.init();
+	  }
 
-      // 初始化第一个组
-      this.addGroup();
-    }
+	  init() {
+		  // 监听添加和删除事件
+		  window.addEventListener('filterAdd', () => this.addGroup());
+		  window.addEventListener('filterDelete', () => this.removeGroup());
 
-    createFilterGroup(index) {
-      return {
-        title: `执行信息${index + 1}`,
-        items: [
-          {
-            type: "input",
-            icon: "📋",
-            name: `input[${index}]`,
-            placeholder: "附件地址",
-            width: "full"
-          },
-          {
-            type: "input",
-            icon: "👤",
-            name: `account[${index}]`,
-            placeholder: "账号",
-            width: "full"
-          },
-          {
-            type: "input",
-            icon: "🔑",
-            name: `password[${index}]`,
-            placeholder: "密码",
-            width: "full"
-          },
-          {
-            type: "file",
-            icon: "📎",
-            name: `file[${index}]`,
-            placeholder: "上传附件",
-            accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt",
-            width: "full"
-          },
-        ]
-      };
-    }
+		  // 绑定表单提交事件
+		  const form = document.getElementById('executionForm');
+		  if (form) {
+			  form.addEventListener('submit', (e) => this.handleSubmit(e));
+		  }
 
-    addGroup() {
-      const groupIndex = this.groups.length;
-      const newGroup = this.createFilterGroup(groupIndex);
-      this.groups.push(newGroup);
+		  // 从 window 获取默认数据
+		  const defaultData = (window as any).__EXECUTION_DATA__ || [];
 
-      // 创建新的组元素
-      const groupElement = this.createGroupElement(newGroup, groupIndex);
+		  // 根据默认数据初始化表单
+		  if (defaultData && defaultData.length > 0) {
+			  defaultData.forEach(() => this.addGroup());
+			  // 填充默认值
+			  this.fillDefaultValues(defaultData);
+		  } else {
+			  // 没有默认数据,初始化第一个空组
+			  this.addGroup();
+		  }
+	  }
 
-      // 如果是第一个组，替换现有内容，否则添加到末尾
-      if (this.groups.length === 1) {
-        this.container.innerHTML = '';
-        this.container.appendChild(groupElement);
-      } else {
-        // 在按钮前插入新组
-        const existingButtons = this.container.querySelector('.filter-btn-wrapper');
-        if (existingButtons) {
-          this.container.insertBefore(groupElement, existingButtons.parentElement);
-        } else {
-          this.container.appendChild(groupElement);
-        }
-      }
+	  createFilterGroup(index: number): FilterGroup {
+		  return {
+			  title: `执行信息${index + 1}`,
+			  items: [
+				  {
+					  type: "input",
+					  icon: "📋",
+					  name: `input[${index}]`,
+					  placeholder: "附件地址",
+					  width: "full"
+				  },
+				  {
+					  type: "input",
+					  icon: "👤",
+					  name: `account[${index}]`,
+					  placeholder: "账号",
+					  width: "full"
+				  },
+				  {
+					  type: "input",
+					  icon: "🔑",
+					  name: `password[${index}]`,
+					  placeholder: "密码",
+					  width: "full"
+				  },
+				  {
+					  type: "file",
+					  icon: "📎",
+					  name: `file[${index}]`,
+					  placeholder: "上传附件",
+					  accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt",
+					  width: "full"
+				  },
+			  ]
+		  };
+	  }
 
-      // 重新渲染按钮
-      this.renderButtons();
+	  addGroup() {
+		  const groupIndex = this.groups.length;
+		  const newGroup = this.createFilterGroup(groupIndex);
+		  this.groups.push(newGroup);
 
-      // 重新绑定文件上传事件
-      this.bindFileEvents(groupElement);
+		  // 创建新的组元素
+		  const groupElement = this.createGroupElement(newGroup, groupIndex);
 
-      console.log(`添加了执行信息${groupIndex + 1}`);
-    }
+		  // 如果是第一个组，替换现有内容,否则添加到末尾
+		  if (!this.container) return;
 
-    removeGroup() {
+		  if (this.groups.length === 1) {
+			  this.container.innerHTML = '';
+			  this.container.appendChild(groupElement);
+		  } else {
+			  // 在按钮前插入新组
+			  const existingButtons = this.container.querySelector('.filter-btn-wrapper');
+			  if (existingButtons && existingButtons.parentElement) {
+				  this.container.insertBefore(groupElement, existingButtons.parentElement);
+			  } else {
+				  this.container.appendChild(groupElement);
+			  }
+		  }
+
+		  // 重新渲染按钮
+		  this.renderButtons();
+
+		  // 重新绑定文件上传事件
+		  this.bindFileEvents(groupElement);
+
+		  console.log(`添加了执行信息${groupIndex + 1}`);
+	  }
+
+	  removeGroup() {
       if (this.groups.length <= 1) {
         alert('至少需要保留一个执行信息组');
         return;
       }
+
+		  if (!this.container) return;
 
       const lastIndex = this.groups.length - 1;
       this.groups.pop();
@@ -412,7 +531,7 @@ const initialFilterGroups = [createFilterGroup(0)];
       console.log(`删除了执行信息${lastIndex + 1}`);
     }
 
-    createGroupElement(group, index) {
+	  createGroupElement(group: FilterGroup, index: number): HTMLElement {
       const groupDiv = document.createElement('div');
       groupDiv.className = 'execution-group';
       groupDiv.innerHTML = `
@@ -426,7 +545,7 @@ const initialFilterGroups = [createFilterGroup(0)];
       return groupDiv;
     }
 
-    createItemHTML(item) {
+	  createItemHTML(item: FilterItem) {
       const itemClass = `filter-item ${item.width === 'half' ? 'half-width' : 'full-width'}`;
 
       if (item.type === 'input') {
@@ -460,72 +579,278 @@ const initialFilterGroups = [createFilterGroup(0)];
               </label>
             </div>
           </div>
+          <div class="${itemClass}">
+            <div class="file-preview-container" data-preview="${item.name}" style="display: none;">
+              <div class="file-preview-label">📎 已上传的附件</div>
+              <div class="file-preview-list" data-preview-list="${item.name}">
+                <!-- 预览内容将动态插入 -->
+              </div>
+            </div>
+          </div>
         `;
       }
       return '';
     }
 
-    renderButtons() {
-      // 移除现有按钮
-      const existingButtons = this.container.querySelector('.filter-btn-wrapper');
-      if (existingButtons) {
-        existingButtons.parentElement.remove();
-      }
+      renderButtons() {
+		  // 移除现有按钮
+			const existingButtons = this.container?.querySelector('.filter-btn-wrapper');
+			if (existingButtons && existingButtons.parentElement) {
+			existingButtons.parentElement.remove();
+		  }
 
-      // 创建新按钮
-      const buttonContainer = document.createElement('div');
-      buttonContainer.innerHTML = `
-        <div class="filter-btn-wrapper">
-          <button class="filter-btn filter-btn-primary" id="addBtn">＋ 添加</button>
-          <button class="filter-btn filter-btn-danger" id="deleteBtn">－ 删除</button>
-        </div>
-      `;
+		  // 创建新按钮
+		  const buttonContainer = document.createElement('div');
+		  buttonContainer.innerHTML = `
+			<div class="filter-btn-wrapper">
+			  <button type="button" class="filter-btn filter-btn-primary" id="addBtn">＋ 添加</button>
+			  <button type="button" class="filter-btn filter-btn-danger" id="deleteBtn">－ 删除</button>
+			</div>
+		  `;
 
-      this.container.appendChild(buttonContainer);
+			if (this.container) {
+				this.container.appendChild(buttonContainer);
+			}
 
-      // 重新绑定按钮事件
-      this.bindButtonEvents();
-    }
+		  // 重新绑定按钮事件
+		  this.bindButtonEvents();
+	  }
 
-    bindButtonEvents() {
-      const addBtn = document.getElementById('addBtn');
-      const deleteBtn = document.getElementById('deleteBtn');
+      bindButtonEvents() {
+		  const addBtn = document.getElementById('addBtn');
+		  const deleteBtn = document.getElementById('deleteBtn');
 
-      if (addBtn) {
-        addBtn.addEventListener('click', () => {
-          window.dispatchEvent(new CustomEvent('filterAdd'));
-        });
-      }
+		  if (addBtn) {
+			  addBtn.addEventListener('click', (e) => {
+				  e.preventDefault();
+			  window.dispatchEvent(new CustomEvent('filterAdd'));
+			});
+		  }
 
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => {
-          window.dispatchEvent(new CustomEvent('filterDelete'));
-        });
-      }
-    }
+		  if (deleteBtn) {
+			  deleteBtn.addEventListener('click', (e) => {
+				  e.preventDefault();
+			  window.dispatchEvent(new CustomEvent('filterDelete'));
+			});
+		  }
+	  }
 
-    bindFileEvents(container) {
-      const fileInputs = container.querySelectorAll('.file-input');
+	  bindFileEvents(container: HTMLElement) {
+		  const fileInputs = container.querySelectorAll('.file-input');
+			  const errorBar: HTMLElement | null = document.getElementById('errorBar');
+			  const successBar: HTMLElement | null = document.getElementById('successBar');
 
-      fileInputs.forEach((input) => {
-        input.addEventListener('change', (e) => {
-          const target = e.target;
-          const file = target.files?.[0];
-          const fileDisplay = container.querySelector(`.file-display[data-name="${target.name}"]`);
+		  fileInputs.forEach((input) => {
+			  input.addEventListener('change', async (e) => {
+				  const target = e.target as HTMLInputElement | null;
+				  if (!target) return;
 
-          if (fileDisplay) {
-            if (file) {
-              fileDisplay.textContent = file.name;
-              fileDisplay.classList.add('has-file');
-            } else {
-              const placeholder = fileDisplay.getAttribute('data-placeholder') || '选择文件';
-              fileDisplay.textContent = placeholder;
-              fileDisplay.classList.remove('has-file');
-            }
-          }
-        });
-      });
-    }
+				  const file = target.files?.[0];
+				  const fileDisplay = container.querySelector(`.file-display[data-name="${target.name}"]`);
+
+				  if (fileDisplay) {
+					  if (file) {
+						  fileDisplay.textContent = file.name;
+						  fileDisplay.classList.add('has-file');
+						  const formData = new FormData();
+						  formData.append('file', file);
+						  formData.append('name', file.name);
+						  const result = await fetch('/taskApi/ajax/upload', {
+							  method: 'POST',
+							  body: formData
+						  })
+						  if (result.ok) {
+							  const data = await result.json();
+							  if (data.code === 200) {
+								  if (successBar) {
+									  successBar.innerHTML = '文件上传成功';
+									  successBar.style.display = 'block';
+								  }
+							  } else {
+								  if (errorBar) {
+									  errorBar.innerHTML = '文件上传失败';
+									  errorBar.style.display = 'block';
+								  }
+							  }
+						  } else {
+							  if (errorBar) {
+								  errorBar.innerHTML = '文件上传失败';
+								  errorBar.style.display = 'block';
+							  }
+						  }
+					  } else {
+						  const placeholder = fileDisplay.getAttribute('data-placeholder') || '选择文件';
+						  fileDisplay.textContent = placeholder;
+						  fileDisplay.classList.remove('has-file');
+					  }
+				  }
+			  });
+		  });
+	  }
+
+	  // 收集所有表单数据
+	  collectFormData() {
+		  const formData: { index: number; input: string; account: string; password: string; file: File | null }[] = [];
+
+		  for (let i = 0; i < this.groups.length; i++) {
+			  const groupData: {
+				  index: number;
+				  input: string;
+				  account: string;
+				  password: string;
+				  file: File | null
+			  } = {
+				  index: i,
+				  input: '',
+				  account: '',
+				  password: '',
+				  file: null
+			  };
+
+			  // 获取输入框的值
+			  const inputField = document.querySelector(`input[name="input[${i}]"]`) as HTMLInputElement | null;
+			  const accountField = document.querySelector(`input[name="account[${i}]"]`) as HTMLInputElement | null;
+			  const passwordField = document.querySelector(`input[name="password[${i}]"]`) as HTMLInputElement | null;
+			  const fileField = document.querySelector(`input[name="file[${i}]"]`) as HTMLInputElement | null;
+
+			  if (inputField) groupData.input = inputField.value;
+			  if (accountField) groupData.account = accountField.value;
+			  if (passwordField) groupData.password = passwordField.value;
+			  if (fileField && fileField.files && fileField.files.length > 0) {
+				  groupData.file = fileField.files[0];
+			  }
+
+			  formData.push(groupData);
+		  }
+
+		  return formData;
+	  }
+
+	  // 填充默认值
+	  fillDefaultValues(defaultData: any[]) {
+		  defaultData.forEach((item, index) => {
+			  const inputField = document.querySelector(`input[name="input[${index}]"]`) as HTMLInputElement | null;
+			  const accountField = document.querySelector(`input[name="account[${index}]"]`) as HTMLInputElement | null;
+			  const passwordField = document.querySelector(`input[name="password[${index}]"]`) as HTMLInputElement | null;
+
+			  if (inputField && item.annex) inputField.value = item.annex;
+			  if (accountField && item.username) accountField.value = item.username;
+			  if (passwordField && item.password) passwordField.value = item.password;
+
+			  // 填充附件预览
+			  if (item.filelist && item.filelist.length > 0) {
+				  this.renderFilePreview(index, item.filelist);
+			  }
+		  });
+	  }
+
+	  // 渲染附件预览
+	  renderFilePreview(index: number, fileList: any[]) {
+		  const previewContainer = document.querySelector(`[data-preview="file[${index}]"]`) as HTMLElement | null;
+		  const previewList = document.querySelector(`[data-preview-list="file[${index}]"]`) as HTMLElement | null;
+
+		  if (!previewContainer || !previewList) return;
+
+		  // 清空现有内容
+		  previewList.innerHTML = '';
+
+		  // 添加每个文件的预览
+		  fileList.forEach((file: any) => {
+			  const previewItem = document.createElement('a');
+			  previewItem.className = 'file-preview-item';
+			  previewItem.href = file.fileurl;
+			  previewItem.target = '_blank';
+			  previewItem.innerHTML = `
+				  <img src="${file.fileurl}" alt="${file.filename}" class="file-preview-image" />
+				  <span class="file-preview-name" title="${file.filename}">${file.filename}</span>
+			  `;
+			  previewList.appendChild(previewItem);
+		  });
+
+		  // 显示预览容器
+		  previewContainer.style.display = 'block';
+	  }
+
+	  // 验证表单数据
+	  validateFormData(formData: any[]) {
+		  const errors: string[] = [];
+
+		  formData.forEach((group, index) => {
+			  if (!group.input && !group.account && !group.password && !group.file) {
+				  errors.push(`执行信息${index + 1}：至少填写一项内容`);
+			  }
+		  });
+
+		  return errors;
+	  }
+
+	  // 处理表单提交
+	  async handleSubmit(e: Event) {
+		  e.preventDefault();
+
+		  // 收集表单数据
+		  const formData = this.collectFormData();
+		  console.log('收集到的表单数据：', formData);
+
+		  // 验证数据
+		  const errors = this.validateFormData(formData);
+		  if (errors.length > 0) {
+			  alert('请检查以下问题：\n' + errors.join('\n'));
+			  return;
+		  }
+
+		  // 禁用提交按钮
+		  const submitBtn = document.querySelector('.submit-btn') as HTMLButtonElement | null;
+		  if (submitBtn) {
+			  submitBtn.disabled = true;
+			  submitBtn.textContent = '提交中...';
+		  }
+
+		  try {
+			  // 创建 FormData 对象用于文件上传
+			  const formDataToSend = new FormData();
+
+			  // 添加所有字段到 FormData
+			  formData.forEach((group, index) => {
+				  formDataToSend.append(`input[${index}]`, group.input);
+				  formDataToSend.append(`account[${index}]`, group.account);
+				  formDataToSend.append(`password[${index}]`, group.password);
+				  if (group.file) {
+					  formDataToSend.append(`file[${index}]`, group.file);
+				  }
+			  });
+
+			  // 这里添加您的提交逻辑
+			  // 示例：发送到服务器
+			  // const response = await fetch('/api/submit', {
+			  //   method: 'POST',
+			  //   body: formDataToSend
+			  // });
+
+			  // if (!response.ok) {
+			  //   throw new Error('提交失败');
+			  // }
+
+			  // 模拟提交（开发时使用）
+			  await new Promise(resolve => setTimeout(resolve, 1000));
+
+			  alert('提交成功！');
+			  console.log('提交的数据：', formData);
+
+			  // 可选：提交成功后重置表单
+			  // e.target.reset();
+
+		  } catch (error) {
+			  console.error('提交失败：', error);
+			  alert('提交失败，请稍后重试');
+		  } finally {
+			  // 恢复提交按钮
+			  if (submitBtn) {
+				  submitBtn.disabled = false;
+				  submitBtn.textContent = '提交执行信息';
+			  }
+		  }
+	  }
   }
 
   // 页面加载完成后初始化

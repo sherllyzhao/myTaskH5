@@ -1,45 +1,14 @@
 ---
 import {Debug} from "astro:components";
 import AttachmentList from "./AttachmentList.astro";
-import FilterDrawer from "./FilterDrawer.astro";
-import FilterSection from "./FilterSection.astro";
 
 // 执行信息组件 - 用于显示任务执行的详细信息
 interface Props {
   data?: any;
+  executionData?: any[];
 }
 
-const { data } = Astro.props;
-
-// 示例数据结构，实际应该从 props 传入
-const executionData: any[] = [];
-
-if(data.appendlog){
-  let annex = data.appendlog.annex ? data.appendlog.annex.split(',') : []
-  let username = data.appendlog.username ? data.appendlog.username.split(',') : []
-  let password = data.appendlog.password ? data.appendlog.password.split(',') : []
-  annex.forEach((item: {
-    annex: string;
-    username: string;
-    password: string;
-    statustxt: string;
-    status: string;
-    filelist: string;
-    audittime: string;
-    createtime: string;
-}, index: number) => {
-    executionData.push({
-      annex: item,
-      username: username[index],
-      password: password[index],
-      statustxt: data.appendlog?.statustxt,
-      status: data.appendlog?.status,
-      filelist: data.appendlog?.filelist,
-      audittime: data.appendlog?.audittime,
-      createtime: data.appendlog?.createtime,
-    })
-  })
-}
+const { data, executionData } = Astro.props;
 ---
 
 <div class="detail-card">
