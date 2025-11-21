@@ -3,17 +3,16 @@ import AlertBar from "./AlertBar.astro";
 import {Debug} from "astro:components";
 
 interface Props {
-  data?: any;
+  taskId?: string;
   isAngance?: boolean;
   username?: string;
   totalMoney?: number;
 	executionData?: any[];
 }
 
-const {isAngance = false, username, totalMoney, data, executionData} = Astro.props;
+const {isAngance = false, username, totalMoney, taskId, executionData} = Astro.props;
 ---
 <form id="executionForm">
-	<!--<Debug data={data}></Debug>-->
   {
     isAngance &&
 		  <div>
@@ -31,8 +30,52 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 		<!-- 动态内容将在这里生成 -->
 	</div>
 
-	<AlertBar type="error" id="errorBar" autoClose={true}/>
-	<AlertBar type="success" id="successBar" autoClose={true}/>
+	<!-- 独立的附件和备注区域 -->
+	<div class="static-fields-section">
+	<div class="static-field-group">
+			<div class="filter-section-title">📎 附件上传</div>
+			<div class="file-upload-hint">请上传gif，jpg，jpeg，bmp，png，webp，xls，xlsx，pdf，doc，docx，wav，mp4，rar，zip格式的文件，最大支持20M</div>
+			<div class="filter-item full-width">
+				<span class="filter-item-icon">📎</span>
+				<div class="file-upload-wrapper">
+					<input
+						type="file"
+						class="file-input"
+						id="file-static"
+						name="file"
+						accept=".gif,.jpg,.jpeg,.bmp,.png,.webp,.xls,.xlsx,.pdf,.doc,.docx,.wav,.mp4,.rar,.zip"
+						multiple
+					/>
+					<label for="file-static" class="file-label">
+						<span class="file-display" data-name="file" data-placeholder="选择文件">
+							选择文件
+						</span>
+					</label>
+				</div>
+			</div>
+			<div class="file-preview-container" id="static-file-preview" style="display: none;">
+				<div class="file-preview-label">📎 已上传的附件</div>
+				<div class="file-preview-list" id="static-preview-list">
+					<!-- 预览内容将动态插入 -->
+				</div>
+			</div>
+		</div>
+
+		<div class="static-field-group">
+			<div class="filter-section-title">📝 备注</div>
+			<div class="filter-item full-width">
+				<textarea
+					class="filter-textarea"
+					name="description"
+					placeholder="请输入备注信息"
+					rows="4"
+				></textarea>
+			</div>
+		</div>
+	</div>
+
+	<AlertBar type="error" id="errorBarExecution" autoClose={true}/>
+	<AlertBar type="success" id="successBarExecution" autoClose={true}/>
 
 	<!-- 提交按钮 -->
 	<div class="submit-btn-wrapper">
@@ -220,6 +263,50 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
         color: #374151;
         font-weight: 500;
     }
+
+    /* 静态字段区域样式 */
+    .static-fields-section {
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 2px solid #e5e7eb;
+    }
+
+    .static-field-group {
+        margin-bottom: 24px;
+        padding: 20px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        background: #fafafa;
+    }
+
+    .file-upload-hint {
+        font-size: 12px;
+        color: #9ca3af;
+        margin-bottom: 12px;
+        line-height: 1.5;
+    }
+
+    .filter-textarea {
+        flex: 1;
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        font-size: 16px;
+        color: #374151;
+        transition: all 0.2s ease;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .filter-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
 	/* 文件预览样式 */
 	.file-preview-container {
 		width: 100%;
@@ -297,6 +384,7 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
         gap: 12px;
         margin-top: 16px;
         justify-content: center;
+        flex-wrap: nowrap;
     }
 
     .filter-btn {
@@ -368,18 +456,16 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
             grid-column: span 1;
         }
 
-        .filter-btn-wrapper {
-            flex-direction: column;
-        }
-
         .filter-btn {
             min-width: auto;
+            flex: 1;
         }
     }
 </style>
 
-<script is:inline define:vars={{executionData}}>
+<script is:inline define:vars={{executionData, taskId}}>
 	window.__EXECUTION_DATA__ = executionData;
+	window.__TASK_ID__ = taskId;
 </script>
 
 <script>
@@ -396,6 +482,7 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
   interface FilterGroup {
 	  title: string;
 	  items: FilterItem[];
+	  file?: string;  // 添加可选的 file 属性
   }
 
   class ExecutionManager {
@@ -420,6 +507,9 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 		  if (form) {
 			  form.addEventListener('submit', (e) => this.handleSubmit(e));
 		  }
+
+		  // 绑定静态附件上传事件
+		  this.bindStaticFileUpload();
 
 		  // 从 window 获取默认数据
 		  const defaultData = (window as any).__EXECUTION_DATA__ || [];
@@ -459,15 +549,7 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 					  name: `password[${index}]`,
 					  placeholder: "密码",
 					  width: "full"
-				  },
-				  {
-					  type: "file",
-					  icon: "📎",
-					  name: `file[${index}]`,
-					  placeholder: "上传附件",
-					  accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt",
-					  width: "full"
-				  },
+				  }
 			  ]
 		  };
 	  }
@@ -506,30 +588,33 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 	  }
 
 	  removeGroup() {
-      if (this.groups.length <= 1) {
-        alert('至少需要保留一个执行信息组');
-        return;
-      }
+		  if (this.groups.length <= 1) {
+			  const errorBarExecution: HTMLElement | null = document.getElementById('errorBarExecution');
+			  if (errorBarExecution) {
+				  errorBarExecution.textContent = '至少需要保留一个执行信息组';
+			  }
+			  return;
+		  }
 
 		  if (!this.container) return;
 
-      const lastIndex = this.groups.length - 1;
-      this.groups.pop();
+		  const lastIndex = this.groups.length - 1;
+		  this.groups.pop();
 
-      // 移除最后一个组的DOM元素
-      const groupElements = this.container.querySelectorAll('.execution-group');
-      const lastGroup = groupElements[groupElements.length - 1];
+		  // 移除最后一个组的DOM元素
+		  const groupElements = this.container.querySelectorAll('.execution-group');
+		  const lastGroup = groupElements[groupElements.length - 1];
 
-      if (lastGroup) {
-        lastGroup.classList.add('removing');
-        setTimeout(() => {
-          lastGroup.remove();
-          this.renderButtons();
-        }, 300);
-      }
+		  if (lastGroup) {
+			lastGroup.classList.add('removing');
+			setTimeout(() => {
+			  lastGroup.remove();
+			  this.renderButtons();
+			}, 300);
+		  }
 
-      console.log(`删除了执行信息${lastIndex + 1}`);
-    }
+		  console.log(`删除了执行信息${lastIndex + 1}`);
+	  }
 
 	  createGroupElement(group: FilterGroup, index: number): HTMLElement {
       const groupDiv = document.createElement('div');
@@ -546,51 +631,51 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
     }
 
 	  createItemHTML(item: FilterItem) {
-      const itemClass = `filter-item ${item.width === 'half' ? 'half-width' : 'full-width'}`;
+		  const itemClass = `filter-item ${item.width === 'half' ? 'half-width' : 'full-width'}`;
 
-      if (item.type === 'input') {
-        return `
-          <div class="${itemClass}">
-            <span class="filter-item-icon">${item.icon}</span>
-            <input
-              type="text"
-              class="filter-input"
-              name="${item.name}"
-              placeholder="${item.placeholder || ''}"
-            />
-          </div>
-        `;
-      } else if (item.type === 'file') {
-        return `
-          <div class="${itemClass}">
-            <span class="filter-item-icon">${item.icon}</span>
-            <div class="file-upload-wrapper">
-              <input
-                type="file"
-                class="file-input"
-                id="file-${item.name}"
-                name="${item.name}"
-                accept="${item.accept || '*/*'}"
-              />
-              <label for="file-${item.name}" class="file-label">
-                <span class="file-display" data-name="${item.name}" data-placeholder="${item.placeholder || '选择文件'}">
-                  ${item.placeholder || '选择文件'}
-                </span>
-              </label>
-            </div>
-          </div>
-          <div class="${itemClass}">
-            <div class="file-preview-container" data-preview="${item.name}" style="display: none;">
-              <div class="file-preview-label">📎 已上传的附件</div>
-              <div class="file-preview-list" data-preview-list="${item.name}">
-                <!-- 预览内容将动态插入 -->
-              </div>
-            </div>
-          </div>
-        `;
-      }
-      return '';
-    }
+		  if (item.type === 'input') {
+			return `
+			  <div class="${itemClass}">
+				<span class="filter-item-icon">${item.icon}</span>
+				<input
+				  type="text"
+				  class="filter-input"
+				  name="${item.name}"
+				  placeholder="${item.placeholder || ''}"
+				/>
+			  </div>
+			`;
+		  } else if (item.type === 'file') {
+			return `
+			  <div class="${itemClass}">
+				<span class="filter-item-icon">${item.icon}</span>
+				<div class="file-upload-wrapper">
+				  <input
+					type="file"
+					class="file-input"
+					id="file-${item.name}"
+					name="${item.name}"
+					accept="${item.accept || '*/*'}"
+				  />
+				  <label for="file-${item.name}" class="file-label">
+					<span class="file-display" data-name="${item.name}" data-placeholder="${item.placeholder || '选择文件'}">
+					  ${item.placeholder || '选择文件'}
+					</span>
+				  </label>
+				</div>
+			  </div>
+			  <div class="${itemClass}">
+				<div class="file-preview-container" data-preview="${item.name}" style="display: none;">
+				  <div class="file-preview-label">📎 已上传的附件</div>
+				  <div class="file-preview-list" data-preview-list="${item.name}">
+					<!-- 预览内容将动态插入 -->
+				  </div>
+				</div>
+			  </div>
+			`;
+		  }
+		  return '';
+	  }
 
       renderButtons() {
 		  // 移除现有按钮
@@ -637,10 +722,10 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 
 	  bindFileEvents(container: HTMLElement) {
 		  const fileInputs = container.querySelectorAll('.file-input');
-			  const errorBar: HTMLElement | null = document.getElementById('errorBar');
-			  const successBar: HTMLElement | null = document.getElementById('successBar');
+			  const errorBarExecution: HTMLElement | null = document.getElementById('errorBarExecution');
+			  const successBarExecution: HTMLElement | null = document.getElementById('successBarExecution');
 
-		  fileInputs.forEach((input) => {
+		  fileInputs.forEach((input, index) => {
 			  input.addEventListener('change', async (e) => {
 				  const target = e.target as HTMLInputElement | null;
 				  if (!target) return;
@@ -662,20 +747,21 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 						  if (result.ok) {
 							  const data = await result.json();
 							  if (data.code === 200) {
-								  if (successBar) {
-									  successBar.innerHTML = '文件上传成功';
-									  successBar.style.display = 'block';
+								  if (successBarExecution) {
+									  this.groups[index].file = data.data.id;
+									  successBarExecution.innerHTML = '文件上传成功';
+									  successBarExecution.style.display = 'block';
 								  }
 							  } else {
-								  if (errorBar) {
-									  errorBar.innerHTML = '文件上传失败';
-									  errorBar.style.display = 'block';
+								  if (errorBarExecution) {
+									  errorBarExecution.innerHTML = '文件上传失败';
+									  errorBarExecution.style.display = 'block';
 								  }
 							  }
 						  } else {
-							  if (errorBar) {
-								  errorBar.innerHTML = '文件上传失败';
-								  errorBar.style.display = 'block';
+							  if (errorBarExecution) {
+								  errorBarExecution.innerHTML = '文件上传失败';
+								  errorBarExecution.style.display = 'block';
 							  }
 						  }
 					  } else {
@@ -688,9 +774,102 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 		  });
 	  }
 
+	  // 绑定静态附件上传
+	  bindStaticFileUpload() {
+		  const fileInput = document.getElementById('file-static') as HTMLInputElement | null;
+		  const fileDisplay = document.querySelector('.file-display[data-name="file"]') as HTMLElement | null;
+		  const previewContainer = document.getElementById('static-file-preview') as HTMLElement | null;
+		  const previewList = document.getElementById('static-preview-list') as HTMLElement | null;
+		  const errorBarExecution = document.getElementById('errorBarExecution') as HTMLElement | null;
+		  const successBarExecution = document.getElementById('successBarExecution') as HTMLElement | null;
+
+		  if (!fileInput || !fileDisplay || !previewContainer || !previewList) return;
+
+		  fileInput.addEventListener('change', async (e) => {
+			  const target = e.target as HTMLInputElement;
+			  const files = target.files;
+
+			  if (!files || files.length === 0) return;
+
+			  // 更新文件显示
+			  const fileCount = files.length;
+			  fileDisplay.textContent = fileCount === 1 ? files[0].name : `已选择 ${fileCount} 个文件`;
+			  fileDisplay.classList.add('has-file');
+
+			  // 上传所有文件
+			  for (let i = 0; i < files.length; i++) {
+				  const file = files[i];
+				  const formData = new FormData();
+				  formData.append('file', file);
+				  formData.append('name', file.name);
+
+				  try {
+					  const result = await fetch('/taskApi/ajax/upload', {
+						  method: 'POST',
+						  body: formData
+					  });
+
+					  if (result.ok) {
+						  const data = await result.json();
+						  if (data.code === 200) {
+							  // 添加预览项
+							  const previewItem = document.createElement('a');
+							  previewItem.className = 'file-preview-item';
+							  previewItem.href = data.data.url || '#';
+							  previewItem.target = '_blank';
+							  previewItem.dataset.fileId = data.data.id;
+							  previewItem.innerHTML = `
+								  <img src="${data.data.url}" alt="${file.name}" class="file-preview-image" />
+								  <span class="file-preview-name" title="${file.name}">${file.name}</span>
+								  <button type="button" class="file-preview-remove" data-file-id="${data.data.id}">×</button>
+							  `;
+							  previewList.appendChild(previewItem);
+
+							  // 绑定删除按钮
+							  const removeBtn = previewItem.querySelector('.file-preview-remove');
+							  if (removeBtn) {
+								  removeBtn.addEventListener('click', (e) => {
+									  e.preventDefault();
+									  e.stopPropagation();
+									  previewItem.remove();
+									  // 如果没有附件了，隐藏预览容器
+									  if (previewList.children.length === 0) {
+										  previewContainer.style.display = 'none';
+										  fileDisplay.textContent = '选择文件';
+										  fileDisplay.classList.remove('has-file');
+										  fileInput.value = '';
+									  }
+								  });
+							  }
+
+							  // 显示预览容器
+							  previewContainer.style.display = 'block';
+
+							  if (successBarExecution) {
+								  successBarExecution.innerHTML = `文件 ${file.name} 上传成功`;
+								  successBarExecution.style.display = 'block';
+							  }
+						  } else {
+							  if (errorBarExecution) {
+								  errorBarExecution.innerHTML = `文件 ${file.name} 上传失败`;
+								  errorBarExecution.style.display = 'block';
+							  }
+						  }
+					  }
+				  } catch (error) {
+					  console.error('上传失败:', error);
+					  if (errorBarExecution) {
+						  errorBarExecution.innerHTML = `文件 ${file.name} 上传失败`;
+						  errorBarExecution.style.display = 'block';
+					  }
+				  }
+			  }
+		  });
+	  }
+
 	  // 收集所有表单数据
 	  collectFormData() {
-		  const formData: { index: number; input: string; account: string; password: string; file: File | null }[] = [];
+		  const formData: { index: number; input: string; account: string; password: string }[] = [];
 
 		  for (let i = 0; i < this.groups.length; i++) {
 			  const groupData: {
@@ -698,32 +877,55 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 				  input: string;
 				  account: string;
 				  password: string;
-				  file: File | null
 			  } = {
 				  index: i,
 				  input: '',
 				  account: '',
-				  password: '',
-				  file: null
+				  password: ''
 			  };
 
 			  // 获取输入框的值
 			  const inputField = document.querySelector(`input[name="input[${i}]"]`) as HTMLInputElement | null;
 			  const accountField = document.querySelector(`input[name="account[${i}]"]`) as HTMLInputElement | null;
 			  const passwordField = document.querySelector(`input[name="password[${i}]"]`) as HTMLInputElement | null;
-			  const fileField = document.querySelector(`input[name="file[${i}]"]`) as HTMLInputElement | null;
 
 			  if (inputField) groupData.input = inputField.value;
 			  if (accountField) groupData.account = accountField.value;
 			  if (passwordField) groupData.password = passwordField.value;
-			  if (fileField && fileField.files && fileField.files.length > 0) {
-				  groupData.file = fileField.files[0];
-			  }
 
 			  formData.push(groupData);
 		  }
 
-		  return formData;
+		  // 收集静态附件ID列表
+		  const previewList = document.getElementById('static-preview-list') as HTMLElement | null;
+		  const fileIds: string[] = [];
+		  if (previewList) {
+			  const fileItems = previewList.querySelectorAll('.file-preview-item');
+			  fileItems.forEach((item, index) => {
+				  const fileId = (item as HTMLElement).dataset.fileId;
+				  if (fileId) {
+					  fileIds.push(fileId);
+				  }
+			  });
+		  }
+
+		  // 收集备注
+		  const descriptionField = document.querySelector('textarea[name="description"]') as HTMLTextAreaElement | null;
+		  const description = descriptionField ? descriptionField.value : '';
+
+		  // 获取 taskId
+		  const taskId = (window as any).__TASK_ID__;
+
+		  const formDataStr = {
+			  annex: formData.map(item => item.input).join(','),
+			  username: formData.map(item => item.account).join(','),
+			  password: formData.map(item => item.password).join(','),
+			  image: fileIds.join(','),
+			  description: description,
+			  id: taskId
+		  }
+
+		  return { formData, formDataStr };
 	  }
 
 	  // 填充默认值
@@ -736,33 +938,64 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 			  if (inputField && item.annex) inputField.value = item.annex;
 			  if (accountField && item.username) accountField.value = item.username;
 			  if (passwordField && item.password) passwordField.value = item.password;
+		  });
 
-			  // 填充附件预览
+		  // 填充静态附件预览（合并所有执行信息的附件）
+		  const allFiles: any[] = [];
+		  defaultData.forEach((item) => {
 			  if (item.filelist && item.filelist.length > 0) {
-				  this.renderFilePreview(index, item.filelist);
+				  allFiles.push(...item.filelist);
 			  }
 		  });
+
+		  if (allFiles.length > 0) {
+			  this.renderStaticFilePreview(allFiles);
+		  }
+
+		  // 填充备注（如果有的话，可以从第一条数据中获取）
+		  if (defaultData.length > 0) {
+			  const description = defaultData[0].description || defaultData[0].desc || defaultData[0].remark || defaultData[0].remarks;
+			  if (description) {
+				  const descriptionField = document.querySelector('textarea[name="description"]') as HTMLTextAreaElement | null;
+				  if (descriptionField) {
+					  descriptionField.value = description;
+				  }
+			  }
+		  }
 	  }
 
-	  // 渲染附件预览
-	  renderFilePreview(index: number, fileList: any[]) {
-		  const previewContainer = document.querySelector(`[data-preview="file[${index}]"]`) as HTMLElement | null;
-		  const previewList = document.querySelector(`[data-preview-list="file[${index}]"]`) as HTMLElement | null;
+	  // 渲染静态附件预览
+	  renderStaticFilePreview(fileList: any[]) {
+		  const previewContainer = document.getElementById('static-file-preview') as HTMLElement | null;
+		  const previewList = document.getElementById('static-preview-list') as HTMLElement | null;
 
-		  if (!previewContainer || !previewList) return;
+		  if (!previewContainer || !previewList) {
+			  console.error('预览容器元素未找到');
+			  return;
+		  }
 
 		  // 清空现有内容
 		  previewList.innerHTML = '';
 
 		  // 添加每个文件的预览
-		  fileList.forEach((file: any) => {
+		  fileList.forEach((file: any, index: number) => {
 			  const previewItem = document.createElement('a');
 			  previewItem.className = 'file-preview-item';
-			  previewItem.href = file.fileurl;
+			  previewItem.href = file.fileurl || file.url || '#';
 			  previewItem.target = '_blank';
+
+			  // 设置 fileId，尝试多个可能的字段名
+			  const fileId = file.id || file.file_id || file.fileId || file.attachmentId;
+			  if (fileId) {
+				  previewItem.dataset.fileId = String(fileId);
+			  } else {
+				  console.warn(`文件 ${index} 没有ID字段:`, Object.keys(file));
+			  }
+
+			  const imgUrl = file.fileurl || file.url || '';
 			  previewItem.innerHTML = `
-				  <img src="${file.fileurl}" alt="${file.filename}" class="file-preview-image" />
-				  <span class="file-preview-name" title="${file.filename}">${file.filename}</span>
+				  <img src="${imgUrl}" alt="${file.filename || file.name || '附件'}" class="file-preview-image" />
+				  <span class="file-preview-name" title="${file.filename || file.name || '附件'}">${file.filename || file.name || '附件'}</span>
 			  `;
 			  previewList.appendChild(previewItem);
 		  });
@@ -776,7 +1009,7 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 		  const errors: string[] = [];
 
 		  formData.forEach((group, index) => {
-			  if (!group.input && !group.account && !group.password && !group.file) {
+			  if (!group.input && !group.account && !group.password) {
 				  errors.push(`执行信息${index + 1}：至少填写一项内容`);
 			  }
 		  });
@@ -789,13 +1022,23 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 		  e.preventDefault();
 
 		  // 收集表单数据
-		  const formData = this.collectFormData();
+		  const result = this.collectFormData();
+		  const { formData, formDataStr } = result;
 		  console.log('收集到的表单数据：', formData);
+		  console.log('格式化后的数据：', formDataStr);
+
+		  const errorBarExecution = document.getElementById('errorBarExecution') as HTMLElement | null;
+		  const successBarExecution = document.getElementById('successBarExecution') as HTMLElement | null;
 
 		  // 验证数据
 		  const errors = this.validateFormData(formData);
 		  if (errors.length > 0) {
-			  alert('请检查以下问题：\n' + errors.join('\n'));
+			  if (errorBarExecution) {
+				  errorBarExecution.innerHTML = '请检查以下问题：\n' + errors.join('\n');
+				  errorBarExecution.style.display = 'block';
+			  }else{
+				  alert('请检查以下问题：\n' + errors.join('\n'));
+			  }
 			  return;
 		  }
 
@@ -807,42 +1050,53 @@ const {isAngance = false, username, totalMoney, data, executionData} = Astro.pro
 		  }
 
 		  try {
-			  // 创建 FormData 对象用于文件上传
-			  const formDataToSend = new FormData();
-
-			  // 添加所有字段到 FormData
-			  formData.forEach((group, index) => {
-				  formDataToSend.append(`input[${index}]`, group.input);
-				  formDataToSend.append(`account[${index}]`, group.account);
-				  formDataToSend.append(`password[${index}]`, group.password);
-				  if (group.file) {
-					  formDataToSend.append(`file[${index}]`, group.file);
-				  }
-			  });
-
 			  // 这里添加您的提交逻辑
 			  // 示例：发送到服务器
-			  // const response = await fetch('/api/submit', {
-			  //   method: 'POST',
-			  //   body: formDataToSend
-			  // });
+			  const response = await fetch('/taskApi/taskorder/addappend', {
+			    method: 'POST',
+			    headers: { 'Content-Type': 'application/json' },
+			    body: JSON.stringify(formDataStr)
+			  });
 
-			  // if (!response.ok) {
-			  //   throw new Error('提交失败');
-			  // }
+			  if (!response.ok) {
+				  if (errorBarExecution) {
+					  errorBarExecution.innerHTML = '提交失败，请稍后重试';
+					  errorBarExecution.style.display = 'block';
+				  }
+				  throw new Error('提交失败');
+			  }
 
-			  // 模拟提交（开发时使用）
-			  await new Promise(resolve => setTimeout(resolve, 1000));
+			  const res = await response.json();
+			  if(res.code !== 1){
+				  if (errorBarExecution) {
+					  errorBarExecution.innerHTML = '提交失败，请稍后重试';
+					  errorBarExecution.style.display = 'block';
+				  }else{
+					  alert('提交失败，请稍后重试');
+				  }
+				  return;
+			  }
 
-			  alert('提交成功！');
-			  console.log('提交的数据：', formData);
-
+			  if (successBarExecution) {
+				  successBarExecution.innerHTML = '提交成功';
+				  successBarExecution.style.display = 'block';
+			  }else{
+				  alert('提交成功');
+			  }
 			  // 可选：提交成功后重置表单
-			  // e.target.reset();
+			  const form = e.target as HTMLFormElement;
+			  if (form && typeof form.reset === 'function') {
+				  form.reset();
+			  }
 
 		  } catch (error) {
 			  console.error('提交失败：', error);
-			  alert('提交失败，请稍后重试');
+			  if (errorBarExecution) {
+				  errorBarExecution.innerHTML = '提交失败，请稍后重试';
+				  errorBarExecution.style.display = 'block';
+			  }else{
+				  alert('提交失败，请稍后重试');
+			  }
 		  } finally {
 			  // 恢复提交按钮
 			  if (submitBtn) {

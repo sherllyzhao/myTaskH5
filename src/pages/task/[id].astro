@@ -471,7 +471,7 @@ if(task.appendlog){
 			    >
 		    </Fragment>
 
-            <AddExecution data={task} executionData={executionData} />
+            <AddExecution taskId={task.id} executionData={executionData} />
 	    </FilterDrawer>
     </div>
     <script is:inline src="/js/drawer.js"></script>
