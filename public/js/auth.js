@@ -23,13 +23,92 @@ class AuthHandler {
         }
     }
 
+    // 获取token
+    getToken() {
+        return this.getCookie('employee_token') ||
+            localStorage.getItem('employee_token') ||
+            this.getCookie('token') ||
+            localStorage.getItem('token');
+    }
+
     // 拦截fetch请求
     interceptFetch() {
         const originalFetch = window.fetch;
+        const self = this;
 
-        window.fetch = async (...args) => {
+        window.fetch = async (url, options = {}) => {
             try {
-                const response = await originalFetch.apply(window, args);
+                const token = self.getToken();
+
+                // 如果有 token，自动添加到请求中
+                if (token) {
+                    // 处理请求体，添加 tokens
+                    const method = (options.method || 'GET').toUpperCase();
+
+                    if (method !== 'GET' && method !== 'HEAD') {
+                        const contentType = options.headers?.['Content-Type'] ||
+                            options.headers?.['content-type'] ||
+                            (options.headers instanceof Headers ? options.headers.get('Content-Type') : null);
+
+                        // JSON 请求体
+                        if (contentType?.includes('application/json') && options.body) {
+                            try {
+                                const bodyData = JSON.parse(options.body);
+                                if (!bodyData.tokens) {
+                                    bodyData.tokens = token;
+                                    options.body = JSON.stringify(bodyData);
+                                }
+                            } catch (e) {
+                                // 解析失败，忽略
+                            }
+                        }
+                        // FormData 请求体
+                        else if (options.body instanceof FormData) {
+                            if (!options.body.has('tokens')) {
+                                options.body.append('tokens', token);
+                            }
+                        }
+                        // URLSearchParams 请求体
+                        else if (options.body instanceof URLSearchParams) {
+                            if (!options.body.has('tokens')) {
+                                options.body.append('tokens', token);
+                            }
+                        }
+                        // 字符串形式的 form-urlencoded
+                        else if (typeof options.body === 'string' &&
+                            contentType?.includes('application/x-www-form-urlencoded')) {
+                            if (!options.body.includes('tokens=')) {
+                                options.body = `tokens=${encodeURIComponent(token)}&${options.body}`;
+                            }
+                        }
+                        // 没有请求体的 POST 等请求
+                        else if (!options.body) {
+                            if (contentType?.includes('application/json')) {
+                                options.body = JSON.stringify({ tokens: token });
+                            } else {
+                                options.body = `tokens=${encodeURIComponent(token)}`;
+                                // 设置 Content-Type
+                                if (!options.headers) options.headers = {};
+                                if (options.headers instanceof Headers) {
+                                    if (!options.headers.has('Content-Type')) {
+                                        options.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+                                    }
+                                } else {
+                                    options.headers['Content-Type'] = options.headers['Content-Type'] || 'application/x-www-form-urlencoded';
+                                }
+                            }
+                        }
+                    } else {
+                        // GET/HEAD 请求，添加到 URL 参数
+                        const urlObj = new URL(url, window.location.origin);
+                        if (!urlObj.searchParams.has('tokens')) {
+                            urlObj.searchParams.set('tokens', token);
+                            url = urlObj.toString();
+                        }
+                    }
+                }
+
+                const response = await originalFetch.call(window, url, options);
 
                 // 检查HTTP状态码401
                 if (response.status === 401) {

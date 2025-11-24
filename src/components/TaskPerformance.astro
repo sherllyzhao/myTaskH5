@@ -19,7 +19,9 @@ const { data, executionData } = Astro.props;
   <!--<Debug data={data} />-->
 
   <div class="execution-table">
-    <button class="edit-address-btn" onclick="openFilterDrawer()">📝 编辑功能地址</button>
+    {
+      data && +data.status < 3 && <button class="edit-address-btn" onclick="openFilterDrawer()">📝 {executionData && executionData.length > 0 ? '编辑' : '添加'}功能地址</button>
+    }
     {executionData && executionData.length > 0 ? executionData.map((item: any) => (
       <div class="execution-row">
         <div class="execution-grid">

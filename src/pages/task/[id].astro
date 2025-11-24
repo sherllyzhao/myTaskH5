@@ -113,8 +113,10 @@ try {
 
 // 示例数据结构，实际应该从 props 传入
 const executionData: any[] = [];
+let appendlogId: string | number = "";
 
 if(task.appendlog){
+  appendlogId = task.appendlog.id
   let annex = task.appendlog.annex ? task.appendlog.annex.split(',') : []
   let username = task.appendlog.username ? task.appendlog.username.split(',') : []
   let password = task.appendlog.password ? task.appendlog.password.split(',') : []
@@ -137,6 +139,7 @@ if(task.appendlog){
       filelist: task.appendlog?.filelist,
       audittime: task.appendlog?.audittime,
       createtime: task.appendlog?.createtime,
+      description: task.appendlog?.description
     })
   })
 }
@@ -459,7 +462,8 @@ if(task.appendlog){
               <button class="action-btn action-btn-primary">🚀 立即接取</button>
             )
           }
-          <a href="javascript:history.back()" class="action-btn action-btn-secondary">← 返回列表</a>
+          <a href="javascript:history.back()" class="action-btn action-btn-secondary">返回列表</a>
+          <a href="javascript:history.back()" class="action-btn action-btn-primary">提交完成</a>
         </div>
       </div>
 
@@ -471,7 +475,7 @@ if(task.appendlog){
 			    >
 		    </Fragment>
 
-            <AddExecution taskId={task.id} executionData={executionData} />
+            <AddExecution taskId={task.id} executionData={executionData} appendlogId={appendlogId} />
 	    </FilterDrawer>
     </div>
     <script is:inline src="/js/drawer.js"></script>
