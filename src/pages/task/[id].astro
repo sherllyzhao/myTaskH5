@@ -155,6 +155,7 @@ if(task.appendlog){
     <link rel="stylesheet" href="/common.css" />
     <link rel="stylesheet" href="/task-detail-styles.css" />
     <script src="/js/auth.js" defer></script>
+    <script src="/js/taskActions.js" defer></script>
     <style>
         .task-badge{
             margin-left: 10px;
@@ -459,7 +460,7 @@ if(task.appendlog){
         <div class="action-buttons">
           {
             isWaiting(task) && (
-              <button class="action-btn action-btn-primary">🚀 立即接取</button>
+              <button class="action-btn action-btn-primary" onclick={`acceptTask('${id}', '${oid || ''}')`}>🚀 立即接取</button>
             )
           }
           <a href="javascript:history.back()" class="action-btn action-btn-secondary">返回列表</a>
