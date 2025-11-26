@@ -6,6 +6,7 @@ import PageHeader from '../components/PageHeader.astro';
 import StatsGrid from '../components/StatsGrid.astro';
 import FilterBar from '../components/FilterBar.astro';
 import ConfirmDialog from '../components/ConfirmDialog.astro';
+import type { FilterGroup } from "../types/filter";
 
 // 初始化空数据,由客户端加载
 
@@ -79,7 +80,7 @@ try {
 const taskStats = taskStatsRes || {};
 
 // 筛选组件配置
-const filterGroups = [
+const filterGroups: FilterGroup[] = [
   {
     title: "基础筛选",
     items: [

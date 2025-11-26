@@ -262,8 +262,7 @@ const modalId = "project-dispatch-modal";
 <div class="detail-card project-performance-card">
   <div class="section-top">
     <div>
-      <div class="section-title">⚡ 项目执行</div>
-      <p class="section-subtitle">移动端视角实时掌握每个执行阶段</p>
+      <div class="section-title">⚡ 执行信息</div>
     </div>
     <button class="dispatch-btn" type="button" data-open-dispatch>下发任务</button>
   </div>
@@ -879,11 +878,11 @@ const modalId = "project-dispatch-modal";
   }
 </style>
 
-<script is:inline define:vars={modalId, defaultFilterKey}>
+<script is:inline define:vars={{modalId, defaultFilterKey}}>
   (() => {
-    const modalId = JSON.stringify(modalId);
-    const defaultFilterKey = JSON.stringify(defaultFilterKey);
-    const modal = document.getElementById(modalId);
+    const modalElementId = String(modalId);
+    const fallbackFilterKey = String(defaultFilterKey || "all");
+    const modal = document.getElementById(modalElementId);
     if (!modal) return;
 
     const openButtons = document.querySelectorAll("[data-open-dispatch]");
@@ -938,6 +937,6 @@ const modalId = "project-dispatch-modal";
       });
     });
 
-    applyFilter(defaultFilterKey);
+    applyFilter(fallbackFilterKey);
   })();
 </script>

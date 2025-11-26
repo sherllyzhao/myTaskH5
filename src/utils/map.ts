@@ -73,10 +73,10 @@ export function getTaskPublishType(task: any): boolean | string {
   return false
 }
 /**
-     * !20240202 工期预警
-     * @param {number | string} status
-     * @returns
-     */
+ * !20240202 工期预警
+ * @param {number | string} status
+ * @returns
+ */
 export function earlyWarningOfConstructionPeriod (status: number | string) : string {
   // 根据status参数的值，返回不同的字符串
   if (status) {

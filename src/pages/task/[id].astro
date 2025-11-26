@@ -75,6 +75,40 @@ try {
   console.log(e);
 }
 
+
+const fallbackOrderType = task?.orderType ?? 0;
+const normalizeCommissionSnapshot = (payload: any) => {
+  if (!payload) {
+    return { orderType: fallbackOrderType };
+  }
+
+  if (typeof payload === "string") {
+    try {
+      return normalizeCommissionSnapshot(JSON.parse(payload));
+    } catch {
+      return { orderType: fallbackOrderType };
+    }
+  }
+
+  if (typeof payload === "object") {
+    const snapshot = payload as Record<string, any>;
+    return {
+      ...snapshot,
+      orderType: snapshot.orderType ?? fallbackOrderType,
+    };
+  }
+
+  return { orderType: fallbackOrderType };
+};
+
+const moneyeditlst = Array.isArray(task?.moneyeditlst)
+  ? task.moneyeditlst.map((item: any) => ({
+      ...item,
+      befor: normalizeCommissionSnapshot(item?.befor),
+      after: normalizeCommissionSnapshot(item?.after),
+    }))
+  : [];
+
 let custom: any = null;
 let customId: string | number = "";
 let showDemandFile: boolean = false;
@@ -346,69 +380,73 @@ if(task.appendlog){
           </div>
 
           <!-- 客户信息 -->
-			{
-				custom && !isWaiting(task) && (
-					<div class="detail-card client-info">
-						<div class="section-title">👤 客户信息</div>
-						<div class="info-grid">
-						<div class="info-item">
-							<span class="info-label">👤 客户名称</span>
-							<span class="info-value">{custom?.customer?.customer_name ?? '-'}</span>
-						</div>
-						<div class="info-item">
-							<span class="info-label">🔢 项目编号</span>
-							<span class="info-value">{custom.hall_orderNumber ?? '-'}</span>
-						</div>
-						<div class="info-item">
-							<span class="info-label">📞 手机号</span>
-							<span class="info-value">{custom?.contact?.contact_phone ?? '-'}</span>
-						</div>
-						<div class="info-item">
-							<span class="info-label">👤 客户姓名</span>
-							<span class="info-value">{custom?.contact?.contacts ?? '-'}</span>
-						</div>
-						<div class="info-item">
-							<span class="info-label">📧 email</span>
-							<span class="info-value">{custom?.contact?.email ?? '-'}</span>
-						</div>
-						<div class="info-item">
-							<span class="info-label">📍 联系地址</span>
-							<span class="info-value">{custom?.contact?.contact_address ?? '-'}</span>
-						</div>
-						</div>
-					</div>
-				)
-			}
+          {
+            custom && !isWaiting(task) && (
+              <div class="detail-card client-info">
+                <div class="section-title">👤 客户信息</div>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">👤 客户名称</span>
+                    <span class="info-value">{custom?.customer?.customer_name ?? '-'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">🔢 项目编号</span>
+                    <span class="info-value">{custom.hall_orderNumber ?? '-'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">📞 手机号</span>
+                    <span class="info-value">{custom?.contact?.contact_phone ?? '-'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">👤 客户姓名</span>
+                    <span class="info-value">{custom?.contact?.contacts ?? '-'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">📧 email</span>
+                    <span class="info-value">{custom?.contact?.email ?? '-'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">📍 联系地址</span>
+                    <span class="info-value">{custom?.contact?.contact_address ?? '-'}</span>
+                  </div>
+                </div>
+              </div>
+            )
+          }
 
           <!-- 佣金修改记录 -->
-		   {
-				task.moneyeditlst && task.moneyeditlst.length > 0 && !isWaiting(task) && (
-					<div class="detail-card">
-						<div class="section-title">📊 佣金修改记录</div>
-							<div class="history-list">
-								{task.moneyeditlst.map((record: any) => (
-									<div class="history-item">
-										<div class="history-date">{record.createtime || '-'}</div>
-										<div class="history-changes">
-											<div class="history-change">
-												<div class="history-label">修改依据：</div>
-												<div class="history-value">{record.remarks || '-'}</div>
-											</div>
-											<div class="history-change">
-												<div class="history-label">修改前：</div>
-												<div class="history-value">¥{record.befor || '0.00'}</div>
-											</div>
-											<div class="history-change">
-												<div class="history-label">修改后：</div>
-												<div class="history-value">¥{record.after || '0.00'}</div>
-											</div>
-										</div>
-									</div>
-								))}
-							</div>
-					</div>
-				)
-		   }
+          {
+            moneyeditlst && moneyeditlst.length > 0 && !isWaiting(task) && (
+              <div class="detail-card">
+                <div class="section-title">📊 佣金修改记录</div>
+                <div class="history-list">
+                  {moneyeditlst.map((record: any) => (
+                    <div class="history-item">
+                      <div class="history-date">{record.createtime || '-'}</div>
+                      <div class="history-changes">
+                        <div class="history-change">
+                          <div class="history-label">修改依据：</div>
+                          <div class="history-value">{record.remarks || '-'}</div>
+                        </div>
+                        <div class="history-change">
+                          <div class="history-label">修改前：</div>
+                          <div class="history-value">总佣金：¥{getTotalMoney(record.befor) || '0.00'}</div>
+                          <div class="history-value">基础佣金：¥{getBaseCommission(record.befor) || '0.00'}</div>
+                          <div class="history-value">加价佣金：¥{getAddCommission(record.befor) || '0.00'}</div>
+                        </div>
+                        <div class="history-change">
+                          <div class="history-label">修改后：</div>
+                          <div class="history-value">总佣金：¥{getTotalMoney(record.after) || '0.00'}</div>
+                          <div class="history-value">基础佣金：¥{getBaseCommission(record.after) || '0.00'}</div>
+                          <div class="history-value">加价佣金：¥{getAddCommission(record.after) || '0.00'}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          }
 
           <!-- 变更记录 -->
 		   {

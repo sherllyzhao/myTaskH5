@@ -95,19 +95,6 @@
 	position: relative;
 }
 
-.salary-item::after {
-	content: "";
-	position: absolute;
-	top: -10px;
-	left: 50%;
-	transform: translateX(-50%);
-	width: 4px;
-	height: 4px;
-	background: #a855f7;
-	border-radius: 50%;
-	opacity: 0.6;
-}
-
 .salary-label {
 	color: #7c3aed;
 	font-weight: 600;

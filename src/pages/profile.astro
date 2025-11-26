@@ -357,12 +357,12 @@
 				const container = document.getElementById('skillsContainer');
 				const toggle = document.getElementById('skillsToggle');
 
-				if (container.classList.contains('expanded')) {
+				if (container && container.classList.contains('expanded')) {
 					container.classList.remove('expanded');
-					toggle.textContent = '展开';
-				} else {
+					if (toggle) toggle.textContent = '展开';
+				} else if (container) {
 					container.classList.add('expanded');
-					toggle.textContent = '收起';
+					if (toggle) toggle.textContent = '收起';
 				}
 			}
 

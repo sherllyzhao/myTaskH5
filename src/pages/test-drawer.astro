@@ -83,7 +83,7 @@ import FilterDrawer from "../components/FilterDrawer.astro";
 				}
 			}
 
-			function closeFilterDrawer(event) {
+			function closeFilterDrawer(event?: Event) {
 				if (event && event.target !== event.currentTarget) return;
 				const drawer = document.getElementById('filterDrawer');
 				if (drawer) {

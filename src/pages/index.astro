@@ -6,6 +6,7 @@ import ConfirmDialog from '../components/ConfirmDialog.astro';
 import PageHeader from '../components/PageHeader.astro';
 import StatsGrid from '../components/StatsGrid.astro';
 import FilterBar from '../components/FilterBar.astro';
+import type { FilterGroup } from "../types/filter";
 
 // 初始化空数据，由客户端加载
 
@@ -79,7 +80,7 @@ try {
 const taskStats = taskStatsRes || {};
 
 // 筛选组件配置
-const filterGroups = [
+const filterGroups: FilterGroup[] = [
   {
     title: "基础筛选",
     items: [
@@ -334,6 +335,10 @@ const filterGroups = [
         // 执行接任务的逻辑
         try {
           const dialog = document.getElementById('myDialog');
+          if (!dialog || !dialog.show) {
+            alert('对话框组件未找到');
+            return;
+          }
             dialog.show({
               message: '接单后需要根据内容指派，请及时把控工期进度。',
               onConfirm: async () => {

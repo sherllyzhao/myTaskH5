@@ -176,7 +176,7 @@ import FilterDrawer from "../components/FilterDrawer.astro";
 				}
 			}
 
-			function closeFilterDrawer(event) {
+			function closeFilterDrawer(event?: Event) {
 				if (event && event.target !== event.currentTarget) return;
 				const drawer = document.getElementById('filterDrawer');
 				if (drawer) {
@@ -186,8 +186,8 @@ import FilterDrawer from "../components/FilterDrawer.astro";
 			}
 
 			function resetFilters() {
-				const selects = document.querySelectorAll('.filter-select');
-				const inputs = document.querySelectorAll('.filter-input');
+				const selects = document.querySelectorAll<HTMLSelectElement>('.filter-select');
+				const inputs = document.querySelectorAll<HTMLInputElement>('.filter-input');
 
 				selects.forEach(select => select.selectedIndex = 0);
 				inputs.forEach(input => input.value = '');
