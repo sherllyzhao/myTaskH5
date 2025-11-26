@@ -89,3 +89,14 @@ export function earlyWarningOfConstructionPeriod (status: number | string) : str
   }
   return ''
 }
+/**
+ * !20241012
+ * !判断是否离职
+ * !判断条件：1：已接单，2：已离职
+ */
+export function isLeave (task: any) {
+  if (task?.userlist[0]?.username) {
+    return !task.appendlog && +task.permission !== 1
+  }
+  return false
+}

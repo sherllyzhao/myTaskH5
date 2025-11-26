@@ -1,4 +1,8 @@
 ---
+import { Debug } from 'astro/components';
+import {isLeave} from "../utils/map.ts";
+import {formatTimestamp} from "../utils/tool.ts";
+
 interface Props {
   data?: Record<string, any>;
 }
@@ -6,6 +10,44 @@ interface Props {
 type AnyRecord = Record<string, any>;
 
 const { data }: Props = Astro.props;
+
+const proxyUrl = `${Astro.url.origin}/proxy`;
+let projectPerformanceInfo: any[] = [];
+let page = 1;
+let limit = 100;
+
+async function getPerformanceList(){
+  try{
+    if(!data || !data.id) return
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": Astro.request.headers.get("cookie") || "",
+      },
+      body: JSON.stringify({
+        path: "/taskorder/getHallTaskList", // 假设这是获取用户信息的接口路径，请根据实际情况修改
+        id: data.id,
+        limit: limit,
+        page: page
+      }),
+    })
+
+    if (response.status === 200) {
+      const res = await response.json();
+      if (res.code === 1) {
+        projectPerformanceInfo = projectPerformanceInfo.concat(...res.data.data);
+        if(res.last_page > limit){
+          page ++;
+          await getPerformanceList();
+        }
+      }
+    }
+  }catch (e) {
+    console.log(e)
+  }
+}
+await getPerformanceList()
 
 const pickArray = (source: AnyRecord | undefined | null, keys: string[]) => {
   if (!source) return [];
@@ -230,23 +272,12 @@ const fallbackDoneCount =
 
 const fallbackSatisfactionText = executionList.length ? "良好" : "-";
 
-const summaryStats = [
-  {
-    label: "进行中",
-    value: data?.projectStats?.inProgress ?? fallbackInProgressCount,
-    desc: "当前执行阶段",
-  },
-  {
-    label: "已完成",
-    value: data?.projectStats?.done ?? fallbackDoneCount,
-    desc: "验收通过阶段",
-  },
-  {
-    label: "满意度",
-    value: data?.projectStats?.satisfaction ?? fallbackSatisfactionText,
-    desc: "客户反馈",
-  },
-];
+const statusMap = projectPerformanceInfo.reduce<Record<string, number>>((acc, item) => {
+  acc[item.statusInfo] = (acc[item.statusInfo] || 0) + 1;
+  return acc;
+}, {});
+
+const summaryStats = Object.entries(statusMap).map(([label, value]) => ({ label, value }));
 
 const dispatchFilterOptions = [
   { key: "all", label: "全部" },
@@ -267,39 +298,51 @@ const modalId = "project-dispatch-modal";
     <button class="dispatch-btn" type="button" data-open-dispatch>下发任务</button>
   </div>
 
+    <!--<Debug data={statusMap} />-->
+
   <div class="summary-grid">
     {summaryStats.map((stat) => (
       <div class="summary-item">
         <div class="summary-label">{stat.label}</div>
         <div class="summary-value">{stat.value}</div>
-        <div class="summary-desc">{stat.desc}</div>
       </div>
     ))}
   </div>
 
   <div class="execution-mobile-list">
-    {executionList.length > 0 ? (
-      executionList.map((stage) => (
-        <div class="execution-card" data-status-key={stage.statusKey}>
+    {projectPerformanceInfo.length > 0 ? (
+      projectPerformanceInfo.map((stage) => (
+        <div class="execution-card" data-status-key={stage.statusInfo}>
           <div class="execution-card-header">
             <div class="execution-stage">
-              <span class="stage-name">{stage.stageName}</span>
-              {stage.stageType && <span class="stage-type">{stage.stageType}</span>}
+              <span class="stage-name">{stage.hallTypeTitle}</span>
             </div>
             <div class="execution-status">
-              <span class="amount-label">{stage.amountLabel}</span>
-              <span class={`status-badge ${stage.statusClass}`}>{stage.statusText}</span>
+              <span class={`task-badge status-${stage.statusInfo}`}>{stage.statusInfo}</span>
             </div>
           </div>
 
           <div class="execution-card-body">
             <div class="meta-row">
               <span class="meta-label">申请人</span>
-              <span class="meta-value">{stage.applicant || "-"}</span>
+              <span class="meta-value">
+                {stage?.userlist[0]?.username ?? "-"}
+                {
+                  isLeave(data) && <span class="meta-tag meta-tag-leave">已离职</span>
+                }
+              </span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">下发人</span>
+              <span class="meta-value">{stage.username || "-"}</span>
             </div>
             <div class="meta-row">
               <span class="meta-label">发布时间</span>
-              <span class="meta-value">{stage.publishTime || "-"}</span>
+              <span class="meta-value">{stage.createtime || "-"}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">接单时间</span>
+              <span class="meta-value">{formatTimestamp(stage.performtime) || "-"}</span>
             </div>
             <div class="meta-row">
               <span class="meta-label">验收时间</span>
@@ -498,11 +541,6 @@ const modalId = "project-dispatch-modal";
     color: #0f172a;
   }
 
-  .summary-desc {
-    font-size: 12px;
-    color: #94a3b8;
-  }
-
   .execution-mobile-list {
     margin-top: 16px;
     display: flex;
@@ -520,7 +558,7 @@ const modalId = "project-dispatch-modal";
 
   .execution-card-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
   }
@@ -551,12 +589,7 @@ const modalId = "project-dispatch-modal";
     display: flex;
     flex-direction: column;
     gap: 6px;
-  }
-
-  .amount-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #0f172a;
+      box-shadow: none;
   }
 
   .status-badge {
@@ -631,6 +664,28 @@ const modalId = "project-dispatch-modal";
     text-align: right;
     color: #0f172a;
     word-break: break-all;
+    display: inline-flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .meta-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border: 1px solid transparent;
+    line-height: 1.4;
+  }
+
+  .meta-tag-leave {
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #b91c1c;
   }
 
   .meta-link {
