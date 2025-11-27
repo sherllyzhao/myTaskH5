@@ -1,6 +1,6 @@
 ---
 import { Debug } from 'astro/components';
-import {getAddCommission, getBaseCommission, isLeave} from "../utils/map.ts";
+import {earlyWarningOfConstructionPeriod, getAddCommission, getBaseCommission, isLeave} from "../utils/map.ts";
 import {formatTimestamp} from "../utils/tool.ts";
 import ExecutionDetailDrawer from "./ExecutionDetailDrawer.astro";
 
@@ -13,6 +13,7 @@ type AnyRecord = Record<string, any>;
 const { data }: Props = Astro.props;
 
 const proxyUrl = `${Astro.url.origin}/proxy`;
+
 let projectPerformanceInfo: any[] = [];
 let page = 1;
 let limit = 100;
@@ -27,7 +28,7 @@ async function getPerformanceList(){
         "Cookie": Astro.request.headers.get("cookie") || "",
       },
       body: JSON.stringify({
-        path: "/taskorder/getHallShow", // 假设这是获取用户信息的接口路径，请根据实际情况修改
+        path: "/taskorder/getHallShow",
         id: data.id,
         limit: limit,
         page: page
@@ -49,6 +50,41 @@ async function getPerformanceList(){
   }
 }
 await getPerformanceList()
+
+let projectPerformanceDetailInfo: any[] = [];
+async function getPerformanceDetailList(){
+  try{
+    if(!data || !data.id) return
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": Astro.request.headers.get("cookie") || "",
+      },
+      body: JSON.stringify({
+        path: "/taskorder/getHallTaskList",
+        id: data.id,
+        limit: limit,
+        page: page
+      }),
+    })
+
+    if (response.status === 200) {
+      const res = await response.json();
+      if (res.code === 1) {
+        projectPerformanceDetailInfo = projectPerformanceDetailInfo.concat(...res.data.data);
+        if(res.last_page > limit){
+          page ++;
+          await getPerformanceDetailList();
+        }
+      }
+    }
+  }catch (e) {
+    console.log(e)
+  }
+}
+await getPerformanceDetailList()
+
 
 const pickArray = (source: AnyRecord | undefined | null, keys: string[]) => {
   if (!source) return [];
@@ -448,7 +484,7 @@ const detailModalId = "execution-detail-modal";
     <button class="dispatch-btn" type="button" data-open-dispatch>下发任务</button>
   </div>
 
-    <!--<Debug data={projectPerformanceInfo} />-->
+    <!--<Debug data={projectPerformanceDetailInfo} />-->
 
   <div class="summary-grid">
     {summaryStats.map((stat) => (
@@ -461,7 +497,7 @@ const detailModalId = "execution-detail-modal";
 
   <div class="execution-mobile-list">
     {projectPerformanceInfo.length > 0 ? (
-      projectPerformanceInfo.map((stage) => {
+      projectPerformanceInfo.map((stage, index) => {
         const auditStatusMeta = getAuditStatusMeta(stage?.appendlog?.status);
 
         return (
@@ -497,14 +533,24 @@ const detailModalId = "execution-detail-modal";
               <span class="meta-label">加价佣金</span>
               <span class="meta-value">￥{getAddCommission(stage) || "-"}</span>
             </div>
+	          <div class="meta-row">
+		          <span class="meta-label">工期（工作日）</span>
+		          <span class="meta-value">
+                      <span class={`tag tag-overdue tag-overdue-${earlyWarningOfConstructionPeriod(stage.button_color)}`}>{projectPerformanceDetailInfo[index].button_info}</span>
+                  </span>
+	          </div>
             <div class="meta-row">
               <span class="meta-label">发布时间</span>
               <span class="meta-value">{stage.createtime || "-"}</span>
             </div>
             <div class="meta-row">
               <span class="meta-label">接单时间</span>
-              <span class="meta-value">{formatTimestamp(stage.performtime) || "-"}</span>
+              <span class="meta-value">{stage.performtime || "-"}</span>
             </div>
+	          <div class="meta-row">
+                <span class="meta-label">截止时间</span>
+                <span class="meta-value">{stage.enddatatime || "-"}</span>
+	          </div>
             <div class="meta-row">
                 <span class="meta-label">完成时间</span>
                 <span class="meta-value">{stage.appendlog?.createtime || "-"}</span>
