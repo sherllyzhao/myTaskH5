@@ -1,7 +1,8 @@
 ---
 import { Debug } from 'astro/components';
-import {isLeave} from "../utils/map.ts";
+import {getAddCommission, getBaseCommission, isLeave} from "../utils/map.ts";
 import {formatTimestamp} from "../utils/tool.ts";
+import ExecutionDetailDrawer from "./ExecutionDetailDrawer.astro";
 
 interface Props {
   data?: Record<string, any>;
@@ -26,7 +27,7 @@ async function getPerformanceList(){
         "Cookie": Astro.request.headers.get("cookie") || "",
       },
       body: JSON.stringify({
-        path: "/taskorder/getHallTaskList", // 假设这是获取用户信息的接口路径，请根据实际情况修改
+        path: "/taskorder/getHallShow", // 假设这是获取用户信息的接口路径，请根据实际情况修改
         id: data.id,
         limit: limit,
         page: page
@@ -87,6 +88,154 @@ const normalizeStatusMeta = (status?: string) => {
     return { className: "status-info", key: "in-progress" };
   }
   return { className: "status-default", key: "unknown" };
+};
+
+const auditStatusMetaMap: Record<number, { label: string; className: string }> = {
+  0: { label: "待审核", className: "status-pending" },
+  1: { label: "已通过", className: "status-success" },
+  2: { label: "已驳回", className: "status-danger" },
+};
+
+const getAuditStatusMeta = (status?: number | string | null) => {
+  if (status === undefined || status === null || status === "") {
+    return null;
+  }
+  const parsed = Number(status);
+  if (Number.isNaN(parsed)) {
+    return null;
+  }
+  return auditStatusMetaMap[parsed] || null;
+};
+
+const toArrayFromCsv = (value: any): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (item === undefined || item === null ? "" : String(item).trim()))
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    if (/^\[.*\]$/.test(trimmed)) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item) => (item === undefined || item === null ? "" : String(item).trim())).filter(Boolean);
+        }
+      } catch {
+        // ignore parse errors and fallback to CSV split
+      }
+    }
+    return trimmed.split(",").map((item) => item.trim()).filter(Boolean);
+  }
+  if (value !== undefined && value !== null) {
+    const text = String(value).trim();
+    return text ? [text] : [];
+  }
+  return [];
+};
+
+const normalizeFileListValue = (
+  value: any,
+): { fileurl: string; filename: string }[] => {
+  if (value === undefined || value === null || value === "") {
+    return [];
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return normalizeFileListValue(parsed);
+      } catch {
+        // ignore parse errors and fallback to CSV split
+      }
+    }
+    return trimmed
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((url) => ({
+        fileurl: url,
+        filename: url.split("/").pop() || "附件",
+      }));
+  }
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (item === undefined || item === null) return null;
+        if (typeof item === "string") {
+          const trimmed = item.trim();
+          if (!trimmed) return null;
+          return {
+            fileurl: trimmed,
+            filename: trimmed.split("/").pop() || "附件",
+          };
+        }
+        if (typeof item === "object") {
+          const fileurl = String(item.fileurl || item.url || item.path || item.href || "").trim();
+          if (!fileurl) {
+            return null;
+          }
+          const filename =
+            item.filename ||
+            item.name ||
+            item.title ||
+            fileurl.split("/").pop() ||
+            "附件";
+          return { fileurl, filename };
+        }
+        return null;
+      })
+      .filter(Boolean) as { fileurl: string; filename: string }[];
+  }
+  if (typeof value === "object") {
+    const fileurl = String(value.fileurl || value.url || value.path || value.href || "").trim();
+    if (!fileurl) return [];
+    return [
+      {
+        fileurl,
+        filename: value.filename || value.name || fileurl.split("/").pop() || "附件",
+      },
+    ];
+  }
+  return [];
+};
+
+const buildAppendlogDetailEntries = (appendlog?: AnyRecord | null, fallbackAddress?: string) => {
+  if (!appendlog && !fallbackAddress) {
+    return [];
+  }
+  const annexList = appendlog ? toArrayFromCsv(appendlog.annex ?? appendlog.link ?? appendlog.address) : [];
+  if (!annexList.length && fallbackAddress) {
+    annexList.push(fallbackAddress);
+  }
+  const usernameList = toArrayFromCsv(appendlog?.username ?? appendlog?.user);
+  const passwordList = toArrayFromCsv(appendlog?.password);
+  const remarkList = toArrayFromCsv(appendlog?.description ?? appendlog?.remark);
+  const entryCount = Math.max(annexList.length, usernameList.length, passwordList.length, 1);
+  if (!appendlog && !entryCount) {
+    return [];
+  }
+  const getValue = (list: string[], index: number) => {
+    if (!list.length) return "";
+    return list[index] ?? list[list.length - 1] ?? "";
+  };
+
+  const fileList = normalizeFileListValue(appendlog?.filelist);
+
+  return Array.from({ length: entryCount }).map((_, index) => ({
+    annex: getValue(annexList, index),
+    username: getValue(usernameList, index),
+    password: getValue(passwordList, index),
+    remark: getValue(remarkList, index) || appendlog?.description || appendlog?.remark || "",
+    statustxt: appendlog?.statustxt ?? "",
+    status: appendlog?.status ?? "",
+    audittime: appendlog?.audittime ?? "",
+    createtime: appendlog?.createtime ?? "",
+    filelist: fileList,
+  }));
 };
 
 const formatAmountLabel = (value: any) => {
@@ -288,6 +437,7 @@ const dispatchFilterOptions = [
 
 const defaultFilterKey = dispatchFilterOptions[0]?.key ?? "all";
 const modalId = "project-dispatch-modal";
+const detailModalId = "execution-detail-modal";
 ---
 
 <div class="detail-card project-performance-card">
@@ -298,7 +448,7 @@ const modalId = "project-dispatch-modal";
     <button class="dispatch-btn" type="button" data-open-dispatch>下发任务</button>
   </div>
 
-    <!--<Debug data={statusMap} />-->
+    <!--<Debug data={projectPerformanceInfo} />-->
 
   <div class="summary-grid">
     {summaryStats.map((stat) => (
@@ -311,7 +461,10 @@ const modalId = "project-dispatch-modal";
 
   <div class="execution-mobile-list">
     {projectPerformanceInfo.length > 0 ? (
-      projectPerformanceInfo.map((stage) => (
+      projectPerformanceInfo.map((stage) => {
+        const auditStatusMeta = getAuditStatusMeta(stage?.appendlog?.status);
+
+        return (
         <div class="execution-card" data-status-key={stage.statusInfo}>
           <div class="execution-card-header">
             <div class="execution-stage">
@@ -328,13 +481,21 @@ const modalId = "project-dispatch-modal";
               <span class="meta-value">
                 {stage?.userlist[0]?.username ?? "-"}
                 {
-                  isLeave(data) && <span class="meta-tag meta-tag-leave">已离职</span>
+                  isLeave(stage) && <span class="meta-tag meta-tag-leave">已离职</span>
                 }
               </span>
             </div>
             <div class="meta-row">
               <span class="meta-label">下发人</span>
               <span class="meta-value">{stage.username || "-"}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">基础佣金</span>
+              <span class="meta-value">￥{getBaseCommission(stage) || "-"}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">加价佣金</span>
+              <span class="meta-value">￥{getAddCommission(stage) || "-"}</span>
             </div>
             <div class="meta-row">
               <span class="meta-label">发布时间</span>
@@ -345,23 +506,35 @@ const modalId = "project-dispatch-modal";
               <span class="meta-value">{formatTimestamp(stage.performtime) || "-"}</span>
             </div>
             <div class="meta-row">
-              <span class="meta-label">验收时间</span>
-              <span class="meta-value">{stage.reviewTime || "未验收"}</span>
+                <span class="meta-label">完成时间</span>
+                <span class="meta-value">{stage.appendlog?.createtime || "-"}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">审核时间</span>
+              <span class="meta-value">{stage?.appendlog?.audittime || "-"}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">验收情况</span>
+              <span class="meta-value">
+                {auditStatusMeta && (
+                  <span class={`status-badge audit-status-badge ${auditStatusMeta.className}`}>
+                    {auditStatusMeta.label}
+                  </span>
+                )}
+              </span>
             </div>
             <div class="meta-row">
               <span class="meta-label">功能地址</span>
               <span class="meta-value">
-                {stage.functionLink ? (
-                  <a
-                    href={stage.functionLink}
-                    class="meta-link"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {stage.functionAddress}
-                  </a>
-                ) : (
-                  stage.functionAddress || "-"
+                {stage.appendlog && (
+		                <button
+				                class="view-detail-btn"
+				                type="button"
+				                data-open-execution-detail
+				                data-execution-data={JSON.stringify(buildAppendlogDetailEntries(stage.appendlog, stage.functionAddress))}
+		                >
+			                查看
+		                </button>
                 )}
               </span>
             </div>
@@ -379,7 +552,8 @@ const modalId = "project-dispatch-modal";
             <button class="ghost-btn" type="button">记录进度</button>
           </div>
         </div>
-      ))
+        );
+      })
     ) : (
       <div class="empty-state">
         <div class="empty-icon">🗂️</div>
@@ -464,6 +638,8 @@ const modalId = "project-dispatch-modal";
     </div>
   </div>
 </div>
+
+<ExecutionDetailDrawer />
 
 <style>
   :global(body.dispatch-modal-open) {
@@ -601,6 +777,11 @@ const modalId = "project-dispatch-modal";
     font-size: 12px;
     font-weight: 600;
     border: 1px solid transparent;
+  }
+
+  .audit-status-badge {
+    padding: 2px 8px;
+    font-size: 11px;
   }
 
   .status-success {
@@ -752,6 +933,10 @@ const modalId = "project-dispatch-modal";
     background: linear-gradient(120deg, #2563eb, #7c3aed);
     color: #ffffff;
     box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+  }
+
+  .audit-status-badge {
+      box-shadow: none;
   }
 
   .empty-state {

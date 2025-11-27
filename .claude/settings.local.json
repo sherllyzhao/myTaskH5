@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc:*)",
-      "Bash(npx astro check:*)"
+      "Bash(npx astro check:*)",
+      "Bash(npx astro build)",
+      "Bash(dir:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
