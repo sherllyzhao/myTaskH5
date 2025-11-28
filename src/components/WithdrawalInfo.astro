@@ -1,5 +1,8 @@
 ---
 // 提现信息组件
+import ConfirmDialog from "./ConfirmDialog.astro";
+import AlertBar from "./AlertBar.astro";
+
 interface Props {
   data?: any;
 }
@@ -11,27 +14,82 @@ const showWithdrawalInfo = () => {
   const showStatus = ['false', '0', '1'];
   return showStatus.includes(withdrawalInfo);
 }
+
+let money = (Number(data.bountymoney) + Number(data.hall_money)).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+if (Number(data.hall_user_money)) {
+  money = data.hall_user_money;
+}
 ---
+
+<AlertBar type="error" id="errorBarWithdrawal" autoClose={true}/>
+<AlertBar type="success" id="successBarWithdrawal" autoClose={true}/>
 
 {
   showWithdrawalInfo() && (
   <div class="detail-card">
     <div class="section-title">💳 提现信息</div>
     {
-      data?.withdraw?.toString() === "false" && <button class="withdrawal-btn">申请提现</button>
+      data?.withdraw?.toString() === "false" && <button class="withdrawal-btn" onclick="showWidthdrawalTips()">申请提现</button>
     }
     {
       (data?.withdraw?.toString() === "0" || data?.withdraw?.toString() === "1") && (
-				    <div class="withdrawal-content">
-					    <div class="withdrawal-status">
-                          {data.withdrawText}
-					    </div>
-				    </div>
+        <div class="withdrawal-content">
+            <div class="withdrawal-status">
+              {data.withdrawText}
+            </div>
+        </div>
       )
     }
-  </div>
+    </div>
+
+    <ConfirmDialog id="withdrawal-confirm-dialog" title="确认提现" message={`当前任务已完结，佣金￥${money}，是否确认申请提现？`} />
   )
 }
+
+<script is:inline define:vars={{data}}>
+    window.taskInfo = data;
+</script>
+<script is:inline>
+    const confirmDialog = document.querySelector('#withdrawal-confirm-dialog');
+    function showWidthdrawalTips () {
+      confirmDialog.show();
+    }
+    confirmDialog.addEventListener('click', async (e) => {
+        try{
+            const result = await fetch('/taskApi/taskorder/addwithdraw', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: window.taskInfo.id
+                }),
+            });
+            if (!result.ok) {
+                const errorBar = document.querySelector('#errorBarWithdrawal');
+                errorBar.show();
+                errorBar.textContent = '提现申请失败';
+                return;
+            }
+            const res = await result.json();
+            if (res.code !== 1) {
+              const errorBar = document.querySelector('#errorBarWithdrawal');
+              errorBar.show();
+              errorBar.textContent = res.msg || res.message || '提现申请失败';
+              return;
+            }
+            const successBar = document.querySelector('#successBarWithdrawal');
+            successBar.show();
+            successBar.textContent = '提现申请成功';
+            //    刷新页面
+            window.location.reload();
+        }catch(e){
+          const errorBar = document.querySelector('#errorBarWithdrawal');
+          errorBar.show();
+          errorBar.textContent = '提现申请失败';
+        }
+    });
+</script>
 
 <style>
   .withdrawal-btn {
