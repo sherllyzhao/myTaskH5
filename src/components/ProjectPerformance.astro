@@ -457,8 +457,15 @@ const fallbackDoneCount =
 
 const fallbackSatisfactionText = executionList.length ? "良好" : "-";
 
+let totalMoney = 0;
+const excludeStatusInfo = ['删除', '已转移', '已撤销']
 const statusMap = projectPerformanceInfo.reduce<Record<string, number>>((acc, item) => {
   acc[item.statusInfo] = (acc[item.statusInfo] || 0) + 1;
+  let total = Number(item.hall_user_money) ? Number(item.hall_user_money) : (Number(item.bountymoney) + Number(item.hall_money));
+  let totalStr = total.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+  if(!excludeStatusInfo.includes(item.statusInfo)){
+    totalMoney += (Number(totalStr) * 100 / 100);
+  }
   return acc;
 }, {});
 
@@ -493,6 +500,10 @@ const detailModalId = "execution-detail-modal";
         <div class="summary-value">{stat.value}</div>
       </div>
     ))}
+    <div class="summary-item">
+        <div class="summary-label">合计金额</div>
+        <div class="summary-value">{totalMoney}</div>
+    </div>
   </div>
 
   <div class="execution-mobile-list">
@@ -501,103 +512,107 @@ const detailModalId = "execution-detail-modal";
         const auditStatusMeta = getAuditStatusMeta(stage?.appendlog?.status);
 
         return (
-        <div class="execution-card" data-status-key={stage.statusInfo}>
-          <div class="execution-card-header">
-            <div class="execution-stage">
-              <span class="stage-name">{stage.hallTypeTitle}</span>
+          <div class="execution-card" data-status-key={stage.statusInfo}>
+            <div class="execution-card-header">
+              <div class="execution-stage">
+                <span class="stage-name">{stage.hallTypeTitle}</span>
+              </div>
+              <div class="execution-status">
+                <span class={`task-badge status-${stage.statusInfo}`}>{stage.statusInfo}</span>
+              </div>
             </div>
-            <div class="execution-status">
-              <span class={`task-badge status-${stage.statusInfo}`}>{stage.statusInfo}</span>
-            </div>
-          </div>
 
-          <div class="execution-card-body">
-            <div class="meta-row">
-              <span class="meta-label">申请人</span>
-              <span class="meta-value">
-                {stage?.userlist[0]?.username ?? "-"}
-                {
-                  isLeave(stage) && <span class="meta-tag meta-tag-leave">已离职</span>
-                }
-              </span>
+            <div class="execution-card-body">
+              <div class="meta-row">
+                <span class="meta-label">申请人</span>
+                <span class="meta-value">
+                  {stage?.userlist[0]?.username ?? "-"}
+                  {
+                    isLeave(stage) && <span class="meta-tag meta-tag-leave">已离职</span>
+                  }
+                </span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">下发人</span>
+                <span class="meta-value">{stage.username || "-"}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">基础佣金</span>
+                <span class="meta-value">￥{getBaseCommission(stage) || "-"}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">加价佣金</span>
+                <span class="meta-value">￥{getAddCommission(stage) || "-"}</span>
+              </div>
+                <div class="meta-row">
+                    <span class="meta-label">工期（工作日）</span>
+                    <span class="meta-value">
+                        <span class={`tag tag-overdue tag-overdue-${earlyWarningOfConstructionPeriod(stage.button_color)}`}>{projectPerformanceDetailInfo[index].button_info}</span>
+                    </span>
+                </div>
+              <div class="meta-row">
+                <span class="meta-label">发布时间</span>
+                <span class="meta-value">{stage.createtime || "-"}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">接单时间</span>
+                <span class="meta-value">{stage.performtime || "-"}</span>
+              </div>
+                <div class="meta-row">
+                  <span class="meta-label">截止时间</span>
+                  <span class="meta-value">{stage.enddatatime || "-"}</span>
+                </div>
+              <div class="meta-row">
+                  <span class="meta-label">完成时间</span>
+                  <span class="meta-value">{stage.appendlog?.createtime || "-"}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">审核时间</span>
+                <span class="meta-value">{stage?.appendlog?.audittime || "-"}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">验收情况</span>
+                <span class="meta-value">
+                  {auditStatusMeta && (
+                    <span class={`status-badge audit-status-badge ${auditStatusMeta.className}`}>
+                      {auditStatusMeta.label}
+                    </span>
+                  )}
+                </span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">功能地址</span>
+                <span class="meta-value">
+                  {stage.appendlog && (
+                          <button
+                                  class="view-detail-btn"
+                                  type="button"
+                                  data-open-execution-detail
+                                  data-execution-data={JSON.stringify(buildAppendlogDetailEntries(stage.appendlog, stage.functionAddress))}
+                          >
+                              查看
+                          </button>
+                  )}
+                </span>
+              </div>
             </div>
-            <div class="meta-row">
-              <span class="meta-label">下发人</span>
-              <span class="meta-value">{stage.username || "-"}</span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-label">基础佣金</span>
-              <span class="meta-value">￥{getBaseCommission(stage) || "-"}</span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-label">加价佣金</span>
-              <span class="meta-value">￥{getAddCommission(stage) || "-"}</span>
-            </div>
-	          <div class="meta-row">
-		          <span class="meta-label">工期（工作日）</span>
-		          <span class="meta-value">
-                      <span class={`tag tag-overdue tag-overdue-${earlyWarningOfConstructionPeriod(stage.button_color)}`}>{projectPerformanceDetailInfo[index].button_info}</span>
-                  </span>
-	          </div>
-            <div class="meta-row">
-              <span class="meta-label">发布时间</span>
-              <span class="meta-value">{stage.createtime || "-"}</span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-label">接单时间</span>
-              <span class="meta-value">{stage.performtime || "-"}</span>
-            </div>
-	          <div class="meta-row">
-                <span class="meta-label">截止时间</span>
-                <span class="meta-value">{stage.enddatatime || "-"}</span>
-	          </div>
-            <div class="meta-row">
-                <span class="meta-label">完成时间</span>
-                <span class="meta-value">{stage.appendlog?.createtime || "-"}</span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-label">审核时间</span>
-              <span class="meta-value">{stage?.appendlog?.audittime || "-"}</span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-label">验收情况</span>
-              <span class="meta-value">
-                {auditStatusMeta && (
-                  <span class={`status-badge audit-status-badge ${auditStatusMeta.className}`}>
-                    {auditStatusMeta.label}
-                  </span>
-                )}
-              </span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-label">功能地址</span>
-              <span class="meta-value">
-                {stage.appendlog && (
-		                <button
-				                class="view-detail-btn"
-				                type="button"
-				                data-open-execution-detail
-				                data-execution-data={JSON.stringify(buildAppendlogDetailEntries(stage.appendlog, stage.functionAddress))}
-		                >
-			                查看
-		                </button>
-                )}
-              </span>
-            </div>
-          </div>
 
-          {stage.remark && <div class="execution-remark">{stage.remark}</div>}
+            {stage.remark && <div class="execution-remark">{stage.remark}</div>}
 
-          <div class="execution-card-footer">
-            <div class="satisfaction">
-              <span class="meta-label">满意度</span>
-              <span class="satisfaction-score">
-                {stage.satisfactionScore || stage.satisfactionLabel || "-"}
-              </span>
-            </div>
-            <button class="ghost-btn" type="button">记录进度</button>
+            <!--<div class="execution-card-footer">
+              <div class="satisfaction">
+                <span class="meta-label">满意度</span>
+                <span class="satisfaction-score">
+                  {stage.satisfactionScore || stage.satisfactionLabel || "-"}
+                </span>
+              </div>
+              <button class="ghost-btn" type="button">记录进度</button>
+            </div>-->
+
+              <div class="execution-card-footer">
+	              <button class="btn btn-secondary detail-btn">👁️ 查看详情</button>
+              </div>
           </div>
-        </div>
         );
       })
     ) : (
@@ -1147,6 +1162,10 @@ const detailModalId = "execution-detail-modal";
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+  }
+
+  .detail-btn{
+      width: 100%;
   }
 
   @media (min-width: 640px) {
