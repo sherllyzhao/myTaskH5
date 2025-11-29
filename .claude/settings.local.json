@@ -5,7 +5,21 @@
       "Bash(npx astro check:*)",
       "Bash(npx astro build)",
       "Bash(dir:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebSearch",
+      "WebFetch(domain:www.longcai.com)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_snapshot",
+      "Bash(if not exist \"src\\images\" mkdir \"src\\images\")",
+      "Bash(mkdir:*)",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_run_code",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(npx sharp-cli:*)"
     ],
     "deny": [],
     "ask": []

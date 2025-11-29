@@ -7,6 +7,7 @@ import PageHeader from '../components/PageHeader.astro';
 import StatsGrid from '../components/StatsGrid.astro';
 import FilterBar from '../components/FilterBar.astro';
 import type { FilterGroup } from "../types/filter";
+import AlertBar from "../components/AlertBar.astro";
 
 // 初始化空数据，由客户端加载
 
@@ -267,6 +268,9 @@ const filterGroups: FilterGroup[] = [
           confirmText="确定"
           cancelText="取消"
         />
+
+	    <AlertBar type="error" id="takeError" fixed autoClose={true}/>
+	    <AlertBar type="success" id="takeSuccess" fixed autoClose={true}/>
     </div>
 
     <script :inline src="/js/cookies.js"></script>
@@ -279,6 +283,9 @@ const filterGroups: FilterGroup[] = [
 
     <!-- 用户信息全局变量 -->
     <script is:inline define:vars={{ userInfo }}>
+      let takeErrorBar = document.getElementById('takeError');
+      let takeSuccessBar = document.getElementById('takeSuccess');
+
       // 将用户信息设置为全局变量
       window.currentUserInfo = userInfo;
       localStorage.setItem('currentUserInfo', JSON.stringify(userInfo));
@@ -306,7 +313,12 @@ const filterGroups: FilterGroup[] = [
 
         // 如果没有用户信息，提示登录
         if (!currentUser) {
-          alert('请先登录');
+          if(takeErrorBar){
+            takeErrorBar.show();
+            takeErrorBar.textContent = '请先登录';
+          }else{
+            alert('请先登录');
+          }
           window.location.href = '/login';
           return;
         }
@@ -328,7 +340,12 @@ const filterGroups: FilterGroup[] = [
 
         // 检查是否为旧版本任务
         if(isOldVersion(task)){
-          alert(`该条${getTypeName(task)}为旧版本，请到PC端接取`);
+          if(takeErrorBar){
+            takeErrorBar.show();
+            takeErrorBar.textContent = '该条任务为旧版本，请到PC端接取';
+          }else{
+            alert(`该条${getTypeName(task)}为旧版本，请到PC端接取`);
+          }
           return;
         }
 
@@ -336,7 +353,12 @@ const filterGroups: FilterGroup[] = [
         try {
           const dialog = document.getElementById('myDialog');
           if (!dialog || !dialog.show) {
-            alert('对话框组件未找到');
+            if(takeErrorBar){
+              takeErrorBar.show();
+              takeErrorBar.textContent = '对话框组件未找到';
+            }else{
+              alert('对话框组件未找到');
+            }
             return;
           }
             dialog.show({
@@ -353,14 +375,29 @@ const filterGroups: FilterGroup[] = [
                     const res = await response.json();
                     if(res.code === 1){
                       // 处理成功逻辑
-                      alert('接单成功，祝您工作愉快！');
+                      if(takeSuccessBar){
+                        takeSuccessBar.show();
+                        takeSuccessBar.textContent = '接单成功，祝您工作愉快！';
+                      }else{
+                        alert('接单成功，祝您工作愉快！');
+                      }
                       window.location.reload();
                     }else{
-                      alert(res.msg || res.message || "接取任务失败，请重试")
+                      if(takeErrorBar){
+                        takeErrorBar.show();
+                        takeErrorBar.textContent = res.msg || res.message || "接取任务失败，请重试";
+                      }else{
+                        alert(res.msg || res.message || "接取任务失败，请重试");
+                      }
+                    }
+                  }else{
+                    if(takeErrorBar){
+                      takeErrorBar.show();
+                      takeErrorBar.textContent = '接取任务失败，请重试';
+                    }else{
+                      alert('接取任务失败，请重试');
                     }
                   }
-                }else{
-                  alert('接取任务失败，请重试');
                 }
               },
               onCancel: () => {
@@ -377,7 +414,12 @@ const filterGroups: FilterGroup[] = [
 
         } catch (error) {
           console.error('接取任务失败:', error);
-          alert('接取任务失败，请重试');
+          if(takeErrorBar){
+            takeErrorBar.show();
+            takeErrorBar.textContent = '接取任务失败，请重试';
+          }else{
+            alert('接取任务失败，请重试');
+          }
         }
       };
     </script>

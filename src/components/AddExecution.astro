@@ -917,6 +917,8 @@ const {isAngance = false, username, totalMoney, taskId, executionData, appendlog
 
 		  // 获取 appendlogId
 		  const appendlogId = (window as any).__APPENDLOG_ID__;
+		  const taskId = (window as any).__TASK_ID__;
+		  console.log("🚀 ~ collectFormData ~ appendlogId: ", appendlogId);
 
 		  const formDataStr = {
 			  annex: formData.map(item => item.input).join(','),
@@ -924,7 +926,7 @@ const {isAngance = false, username, totalMoney, taskId, executionData, appendlog
 			  password: formData.map(item => item.password).join(','),
 			  image: fileIds.join(','),
 			  description: description,
-			  id: appendlogId
+			  id: appendlogId || taskId
 		  }
 
 		  return { formData, formDataStr };

@@ -324,7 +324,12 @@ if(task.appendlog){
                 <div class="info-item info-item-full" style="margin-top: 12px;">
                   <span class="info-label">备注</span>
                   <span class="info-value info-value-jobs">
-                    {task.description}
+                      {
+                        task.description.length > 30 ? <details>
+                            <div>{task.description}</div>
+                            <summary>点击展开更多信息</summary>
+                        </details> : task.description
+                      }
                   </span>
                 </div>
               )

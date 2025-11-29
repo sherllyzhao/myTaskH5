@@ -54,7 +54,7 @@ if (Number(data.hall_user_money)) {
     function showWidthdrawalTips () {
       confirmDialog.show();
     }
-    confirmDialog.addEventListener('click', async (e) => {
+    confirmDialog && confirmDialog.addEventListener('click', async (e) => {
         try{
             const result = await fetch('/taskApi/taskorder/addwithdraw', {
                 method: 'POST',

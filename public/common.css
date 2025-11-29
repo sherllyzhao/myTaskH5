@@ -493,7 +493,7 @@ body::after {
     box-shadow:
         0 -10px 40px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .filter-drawer.active {

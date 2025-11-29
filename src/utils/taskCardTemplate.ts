@@ -60,10 +60,16 @@ export function createTaskCardHTML(task: any): string {
     : '';
 
   // 处理备注（仅在有内容时显示）
+  const marksRow = task.description && task.description.length > 30 ? `<details>
+            <div>${task.description}</div>
+              <summary>点击展开更多信息</summary>
+          </details>` : task.description
   const descriptionRow = task.description
     ? `<div class="task-info-row">
         <span class="task-info-label">💡 备注</span>
-        <span class="task-info-value">${task.description}</span>
+        <span class="task-info-value">
+          ${marksRow}
+        </span>
       </div>`
     : '';
 
