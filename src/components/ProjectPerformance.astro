@@ -613,7 +613,7 @@ const detailModalId = "execution-detail-modal";
 
               <div class="execution-card-footer">
 	              <button class="btn btn-secondary detail-btn">详情</button>
-	              <button class="btn btn-secondary recall-btn" data-task-id={stage.id} onclick="handleRecall">撤销</button>
+	              <button class="btn btn-secondary recall-btn" data-task-id={stage.id} onclick="handleRecall(event)">撤销</button>
               </div>
           </div>
         );
@@ -1332,6 +1332,7 @@ const detailModalId = "execution-detail-modal";
 <script is:inline>
   function handleRecall(event) {
     const taskId = event.target.dataset.taskId;
+    console.log("🚀 ~ handleRecall ~ event.target.dataset: ", event.target.dataset);
     const recallErrorBar = document.getElementById('recallErrorBar');
     const recallSuccessBar = document.getElementById('recallSuccessBar');
 
@@ -1340,7 +1341,7 @@ const detailModalId = "execution-detail-modal";
       return;
     }
     try {
-      const dialog = document.getElementById('myDialog');
+      const dialog = document.getElementById('recallDialog');
       if (!dialog || !dialog.show) {
         if (recallErrorBar) {
           recallErrorBar.show();
@@ -1355,7 +1356,7 @@ const detailModalId = "execution-detail-modal";
           const response = await fetch('/taskApi/taskorder/deleteHall', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: taskId, tokens: Cookies.get('employee_token') })
+            body: JSON.stringify({ id: taskId })
           });
 
           if(response.ok){
@@ -1363,27 +1364,27 @@ const detailModalId = "execution-detail-modal";
               const res = await response.json();
               if(res.code === 1){
                 // 处理成功逻辑
-                if(takeSuccessBar){
-                  takeSuccessBar.show();
-                  takeSuccessBar.textContent = '接单成功，祝您工作愉快！';
+                if(recallSuccessBar){
+                  recallSuccessBar.show();
+                  recallSuccessBar.textContent = '撤销成功';
                 }else{
-                  alert('接单成功，祝您工作愉快！');
+                  alert('撤销成功');
                 }
                 window.location.reload();
               }else{
-                if(takeErrorBar){
-                  takeErrorBar.show();
-                  takeErrorBar.textContent = res.msg || res.message || "接取任务失败，请重试";
+                if(recallErrorBar){
+                  recallErrorBar.show();
+                  recallErrorBar.textContent = res.msg || res.message || "撤销任务失败，请重试";
                 }else{
-                  alert(res.msg || res.message || "接取任务失败，请重试");
+                  alert(res.msg || res.message || "撤销任务失败，请重试");
                 }
               }
             }else{
-              if(takeErrorBar){
-                takeErrorBar.show();
-                takeErrorBar.textContent = '接取任务失败，请重试';
+              if(recallErrorBar){
+                recallErrorBar.show();
+                recallErrorBar.textContent = '撤销任务失败，请重试';
               }else{
-                alert('接取任务失败，请重试');
+                alert('撤销任务失败，请重试');
               }
             }
           }
@@ -1393,7 +1394,7 @@ const detailModalId = "execution-detail-modal";
         }
       });
     } catch(err){
-
+        console.log("🚀 ~ handleRecall ~ err: ", err);
     }
   }
 </script>

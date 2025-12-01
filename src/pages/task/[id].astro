@@ -334,6 +334,21 @@ if(task.appendlog){
                 </div>
               )
             }
+            {
+              task.desc && (
+				            <div class="info-item info-item-full" style="margin-top: 12px;">
+					            <span class="info-label">报价说明</span>
+					            <span class="info-value info-value-jobs">
+                      {
+                        task.desc.length > 30 ? <details>
+	                        <div>{task.desc}</div>
+	                        <summary>点击展开更多信息</summary>
+                        </details> : task.desc
+                      }
+                  </span>
+                  </div>
+              )
+            }
 
             <!-- 附件展示 -->
             {
