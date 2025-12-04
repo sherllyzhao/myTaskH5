@@ -1,0 +1,578 @@
+---
+const { id } = Astro.params;
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>任务详情</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/common.css" />
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      body {
+        margin: 0;
+        padding: 48px 16px;
+        min-height: 100vh;
+        font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(111, 134, 214, 0.25), transparent 45%),
+          linear-gradient(180deg, #eef2f7 0%, #f6f7fb 80%);
+        color: #2f3b52;
+        display: flex;
+        justify-content: center;
+      }
+
+      .task-detail-page {
+        width: min(960px, 100%);
+        background: #fff;
+        border-radius: 18px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow:
+          0 25px 60px rgba(15, 23, 42, 0.16),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        overflow: auto;
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 32px 36px 28px;
+        background: linear-gradient(120deg, #fdfefe 0%, #edf1f9 100%);
+        border-bottom: 1px solid #e1e7f3;
+        position: sticky;
+        top: 0;
+        left: 0;
+        z-index: 1;
+      }
+
+      .page-header h1 {
+        margin: 8px 0 0;
+        font-size: 24px;
+        color: #1f2d3d;
+      }
+
+      .page-header p {
+        margin: 0;
+        color: #7d8ba5;
+        font-size: 14px;
+        letter-spacing: 0.3px;
+      }
+
+      .page-actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      .back-btn {
+        padding: 10px 22px;
+        border-radius: 24px;
+        border: 1px solid #c9d2e3;
+        background: #ffffff;
+        color: #4a5b75;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+      }
+
+      .back-btn:hover {
+        border-color: #9fb2cc;
+        color: #1f2d3d;
+        box-shadow: 0 8px 18px rgba(79, 133, 198, 0.18);
+      }
+
+      .page-body {
+        padding: 30px 36px 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+        font-size: 15px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+      }
+
+      .meta-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px 0 6px;
+      }
+
+      .badge {
+        padding: 6px 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .badge.primary {
+        background: rgba(86, 134, 255, 0.12);
+        color: #3752c9;
+        border: 1px solid rgba(86, 134, 255, 0.25);
+      }
+
+      .badge.ghost {
+        background: rgba(33, 150, 243, 0.08);
+        color: #1d68c2;
+        border: 1px solid rgba(33, 150, 243, 0.15);
+      }
+
+      .badge.outline {
+        border: 1px dashed #b1bfd8;
+        color: #5c6b85;
+      }
+
+      .section-card {
+        border-radius: 14px;
+        border: 1px solid rgba(226, 231, 241, 0.8);
+        background: linear-gradient(135deg, rgba(249, 251, 255, 0.9), rgba(241, 245, 255, 0.65));
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #1f2d3d;
+      }
+
+      .section-header h2 {
+        font-size: 18px;
+        margin: 0;
+      }
+
+      .section-header span {
+        font-size: 13px;
+        color: #90a0bf;
+      }
+
+      .field-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .field-row.two-columns {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .field {
+        flex: 1;
+        display: flex;
+        align-items: baseline;
+        color: #2f3b52;
+        min-width: 280px;
+      }
+
+      .field .label {
+        min-width: 130px;
+        color: #5c6b85;
+        display: inline-flex;
+        align-items: center;
+        font-weight: 600;
+      }
+
+      .field .required {
+        color: #e53935;
+        margin-right: 4px;
+      }
+
+      .field .value {
+        font-weight: 500;
+      }
+
+      .position-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .position-pill {
+        padding: 4px 18px;
+        border-radius: 24px;
+        border: 1px solid #57a5ff;
+        color: #1f7ed0;
+        background: #ecf5ff;
+        font-size: 14px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+      }
+
+      .star-levels {
+        display: inline-flex;
+        gap: 8px;
+        color: #1f2d3d;
+      }
+
+      .field .pair {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .info-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 1px solid #c0c6d4;
+        color: #8492a6;
+        font-size: 11px;
+        cursor: help;
+      }
+
+      .commission-grid {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .commission-card {
+        flex: 1;
+        min-width: 220px;
+        border-radius: 12px;
+        border: 1px solid rgba(183, 199, 236, 0.6);
+        background: linear-gradient(135deg, rgba(226, 239, 255, 0.8), rgba(247, 252, 255, 0.95));
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .commission-card strong {
+        font-size: 24px;
+        color: #2e4cc5;
+      }
+
+      .project-commission {
+        color: #d93026;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .star-commission {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        padding-left: 4px;
+        color: #5c6b85;
+      }
+
+      .star-commission span {
+        min-width: 120px;
+      }
+
+      .star-commission strong {
+        color: #1f2d3d;
+        margin-left: 4px;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 0;
+        }
+
+        .task-detail-page {
+          border-radius: 0;
+        }
+
+        .page-header,
+        .page-body {
+          padding: 24px;
+        }
+
+        .meta-info {
+          flex-direction: column;
+        }
+
+        .field-row.two-columns {
+          flex-direction: column;
+        }
+
+        .star-commission {
+          padding-left: 0;
+        }
+
+        .field .label {
+          min-width: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="task-detail-page">
+      <header class="page-header">
+        <div>
+          <p id="task-id">任务编号：{id || ""}</p>
+          <h1 id="task-detail-title">任务详情</h1>
+        </div>
+        <div class="page-actions">
+          <button id="backButton" class="back-btn" type="button">返回上一页</button>
+        </div>
+      </header>
+
+      <section class="page-body" aria-labelledby="task-detail-title">
+        <div class="meta-info">
+          <span class="badge primary" id="badge-type">任务类型：</span>
+          <span class="badge ghost" id="badge-star-levels">可接星级：</span>
+          <span class="badge outline" id="badge-duration">任务工期：</span>
+        </div>
+
+        <article class="section-card">
+          <div class="section-header">
+            <h2>基础信息</h2>
+            <span>岗位与要求</span>
+          </div>
+
+          <div class="field-row two-columns">
+            <div class="field">
+              <span class="label"><span class="required">*</span>任务类型：</span>
+              <span class="value" id="field-type"></span>
+            </div>
+            <div class="field">
+              <span class="label">可接星级：</span>
+              <span class="star-levels" id="field-star-levels"></span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <span class="label">可接单岗位：</span>
+              <div class="position-tags" id="field-positions"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="section-card">
+          <div class="section-header">
+            <h2>佣金详情</h2>
+            <span>基础金额与加价</span>
+          </div>
+
+          <div class="commission-grid">
+            <div class="commission-card">
+              <span>基础佣金(元)</span>
+              <strong id="field-base-commission"></strong>
+              <span class="project-commission" id="field-project-commission">项目佣金：</span>
+            </div>
+            <div class="commission-card">
+              <span>加价佣金(元)</span>
+              <strong id="field-markup-commission"></strong>
+              <span class="pair" style="color：#5c6b85;">
+                <span class="info-icon" title="基础佣金指完成任务后可获得的固定金额">?</span>
+                完成后可自动结算
+              </span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <span class="label">各星级可得基础佣金：</span>
+            </div>
+            <div class="star-commission" id="field-star-commission"></div>
+          </div>
+        </article>
+
+        <article class="section-card">
+          <div class="section-header">
+            <h2>时间与备注</h2>
+            <span>截止与补充说明</span>
+          </div>
+
+          <div class="field-row two-columns">
+            <div class="field">
+              <span class="label"><span class="required">*</span>截止时间：</span>
+              <span class="value" id="field-deadline"></span>
+            </div>
+            <div class="field">
+              <span class="label"><span class="required">*</span>任务工期：</span>
+              <span class="value" id="field-duration"></span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <span class="label">任务备注：</span>
+              <span class="value" id="field-remark"></span>
+            </div>
+          </div>
+        </article>
+
+        <article class="section-card">
+          <div class="section-header">
+            <h2>执行信息</h2>
+            <span>责任单位与范围</span>
+          </div>
+
+          <div class="field-row two-columns">
+            <div class="field">
+              <span class="label">执行单位：</span>
+              <span class="value" id="field-unit"></span>
+            </div>
+            <div class="field">
+              <span class="label">执行部门：</span>
+              <span class="value" id="field-department"></span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <span class="label">任务范围：</span>
+              <span class="value" id="field-scope"></span>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script is:inline src="/js/cookies.js"></script>
+
+    <script is:inline>
+      // 从 sessionStorage 加载数据
+      function loadTaskDetailFromSessionStorage() {
+        try {
+          const projectInfoStr = sessionStorage.getItem("projectPerformanceDetailInfo");
+
+          if (projectInfoStr) {
+            const projectInfo = JSON.parse(projectInfoStr);
+            console.log("🚀 ~ loadTaskDetailFromSessionStorage ~ projectInfo: ", projectInfo);
+
+            // 更新页面内容
+            if (projectInfo.id) {
+              const taskIdEl = document.getElementById('task-id');
+              if (taskIdEl) taskIdEl.textContent = '任务编号：' + projectInfo.id;
+            }
+
+            if (projectInfo.hallTypeTitle) {
+              const badgeTypeEl = document.getElementById('badge-type');
+              if (badgeTypeEl) badgeTypeEl.textContent = '任务类型：' + projectInfo.hallTypeTitle;
+
+              const fieldTypeEl = document.getElementById('field-type');
+              if (fieldTypeEl) fieldTypeEl.textContent = projectInfo.hallTypeTitle;
+            }
+
+            fetch('/taskApi/Position/gradeList', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  tokens: Cookies.get('employee_token')
+                }),
+            })
+              .then(res => res.json())
+              .then(r => {
+                if (r.data && r.code === 1) {
+                  const gradeList = Object.values(r.data);
+
+                  if (gradeList && Array.isArray(gradeList)) {
+                    const badgeStarEl = document.getElementById('badge-star-levels');
+                    if (badgeStarEl) badgeStarEl.textContent = '可接星级：' + gradeList.join('、');
+
+                    const fieldStarEl = document.getElementById('field-star-levels');
+                    if (fieldStarEl) fieldStarEl.textContent = gradeList.join('、');
+                  }
+                }
+              })
+              .catch(error => console.error('Failed to fetch project info:', error));
+
+            if (projectInfo.duration) {
+              const badgeDurationEl = document.getElementById('badge-duration');
+              if (badgeDurationEl) badgeDurationEl.textContent = '任务工期：' + projectInfo.duration;
+
+              const fieldDurationEl = document.getElementById('field-duration');
+              if (fieldDurationEl) fieldDurationEl.textContent = projectInfo.duration;
+            }
+
+            if (projectInfo.positions && Array.isArray(projectInfo.positions)) {
+              const positionsContainer = document.getElementById('field-positions');
+              if (positionsContainer) {
+                positionsContainer.innerHTML = projectInfo.positions
+                  .map(pos => `<span class="position-pill">${pos}</span>`)
+                  .join('');
+              }
+            }
+
+            if (projectInfo.baseCommission) {
+              const baseCommEl = document.getElementById('field-base-commission');
+              if (baseCommEl) baseCommEl.textContent = projectInfo.baseCommission;
+            }
+
+            if (projectInfo.markupCommission) {
+              const markupEl = document.getElementById('field-markup-commission');
+              if (markupEl) markupEl.textContent = projectInfo.markupCommission;
+            }
+
+            if (projectInfo.projectCommission) {
+              const projCommEl = document.getElementById('field-project-commission');
+              if (projCommEl) projCommEl.textContent = '项目佣金：' + projectInfo.projectCommission;
+            }
+
+            if (projectInfo.starCommission && Array.isArray(projectInfo.starCommission)) {
+              const starCommEl = document.getElementById('field-star-commission');
+              if (starCommEl) {
+                starCommEl.innerHTML = projectInfo.starCommission
+                  .map(item => `<span>${item.level}：<strong>${item.amount}</strong></span>`)
+                  .join('');
+              }
+            }
+
+            if (projectInfo.deadline) {
+              const deadlineEl = document.getElementById('field-deadline');
+              if (deadlineEl) deadlineEl.textContent = projectInfo.deadline;
+            }
+
+            if (projectInfo.remark) {
+              const remarkEl = document.getElementById('field-remark');
+              if (remarkEl) remarkEl.textContent = projectInfo.remark;
+            }
+
+            if (projectInfo.unit) {
+              const unitEl = document.getElementById('field-unit');
+              if (unitEl) unitEl.textContent = projectInfo.unit;
+            }
+
+            if (projectInfo.department) {
+              const deptEl = document.getElementById('field-department');
+              if (deptEl) deptEl.textContent = projectInfo.department;
+            }
+
+            if (projectInfo.scope) {
+              const scopeEl = document.getElementById('field-scope');
+              if (scopeEl) scopeEl.textContent = projectInfo.scope;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load data from sessionStorage:', error);
+        }
+      }
+
+      // 页面加载时执行
+      loadTaskDetailFromSessionStorage();
+
+      // 返回按钮
+      const backBtn = document.getElementById('backButton');
+      if (backBtn) {
+        backBtn.addEventListener('click', () => {
+          if (history.length > 1) {
+            history.back();
+          } else {
+            window.location.href = '/';
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

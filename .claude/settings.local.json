@@ -19,7 +19,8 @@
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_run_code",
       "mcp__playwright__browser_take_screenshot",
-      "Bash(npx sharp-cli:*)"
+      "Bash(npx sharp-cli:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,7 +1,6 @@
 ---
 import { Debug } from 'astro/components';
 import {earlyWarningOfConstructionPeriod, getAddCommission, getBaseCommission, isLeave} from "../utils/map.ts";
-import {formatTimestamp} from "../utils/tool.ts";
 import ExecutionDetailDrawer from "./ExecutionDetailDrawer.astro";
 import ConfirmDialog from "./ConfirmDialog.astro";
 import AlertBar from "./AlertBar.astro";
@@ -86,7 +85,6 @@ async function getPerformanceDetailList(){
   }
 }
 await getPerformanceDetailList()
-
 
 const pickArray = (source: AnyRecord | undefined | null, keys: string[]) => {
   if (!source) return [];
@@ -291,33 +289,6 @@ const formatAmountLabel = (value: any) => {
   return /^¥/.test(text) ? text : `¥ ${text}`;
 };
 
-const normalizeExecution = (item: AnyRecord, index: number) => {
-  const stageName = item.stage || item.stageName || item.name || `执行阶段 ${index + 1}`;
-  const stageType = item.stageType || item.type || item.taskType || item.category || "";
-  const statusText = item.statusText || item.statustxt || item.status || "进行中";
-  const statusMeta = normalizeStatusMeta(statusText);
-  const rawAddress = item.address || item.functionAddress || item.link || item.annex || "";
-
-  return {
-    id: item.id ?? item.stageId ?? index,
-    stageName,
-    stageType,
-    amountLabel: formatAmountLabel(item.amount ?? item.money ?? item.reward ?? item.fee ?? 0),
-    publishTime: item.publishTime ?? item.createTime ?? item.createtime ?? item.orderTime ?? "-",
-    reviewTime: item.reviewTime ?? item.auditTime ?? item.audittime ?? "-",
-    applicant: item.applicant ?? item.customer ?? item.username ?? "",
-    reviewer: item.reviewer ?? item.auditUser ?? item.handler ?? "",
-    functionAddress: rawAddress || "-",
-    functionLink: typeof rawAddress === "string" && /^https?:\/\//i.test(rawAddress) ? rawAddress : "",
-    statusText,
-    statusClass: statusMeta.className,
-    statusKey: statusMeta.key,
-    satisfactionLabel: item.satisfaction ?? item.satisfactionLevel ?? "-",
-    satisfactionScore: item.satisfactionScore ?? item.satisfactionStars ?? "",
-    remark: item.remark ?? item.description ?? "",
-  };
-};
-
 const normalizeDispatchTask = (item: AnyRecord, index: number) => {
   const statusText = item.statusText ?? item.status ?? "进行中";
   const statusMeta = normalizeStatusMeta(statusText);
@@ -338,16 +309,6 @@ const normalizeDispatchTask = (item: AnyRecord, index: number) => {
   };
 };
 
-const executionCandidates = pickArray(data, [
-  "projectExecutions",
-  "executionList",
-  "projectExecutionList",
-  "executionlist",
-  "stageList",
-  "projectLogList",
-  "projectLog",
-]);
-
 const dispatchCandidates = pickArray(data, [
   "dispatchTasks",
   "issueTaskList",
@@ -356,45 +317,6 @@ const dispatchCandidates = pickArray(data, [
   "taskIssueList",
   "pendingIssueList",
 ]);
-
-const fallbackExecutions = [
-  {
-    id: "stage-fallback-1",
-    stageName: "方案梳理",
-    stageType: "需求设计",
-    amountLabel: "¥ 0.00",
-    publishTime: "2024-12-28 09:13:42",
-    reviewTime: "未上传",
-    applicant: "李设计",
-    reviewer: "-",
-    functionAddress: "功能清单 V1",
-    functionLink: "",
-    statusText: "未审核",
-    statusClass: "status-pending",
-    statusKey: "pending",
-    satisfactionLabel: "-",
-    satisfactionScore: "-",
-    remark: "等待客户提供最终资料。",
-  },
-  {
-    id: "stage-fallback-2",
-    stageName: "网站制作",
-    stageType: "开发交付",
-    amountLabel: "¥ 0.50",
-    publishTime: "2024-11-04 10:00:59",
-    reviewTime: "2024-11-04 10:53:15",
-    applicant: "资海云",
-    reviewer: "项目经理",
-    functionAddress: "投产查看",
-    functionLink: "",
-    statusText: "已验收",
-    statusClass: "status-success",
-    statusKey: "done",
-    satisfactionLabel: "评分",
-    satisfactionScore: "1",
-    remark: "客户反馈良好，准备上线。",
-  },
-];
 
 const fallbackDispatchTasks = [
   {
@@ -441,23 +363,10 @@ const fallbackDispatchTasks = [
   },
 ];
 
-const executionList =
-  executionCandidates.length > 0
-    ? executionCandidates.map(normalizeExecution)
-    : fallbackExecutions;
-
 const dispatchTaskList =
   dispatchCandidates.length > 0
     ? dispatchCandidates.map(normalizeDispatchTask)
     : fallbackDispatchTasks;
-
-const fallbackInProgressCount =
-  executionList.filter((item) => item.statusKey === "in-progress").length || 0;
-
-const fallbackDoneCount =
-  executionList.filter((item) => item.statusKey === "done").length || 0;
-
-const fallbackSatisfactionText = executionList.length ? "良好" : "-";
 
 let totalMoney = 0;
 const excludeStatusInfo = ['删除', '已转移', '已撤销']
@@ -493,7 +402,7 @@ const detailModalId = "execution-detail-modal";
     <button class="dispatch-btn" type="button" data-open-dispatch>下发任务</button>
   </div>
 
-    <!--<Debug data={projectPerformanceDetailInfo} />-->
+    <Debug data={projectPerformanceInfo} />
 
   <div class="summary-grid">
     {summaryStats.map((stat) => (
@@ -612,7 +521,7 @@ const detailModalId = "execution-detail-modal";
             </div>-->
 
               <div class="execution-card-footer">
-	              <button class="btn btn-secondary detail-btn">详情</button>
+	              <button class="btn btn-secondary detail-btn" data-task-id={stage.id} onclick="handleDetail(event)">详情</button>
 	              <button class="btn btn-secondary recall-btn" data-task-id={stage.id} onclick="handleRecall(event)">撤销</button>
               </div>
           </div>
@@ -1249,6 +1158,7 @@ const detailModalId = "execution-detail-modal";
   .btn-secondary.detail-btn,
   .btn-secondary.recall-btn{
       flex: 1;
+      text-decoration: none;
   }
 
   @media (min-width: 640px) {
@@ -1266,7 +1176,8 @@ const detailModalId = "execution-detail-modal";
   }
 </style>
 
-<script is:inline define:vars={{modalId, defaultFilterKey}}>
+<script is:inline define:vars={{modalId, defaultFilterKey, projectPerformanceInfo}}>
+  window.__projectPerformanceInfo__ = projectPerformanceInfo;
   (() => {
     const modalElementId = String(modalId);
     const fallbackFilterKey = String(defaultFilterKey || "all");
@@ -1332,11 +1243,9 @@ const detailModalId = "execution-detail-modal";
 <script is:inline>
   function handleRecall(event) {
     const taskId = event.target.dataset.taskId;
-    console.log("🚀 ~ handleRecall ~ event.target.dataset: ", event.target.dataset);
     const recallErrorBar = document.getElementById('recallErrorBar');
     const recallSuccessBar = document.getElementById('recallSuccessBar');
 
-    console.log("Recall task:", taskId);
     if(!taskId){
       return;
     }
@@ -1396,5 +1305,14 @@ const detailModalId = "execution-detail-modal";
     } catch(err){
         console.log("🚀 ~ handleRecall ~ err: ", err);
     }
+  }
+  function handleDetail(event) {
+    const taskId = event.target.dataset.taskId;
+    if (!taskId) {
+      return;
+    }
+    let projectPerformanceInfo= window.__projectPerformanceInfo__.find(item => '' + item.id === taskId);
+    sessionStorage.setItem("projectPerformanceDetailInfo", JSON.stringify(projectPerformanceInfo));
+    window.location.href = `/project-task-detail/${taskId}`;
   }
 </script>
