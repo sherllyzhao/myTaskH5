@@ -214,10 +214,12 @@ const { id } = Astro.params;
         color: #1f2d3d;
       }
 
-      .field .pair {
+      .pair {
         display: inline-flex;
         align-items: center;
         gap: 6px;
+          font-size: 12px;
+          color: #3a5471;
       }
 
       .info-icon {
@@ -231,6 +233,7 @@ const { id } = Astro.params;
         color: #8492a6;
         font-size: 11px;
         cursor: help;
+          flex-shrink: 0;
       }
 
       .commission-grid {
@@ -370,9 +373,9 @@ const { id } = Astro.params;
             <div class="commission-card">
               <span>加价佣金(元)</span>
               <strong id="field-markup-commission"></strong>
-              <span class="pair" style="color：#5c6b85;">
-                <span class="info-icon" title="基础佣金指完成任务后可获得的固定金额">?</span>
-                完成后可自动结算
+              <span class="pair" style="color: #5c6b85;">
+                <span class="info-icon">?</span>
+                此金额为三星岗位人员接单金额，二星人员接单金额为90%，一星为80%
               </span>
             </div>
           </div>
@@ -394,18 +397,18 @@ const { id } = Astro.params;
           <div class="field-row two-columns">
             <div class="field">
               <span class="label"><span class="required">*</span>截止时间：</span>
-              <span class="value" id="field-deadline"></span>
+              <span class="value" id="field-deadline">未知</span>
             </div>
             <div class="field">
               <span class="label"><span class="required">*</span>任务工期：</span>
-              <span class="value" id="field-duration"></span>
+              <span class="value" id="field-duration">未知</span>
             </div>
           </div>
 
           <div class="field-row">
             <div class="field">
               <span class="label">任务备注：</span>
-              <span class="value" id="field-remark"></span>
+              <span class="value" id="field-remark">无</span>
             </div>
           </div>
         </article>
@@ -419,18 +422,18 @@ const { id } = Astro.params;
           <div class="field-row two-columns">
             <div class="field">
               <span class="label">执行单位：</span>
-              <span class="value" id="field-unit"></span>
+              <span class="value" id="field-unit">无</span>
             </div>
             <div class="field">
               <span class="label">执行部门：</span>
-              <span class="value" id="field-department"></span>
+              <span class="value" id="field-department">无</span>
             </div>
           </div>
 
           <div class="field-row">
             <div class="field">
               <span class="label">任务范围：</span>
-              <span class="value" id="field-scope"></span>
+              <span class="value" id="field-scope">无</span>
             </div>
           </div>
         </article>
@@ -438,29 +441,31 @@ const { id } = Astro.params;
     </main>
 
     <script is:inline src="/js/cookies.js"></script>
+    <script is:inline src="/js/money.js"></script>
 
     <script is:inline>
       // 从 sessionStorage 加载数据
       function loadTaskDetailFromSessionStorage() {
         try {
-          const projectInfoStr = sessionStorage.getItem("projectPerformanceDetailInfo");
+          const taskInfoStr = sessionStorage.getItem("projectPerformanceDetailInfo");
+          const projectInfoStr = sessionStorage.getItem("projectDetailInfo");
 
-          if (projectInfoStr) {
-            const projectInfo = JSON.parse(projectInfoStr);
-            console.log("🚀 ~ loadTaskDetailFromSessionStorage ~ projectInfo: ", projectInfo);
+          if (taskInfoStr) {
+            const taskInfo = JSON.parse(taskInfoStr);
+            console.log("🚀 ~ loadTaskDetailFromSessionStorage ~ taskInfo: ", taskInfo);
 
             // 更新页面内容
-            if (projectInfo.id) {
+            if (taskInfo.id) {
               const taskIdEl = document.getElementById('task-id');
-              if (taskIdEl) taskIdEl.textContent = '任务编号：' + projectInfo.id;
+              if (taskIdEl) taskIdEl.textContent = '任务编号：' + taskInfo.id;
             }
 
-            if (projectInfo.hallTypeTitle) {
+            if (taskInfo.hallTypeTitle) {
               const badgeTypeEl = document.getElementById('badge-type');
-              if (badgeTypeEl) badgeTypeEl.textContent = '任务类型：' + projectInfo.hallTypeTitle;
+              if (badgeTypeEl) badgeTypeEl.textContent = '任务类型：' + taskInfo.hallTypeTitle;
 
               const fieldTypeEl = document.getElementById('field-type');
-              if (fieldTypeEl) fieldTypeEl.textContent = projectInfo.hallTypeTitle;
+              if (fieldTypeEl) fieldTypeEl.textContent = taskInfo.hallTypeTitle;
             }
 
             fetch('/taskApi/Position/gradeList', {
@@ -488,70 +493,94 @@ const { id } = Astro.params;
               })
               .catch(error => console.error('Failed to fetch project info:', error));
 
-            if (projectInfo.duration) {
+            if (taskInfo.hall_duration) {
               const badgeDurationEl = document.getElementById('badge-duration');
-              if (badgeDurationEl) badgeDurationEl.textContent = '任务工期：' + projectInfo.duration;
+              if (badgeDurationEl) badgeDurationEl.textContent = '任务工期：' + taskInfo.hall_duration + '个工作日';
 
               const fieldDurationEl = document.getElementById('field-duration');
-              if (fieldDurationEl) fieldDurationEl.textContent = projectInfo.duration;
+              if (fieldDurationEl) fieldDurationEl.textContent = taskInfo.hall_duration + '个工作日';
             }
 
-            if (projectInfo.positions && Array.isArray(projectInfo.positions)) {
-              const positionsContainer = document.getElementById('field-positions');
-              if (positionsContainer) {
-                positionsContainer.innerHTML = projectInfo.positions
-                  .map(pos => `<span class="position-pill">${pos}</span>`)
-                  .join('');
+            if(taskInfo.hall_type){
+              if (taskInfo.positionArray && Array.isArray(taskInfo.positionArray)) {
+                const positionsContainer = document.getElementById('field-positions');
+                if (positionsContainer) {
+                  positionsContainer.innerHTML = taskInfo.positionArray
+                    .map(pos => `<span class="position-pill">${pos.name}</span>`)
+                    .join('');
+                }
               }
+            }else{
+              positionsContainer.innerHTML = '无';
             }
 
-            if (projectInfo.baseCommission) {
+            if (taskInfo.hall_user_money || taskInfo.bountymoney) {
               const baseCommEl = document.getElementById('field-base-commission');
-              if (baseCommEl) baseCommEl.textContent = projectInfo.baseCommission;
+              if (baseCommEl) baseCommEl.textContent = '￥' + (Number(taskInfo.hall_user_money) && Number(taskInfo.hall_money) ? (Number(taskInfo.hall_user_money) -
+                Number(taskInfo.hall_money)).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : taskInfo.bountymoney);
             }
 
-            if (projectInfo.markupCommission) {
-              const markupEl = document.getElementById('field-markup-commission');
-              if (markupEl) markupEl.textContent = projectInfo.markupCommission;
+            if(projectInfoStr){
+                const projectInfo = JSON.parse(projectInfoStr);
+                let totalMoney = getTotalMoney(projectInfo);
+              if (totalMoney) {
+                const projCommEl = document.getElementById('field-project-commission');
+                if (projCommEl) projCommEl.textContent = '项目佣金：￥' + totalMoney;
+              }
+
+              if (projectInfo.hall_money) {
+                const markupEl = document.getElementById('field-markup-commission');
+                if (markupEl) markupEl.textContent = '￥' + (projectInfo.hall_money || 0);
+              }
             }
 
-            if (projectInfo.projectCommission) {
-              const projCommEl = document.getElementById('field-project-commission');
-              if (projCommEl) projCommEl.textContent = '项目佣金：' + projectInfo.projectCommission;
-            }
-
-            if (projectInfo.starCommission && Array.isArray(projectInfo.starCommission)) {
+            if (taskInfo.bountymoney) {
               const starCommEl = document.getElementById('field-star-commission');
+              const starCommission = taskInfo.starCommission || [
+                {
+                  level: '三星',
+                  amount: taskInfo.bountymoney
+                },
+                {
+                  level: '二星',
+                  amount: (Number(taskInfo.bountymoney) * 0.9).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                },
+                {
+                  level: '一星',
+                  amount: (Number(taskInfo.bountymoney) * 0.8).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                }
+              ];
               if (starCommEl) {
-                starCommEl.innerHTML = projectInfo.starCommission
-                  .map(item => `<span>${item.level}：<strong>${item.amount}</strong></span>`)
+                starCommEl.innerHTML = starCommission
+                  .map(item => `<span>${item.level}：<strong>￥${item.amount}</strong></span>`)
                   .join('');
               }
             }
 
-            if (projectInfo.deadline) {
+            if (taskInfo.enddatatime) {
               const deadlineEl = document.getElementById('field-deadline');
-              if (deadlineEl) deadlineEl.textContent = projectInfo.deadline;
+              if (deadlineEl) deadlineEl.textContent = taskInfo.enddatatime;
             }
 
-            if (projectInfo.remark) {
+            if (taskInfo.description) {
               const remarkEl = document.getElementById('field-remark');
-              if (remarkEl) remarkEl.textContent = projectInfo.remark;
+              if (remarkEl) remarkEl.textContent = taskInfo.description;
             }
 
-            if (projectInfo.unit) {
+            if (taskInfo.taskrangeInfo) {
               const unitEl = document.getElementById('field-unit');
-              if (unitEl) unitEl.textContent = projectInfo.unit;
+              if (unitEl) unitEl.textContent = taskInfo.taskrangeInfo || '无';
             }
 
-            if (projectInfo.department) {
+            console.log("🚀 ~ loadTaskDetailFromSessionStorage ~ taskInfo.taskDepartmentTitle: ", taskInfo.taskDepartmentTitle);
+            if (taskInfo.taskDepartmentTitle && taskInfo.taskDepartmentTitle.title) {
               const deptEl = document.getElementById('field-department');
-              if (deptEl) deptEl.textContent = projectInfo.department;
+              if (deptEl) deptEl.textContent = taskInfo.taskDepartmentTitle.title || '无';
             }
 
-            if (projectInfo.scope) {
+            if (taskInfo.taskuserlist) {
               const scopeEl = document.getElementById('field-scope');
-              if (scopeEl) scopeEl.textContent = projectInfo.scope;
+              if (scopeEl) scopeEl.textContent = getUserList(taskInfo.taskuserlist);
             }
           }
         } catch (error) {

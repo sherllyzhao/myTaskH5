@@ -402,7 +402,7 @@ const detailModalId = "execution-detail-modal";
     <button class="dispatch-btn" type="button" data-open-dispatch>下发任务</button>
   </div>
 
-    <Debug data={projectPerformanceInfo} />
+    <!--<Debug data={projectPerformanceInfo} />-->
 
   <div class="summary-grid">
     {summaryStats.map((stat) => (
@@ -507,18 +507,14 @@ const detailModalId = "execution-detail-modal";
                 </span>
               </div>
             </div>
+	          <div class="meta-row">
+		          <span class="meta-label">满意度</span>
+		          <span class="meta-value satisfaction-score">
+                    {stage.evaluate || stage.evaluate || "-"}
+                  </span>
+	          </div>
 
             {stage.remark && <div class="execution-remark">{stage.remark}</div>}
-
-            <!--<div class="execution-card-footer">
-              <div class="satisfaction">
-                <span class="meta-label">满意度</span>
-                <span class="satisfaction-score">
-                  {stage.satisfactionScore || stage.satisfactionLabel || "-"}
-                </span>
-              </div>
-              <button class="ghost-btn" type="button">记录进度</button>
-            </div>-->
 
               <div class="execution-card-footer">
 	              <button class="btn btn-secondary detail-btn" data-task-id={stage.id} onclick="handleDetail(event)">详情</button>
@@ -1176,8 +1172,9 @@ const detailModalId = "execution-detail-modal";
   }
 </style>
 
-<script is:inline define:vars={{modalId, defaultFilterKey, projectPerformanceInfo}}>
+<script is:inline define:vars={{modalId, defaultFilterKey, projectPerformanceInfo, data}}>
   window.__projectPerformanceInfo__ = projectPerformanceInfo;
+  window.__projectDetail__ = data;
   (() => {
     const modalElementId = String(modalId);
     const fallbackFilterKey = String(defaultFilterKey || "all");
@@ -1313,6 +1310,7 @@ const detailModalId = "execution-detail-modal";
     }
     let projectPerformanceInfo= window.__projectPerformanceInfo__.find(item => '' + item.id === taskId);
     sessionStorage.setItem("projectPerformanceDetailInfo", JSON.stringify(projectPerformanceInfo));
+    sessionStorage.setItem("projectDetailInfo", JSON.stringify(window.__projectDetail__));
     window.location.href = `/project-task-detail/${taskId}`;
   }
 </script>
