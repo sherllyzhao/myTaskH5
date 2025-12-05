@@ -110,8 +110,6 @@ const moneyeditlst = Array.isArray(task?.moneyeditlst)
   : [];
 
 let custom: any = null;
-let customId: string | number = "";
-let showDemandFile: boolean = false;
 
 try {
   const custormRes = await fetch(proxyUrl, {
@@ -177,6 +175,39 @@ if(task.appendlog){
     })
   })
 }
+
+let hasList = false;
+let page = 1;
+let limit = 1;
+
+async function getPerformanceList(){
+  try{
+    if(!task || !task.id) return
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": Astro.request.headers.get("cookie") || "",
+      },
+      body: JSON.stringify({
+        path: "/taskorder/getHallShow",
+        id: task.id,
+        limit: limit,
+        page: page
+      }),
+    })
+
+    if (response.status === 200) {
+      const res = await response.json();
+      if (res.code === 1) {
+        hasList = res.data && res.data.total > 0;
+      }
+    }
+  }catch (e) {
+    console.log(e)
+  }
+}
+await getPerformanceList()
 ---
 
 <html lang="zh-CN">
@@ -523,8 +554,10 @@ if(task.appendlog){
           }
           <a href="javascript:history.back()" class="action-btn action-btn-secondary">返回列表</a>
           {
-            executionData.length > 0 && task.status < 3 && (
+            !isProject(task.orderType) ? executionData.length > 0 && task.status < 3 && (
               <a href="javascript:history.back()" class="action-btn action-btn-primary">提交完成</a>
+            ) : (
+              hasList && task.appendStatusLink && (<button onclick="handleFinish()" data-project-id={task.id} class="action-btn action-btn-primary">上报完结</button>)
             )
           }
         </div>

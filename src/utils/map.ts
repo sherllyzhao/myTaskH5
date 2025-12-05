@@ -100,3 +100,16 @@ export function isLeave (task: any) {
   }
   return false
 }
+
+/**
+ * !20241012
+ * !判断是否显示完成
+ * !判断条件：1：已接单，2：已离职
+ */
+export function getShowFinish (data: any) {
+  if (data.tableData.length && data.form.appendStatusLink) {
+    // 如果没有this.form.appendlog里的status，显示，如果status = 2，显示，否则不显示
+    return !(data.form.appendlog && 'status' in data.form.appendlog) || data.form.appendlog.status === 2
+  }
+  return false
+}
