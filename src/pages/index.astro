@@ -364,41 +364,52 @@ const filterGroups: FilterGroup[] = [
             dialog.show({
               message: '接单后需要根据内容指派，请及时把控工期进度。',
               onConfirm: async () => {
-                const response = await fetch('/taskApi/taskorder/addtask', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ id: taskId, remark: '1', tokens: Cookies.get('employee_token') })
-                });
-
-                if(response.ok){
-                  if(response.status === 200){
-                    const res = await response.json();
-                    if(res.code === 1){
-                      // 处理成功逻辑
-                      if(takeSuccessBar){
-                        takeSuccessBar.show();
-                        takeSuccessBar.textContent = '接单成功，祝您工作愉快！';
+                  dialog.dataset.loading = 'true';
+                  try{
+                    const response = await fetch('/taskApi/taskorder/addtask', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ id: taskId, remark: '1', tokens: Cookies.get('employee_token') })
+                    });
+                    if(response.ok){
+                      if(response.status === 200){
+                        const res = await response.json();
+                        if(res.code === 1){
+                          // 处理成功逻辑
+                          if(takeSuccessBar){
+                            takeSuccessBar.show();
+                            takeSuccessBar.textContent = '接单成功，祝您工作愉快！';
+                          }else{
+                            alert('接单成功，祝您工作愉快！');
+                          }
+                          window.location.reload();
+                        }else{
+                          if(takeErrorBar){
+                            takeErrorBar.show();
+                            takeErrorBar.textContent = res.msg || res.message || "接取任务失败，请重试";
+                          }else{
+                            alert(res.msg || res.message || "接取任务失败，请重试");
+                          }
+                        }
                       }else{
-                        alert('接单成功，祝您工作愉快！');
-                      }
-                      window.location.reload();
-                    }else{
-                      if(takeErrorBar){
-                        takeErrorBar.show();
-                        takeErrorBar.textContent = res.msg || res.message || "接取任务失败，请重试";
-                      }else{
-                        alert(res.msg || res.message || "接取任务失败，请重试");
+                        if(takeErrorBar){
+                          takeErrorBar.show();
+                          takeErrorBar.textContent = '接取任务失败，请重试';
+                        }else{
+                          alert('接取任务失败，请重试');
+                        }
                       }
                     }
-                  }else{
+                  } catch (error) {
                     if(takeErrorBar){
                       takeErrorBar.show();
                       takeErrorBar.textContent = '接取任务失败，请重试';
                     }else{
                       alert('接取任务失败，请重试');
                     }
+                  } finally {
+                    dialog.dataset.loading = 'false';
                   }
-                }
               },
               onCancel: () => {
                 console.log('用户点击了取消');

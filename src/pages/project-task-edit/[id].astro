@@ -1,0 +1,973 @@
+﻿---
+import FilterDrawer from "../../components/FilterDrawer.astro";
+import FilterSection from "../../components/FilterSection.astro";
+import type { FilterGroup } from "../../types/filter";
+
+const baseFilterGroups: FilterGroup[] = [
+  {
+    title: "基础信息",
+    items: [
+      { type: "input", icon: "#", name: "hallTypeTitle", placeholder: "任务类型（例如：等级保护测评）" },
+      { type: "input", icon: "*", name: "starLevelsText", placeholder: "可接星级，使用顿号或逗号分隔" },
+      { type: "input", icon: "@", name: "positionsText", placeholder: "可接岗位，多项以顿号分隔" },
+    ],
+  },
+];
+
+const commissionFilterGroups: FilterGroup[] = [
+  {
+    title: "佣金设置",
+    items: [
+      { type: "number", icon: "Y", name: "hall_user_money", placeholder: "基础佣金（元）", width: "half" },
+      { type: "number", icon: "+", name: "hall_money", placeholder: "加价佣金（元）", width: "half" },
+      { type: "number", icon: "T", name: "projectCommissionText", placeholder: "项目佣金总额", width: "half" },
+      { type: "number", icon: "3", name: "starCommissionA", placeholder: "三星佣金（元）", width: "half" },
+      { type: "number", icon: "2", name: "starCommissionB", placeholder: "二星佣金（元）", width: "half" },
+      { type: "number", icon: "1", name: "starCommissionC", placeholder: "一星佣金（元）", width: "half" },
+    ],
+  },
+];
+
+const timelineFilterGroups: FilterGroup[] = [
+  {
+    title: "时间设置",
+    items: [
+      { type: "input", icon: "T", name: "enddatatime", placeholder: "截止时间，例如 2025-12-31 18:00" },
+      { type: "number", icon: "D", name: "hall_duration", placeholder: "任务工期（工作日）", width: "half" },
+      { type: "input", icon: "M", name: "description", placeholder: "任务备注", width: "full" },
+    ],
+  },
+];
+
+const executionFilterGroups: FilterGroup[] = [
+  {
+    title: "执行信息",
+    items: [
+      { type: "input", icon: "U", name: "taskrangeInfo", placeholder: "执行单位" },
+      { type: "input", icon: "D", name: "taskDepartmentText", placeholder: "执行部门" },
+      { type: "input", icon: "S", name: "taskScopeText", placeholder: "任务范围或执行人员" },
+    ],
+  },
+];
+
+const { id } = Astro.params;
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>项目任务编辑</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/common.css" />
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      body {
+        font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        padding: 48px 16px;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(28, 121, 228, 0.18), transparent 45%),
+          linear-gradient(180deg, #ecf2ff 0%, #f9fbff 60%, #ffffff 100%);
+        color: #1f2d3d;
+        display: flex;
+        justify-content: center;
+      }
+
+      main.task-edit-page {
+        width: min(1040px, 100%);
+        background: #ffffff;
+        border-radius: 22px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow:
+          0 30px 60px rgba(15, 23, 42, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        overflow: hidden;
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 32px 40px 28px;
+        background: linear-gradient(115deg, rgba(255, 255, 255, 0.95), rgba(230, 240, 255, 0.95));
+        border-bottom: 1px solid rgba(215, 226, 244, 0.8);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .page-header h1 {
+        margin: 6px 0 0;
+        font-size: 24px;
+      }
+
+      .page-actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      .primary-btn,
+      .ghost-btn {
+        border-radius: 999px;
+        padding: 10px 22px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+      }
+
+      .ghost-btn {
+        border-color: rgba(99, 115, 139, 0.35);
+        background: transparent;
+        color: #394662;
+      }
+
+      .ghost-btn:hover {
+        border-color: rgba(99, 115, 139, 0.7);
+        color: #111c2f;
+      }
+
+      .primary-btn {
+        background: linear-gradient(135deg, #5271ff, #5ec4ff);
+        color: #fff;
+        box-shadow: 0 10px 25px rgba(82, 113, 255, 0.3);
+      }
+
+      .primary-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 30px rgba(82, 113, 255, 0.35);
+      }
+
+      .page-body {
+        padding: 32px 40px 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .meta-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 6px 0 2px;
+      }
+
+      .badge {
+        padding: 6px 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid transparent;
+      }
+
+      .badge.primary {
+        background: rgba(82, 113, 255, 0.12);
+        border-color: rgba(82, 113, 255, 0.3);
+        color: #3949ab;
+      }
+
+      .badge.ghost {
+        background: rgba(14, 165, 233, 0.1);
+        border-color: rgba(14, 165, 233, 0.25);
+        color: #0369a1;
+      }
+
+      .badge.outline {
+        background: rgba(148, 163, 184, 0.1);
+        border-color: rgba(148, 163, 184, 0.35);
+        color: #475569;
+      }
+
+      .section-card {
+        border-radius: 18px;
+        border: 1px solid rgba(226, 231, 241, 0.9);
+        background: linear-gradient(140deg, rgba(251, 253, 255, 0.95), rgba(238, 245, 255, 0.9));
+        box-shadow: 0 15px 40px rgba(15, 23, 42, 0.08);
+        padding: 24px 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .section-header h2 {
+        font-size: 20px;
+        margin: 0;
+        color: #0f172a;
+      }
+
+      .section-header span {
+        font-size: 13px;
+        color: #6b7c99;
+      }
+
+      .section-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .edit-btn {
+        border: 1px solid rgba(82, 113, 255, 0.3);
+        border-radius: 999px;
+        padding: 6px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        background: #fff;
+        color: #3843c4;
+        transition: all 0.2s ease;
+      }
+
+      .edit-btn:hover {
+        background: rgba(82, 113, 255, 0.12);
+      }
+
+      .field-row {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .field-row.two-columns {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+
+      .field {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 280px;
+      }
+
+      .field .label {
+        font-size: 13px;
+        letter-spacing: 0.05em;
+        color: #7a889f;
+        font-weight: 600;
+      }
+
+      .field .value {
+        font-size: 16px;
+        color: #1f2d3d;
+        font-weight: 600;
+      }
+
+      .position-tags,
+      .multi-value {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .position-pill,
+      .star-pill {
+        padding: 4px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(59, 130, 246, 0.45);
+        background: rgba(59, 130, 246, 0.08);
+        color: #1d4ed8;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .commission-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .commission-card {
+        flex: 1;
+        min-width: 240px;
+        background: linear-gradient(135deg, rgba(185, 221, 255, 0.24), rgba(255, 255, 255, 0.9));
+        border: 1px solid rgba(147, 197, 253, 0.6);
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .commission-card strong {
+        font-size: 28px;
+        color: #233876;
+      }
+
+      .star-commission {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        color: #475569;
+      }
+
+      .star-commission span {
+        min-width: 140px;
+      }
+
+      .star-commission strong {
+        color: #0f172a;
+        margin-left: 4px;
+      }
+
+      .empty-text {
+        color: #94a3b8;
+        font-size: 14px;
+      }
+
+      .toast {
+        position: fixed;
+        right: 32px;
+        bottom: 32px;
+        background: #0f172a;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+        opacity: 0;
+        transform: translateY(20px);
+        pointer-events: none;
+        transition: all 0.25s ease;
+        z-index: 50;
+      }
+
+      .toast.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 0;
+        }
+
+        main.task-edit-page {
+          border-radius: 0;
+        }
+
+        .page-header,
+        .page-body {
+          padding: 24px;
+        }
+
+        .field-row.two-columns {
+          flex-direction: column;
+        }
+
+        .page-actions {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="task-edit-page">
+      <header class="page-header">
+        <div>
+          <p id="task-id">任务编号：{id || ""}</p>
+          <h1>项目任务编辑</h1>
+          <p id="task-desc" style="color: #7d8ba5; margin: 6px 0 0; font-size: 14px;">同步 sessionStorage 中的任务详情，可编辑后实时同步。</p>
+        </div>
+        <div class="page-actions">
+          <button class="ghost-btn" type="button" id="backButton">返回</button>
+          <button class="primary-btn" type="button" id="saveDraftButton">保存草稿</button>
+        </div>
+      </header>
+
+      <section class="page-body">
+        <div class="meta-info">
+          <span class="badge primary" id="badge-type">任务类型：-</span>
+          <span class="badge ghost" id="badge-star-levels">可接星级：-</span>
+          <span class="badge outline" id="badge-duration">任务工期：-</span>
+        </div>
+
+        <article class="section-card" id="section-base">
+          <div class="section-header">
+            <div>
+              <h2>基础信息</h2>
+              <span>岗位与要求</span>
+            </div>
+            <div class="section-actions">
+              <button class="edit-btn" type="button" onclick="openEditDrawerForSection('base')">编辑基础信息</button>
+            </div>
+          </div>
+
+          <div class="field-row two-columns">
+            <div class="field">
+              <span class="label">任务类型</span>
+              <span class="value" id="field-type">-</span>
+            </div>
+            <div class="field">
+              <span class="label">可接星级</span>
+              <div class="multi-value" id="field-star-levels"></div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <span class="label">可接岗位</span>
+              <div class="position-tags" id="field-positions"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="section-card" id="section-commission">
+          <div class="section-header">
+            <div>
+              <h2>佣金信息</h2>
+              <span>基础金额与加价</span>
+            </div>
+            <div class="section-actions">
+              <button class="edit-btn" type="button" onclick="openEditDrawerForSection('commission')">编辑佣金</button>
+            </div>
+          </div>
+
+          <div class="commission-grid">
+            <div class="commission-card">
+              <span>基础佣金（含税）</span>
+              <strong id="field-base-commission">-</strong>
+              <span id="field-project-commission" class="empty-text">项目佣金：-</span>
+            </div>
+            <div class="commission-card">
+              <span>加价佣金（含税）</span>
+              <strong id="field-markup-commission">-</strong>
+              <span class="empty-text">星级差异自动计算</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <span class="label">各星级可得基础佣金</span>
+            </div>
+            <div class="star-commission" id="field-star-commission"></div>
+          </div>
+        </article>
+
+        <article class="section-card" id="section-timeline">
+          <div class="section-header">
+            <div>
+              <h2>时间与备注</h2>
+              <span>截止与补充说明</span>
+            </div>
+            <div class="section-actions">
+              <button class="edit-btn" type="button" onclick="openEditDrawerForSection('timeline')">编辑时间</button>
+            </div>
+          </div>
+
+          <div class="field-row two-columns">
+            <div class="field">
+              <span class="label">截止时间</span>
+              <span class="value" id="field-deadline">未设置</span>
+            </div>
+            <div class="field">
+              <span class="label">任务工期</span>
+              <span class="value" id="field-duration">未设置</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <span class="label">任务备注</span>
+              <span class="value" id="field-remark">无</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="section-card" id="section-execution">
+          <div class="section-header">
+            <div>
+              <h2>执行信息</h2>
+              <span>责任单位与范围</span>
+            </div>
+            <div class="section-actions">
+              <button class="edit-btn" type="button" onclick="openEditDrawerForSection('execution')">编辑执行信息</button>
+            </div>
+          </div>
+
+          <div class="field-row two-columns">
+            <div class="field">
+              <span class="label">执行单位</span>
+              <span class="value" id="field-unit">未设置</span>
+            </div>
+            <div class="field">
+              <span class="label">执行部门</span>
+              <span class="value" id="field-department">未设置</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <span class="label">任务范围</span>
+              <span class="value" id="field-scope">未设置</span>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <div class="toast" id="saveToast">保存成功</div>
+
+    <FilterDrawer id="filterDrawer" title="编辑字段">
+      <Fragment slot="header">
+        <h3 class="filter-drawer-title" id="drawerTitle">编辑字段</h3>
+        <button class="filter-drawer-close" onclick="closeFilterDrawer()">✕</button>
+      </Fragment>
+
+      <div data-section-panel="base">
+        <FilterSection groups={baseFilterGroups} />
+      </div>
+
+      <div data-section-panel="commission" hidden>
+        <FilterSection groups={commissionFilterGroups} />
+      </div>
+
+      <div data-section-panel="timeline" hidden>
+        <FilterSection groups={timelineFilterGroups} />
+      </div>
+
+      <div data-section-panel="execution" hidden>
+        <FilterSection groups={executionFilterGroups} />
+      </div>
+
+      <Fragment slot="footer">
+        <button class="filter-btn filter-btn-secondary" type="button" onclick="closeFilterDrawer()">取消</button>
+        <button class="filter-btn filter-btn-primary" type="button" id="drawerSaveButton">保存</button>
+      </Fragment>
+    </FilterDrawer>
+
+    <script is:inline src="/js/cookies.js"></script>
+    <script is:inline src="/js/money.js"></script>
+    <script is:inline src="/js/drawer.js"></script>
+    <script is:inline define:vars={{id}}>
+        window.__taskId__ = id;
+    </script>
+
+    <script is:inline>
+      const initialTaskId = window.__taskId__;
+
+      (function () {
+        let activeSection = "base";
+
+        const defaultTask = {
+          id: initialTaskId || "TSK-" + Date.now(),
+          hallTypeTitle: "信息安全测评",
+          starLevels: ["三星", "二星", "一星"],
+          positionArray: [{ name: "安全工程师" }, { name: "项目经理" }],
+          hall_user_money: "15000",
+          hall_money: "3000",
+          projectCommission: "18000",
+          starCommission: [
+            { level: "三星", amount: "15000" },
+            { level: "二星", amount: "13500" },
+            { level: "一星", amount: "12000" },
+          ],
+          enddatatime: "2025-12-31 18:00",
+          hall_duration: "30",
+          description: "请在工期内完成报告并上传附件。",
+          taskrangeInfo: "资海云-交付中心",
+          taskDepartmentTitle: { title: "安全评估部" },
+          taskuserlist: [{ username: "张三" }, { username: "李四" }],
+        };
+
+        let taskInfo = { ...defaultTask };
+
+        const drawerConfigs = {
+          base: {
+            title: "编辑基础信息",
+            panel: "base",
+            fields: [
+              {
+                inputName: "hallTypeTitle",
+                getter: (task) => task.hallTypeTitle || "",
+                setter: (task, value) => {
+                  task.hallTypeTitle = value.trim();
+                },
+              },
+              {
+                inputName: "starLevelsText",
+                getter: (task) => (Array.isArray(task.starLevels) ? task.starLevels.join("、") : ""),
+                setter: (task, value) => {
+                  task.starLevels = normalizeList(value);
+                },
+              },
+              {
+                inputName: "positionsText",
+                getter: (task) => {
+                  const list = Array.isArray(task.positionArray) ? task.positionArray : [];
+                  return list.map((item) => item.name).join("、");
+                },
+                setter: (task, value) => {
+                  task.positionArray = normalizeList(value).map((name) => ({ name }));
+                },
+              },
+            ],
+          },
+          commission: {
+            title: "编辑佣金信息",
+            panel: "commission",
+            fields: [
+              {
+                inputName: "hall_user_money",
+                getter: (task) => task.hall_user_money || "",
+                setter: (task, value) => {
+                  task.hall_user_money = value;
+                },
+              },
+              {
+                inputName: "hall_money",
+                getter: (task) => task.hall_money || "",
+                setter: (task, value) => {
+                  task.hall_money = value;
+                },
+              },
+              {
+                inputName: "projectCommissionText",
+                getter: (task) => task.projectCommission || "",
+                setter: (task, value) => {
+                  task.projectCommission = value;
+                },
+              },
+              {
+                inputName: "starCommissionA",
+                getter: (task) => getStarAmount(task, "三星"),
+                setter: (task, value) => updateStar(task, "三星", value),
+              },
+              {
+                inputName: "starCommissionB",
+                getter: (task) => getStarAmount(task, "二星"),
+                setter: (task, value) => updateStar(task, "二星", value),
+              },
+              {
+                inputName: "starCommissionC",
+                getter: (task) => getStarAmount(task, "一星"),
+                setter: (task, value) => updateStar(task, "一星", value),
+              },
+            ],
+          },
+          timeline: {
+            title: "编辑时间信息",
+            panel: "timeline",
+            fields: [
+              {
+                inputName: "enddatatime",
+                getter: (task) => task.enddatatime || "",
+                setter: (task, value) => {
+                  task.enddatatime = value;
+                },
+              },
+              {
+                inputName: "hall_duration",
+                getter: (task) => task.hall_duration || "",
+                setter: (task, value) => {
+                  task.hall_duration = value;
+                },
+              },
+              {
+                inputName: "description",
+                getter: (task) => task.description || "",
+                setter: (task, value) => {
+                  task.description = value;
+                },
+              },
+            ],
+          },
+          execution: {
+            title: "编辑执行信息",
+            panel: "execution",
+            fields: [
+              {
+                inputName: "taskrangeInfo",
+                getter: (task) => task.taskrangeInfo || "",
+                setter: (task, value) => {
+                  task.taskrangeInfo = value;
+                },
+              },
+              {
+                inputName: "taskDepartmentText",
+                getter: (task) => {
+                  if (typeof task.taskDepartmentTitle === "string") {
+                    return task.taskDepartmentTitle;
+                  }
+                  return task.taskDepartmentTitle?.title || "";
+                },
+                setter: (task, value) => {
+                  task.taskDepartmentTitle = { title: value };
+                },
+              },
+              {
+                inputName: "taskScopeText",
+                getter: (task) => {
+                  if (Array.isArray(task.taskuserlist)) {
+                    return task.taskuserlist.map((user) => user.username).join("、");
+                  }
+                  if (typeof task.taskuserlist === "string") {
+                    return task.taskuserlist;
+                  }
+                  return task.scopeText || "";
+                },
+                setter: (task, value) => {
+                  const list = normalizeList(value);
+                  task.taskuserlist = list.map((username) => ({ username }));
+                  task.scopeText = list.join("、");
+                },
+              },
+            ],
+          },
+        };
+
+        function normalizeList(value) {
+          if (!value) return [];
+          return value
+            .split(/[\n,，、]/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+        }
+
+        function formatMoney(value) {
+          const numberValue = Number(value);
+          if (!value || Number.isNaN(numberValue)) return "-";
+          return "¥" + numberValue.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function getStarAmount(task, level) {
+          const list = Array.isArray(task.starCommission) ? task.starCommission : [];
+          const target = list.find((item) => item.level === level);
+          return target?.amount || "";
+        }
+
+        function updateStar(task, level, amount) {
+          if (!Array.isArray(task.starCommission)) {
+            task.starCommission = [];
+          }
+          const normalizedAmount = amount || "";
+          const existing = task.starCommission.find((item) => item.level === level);
+          if (existing) {
+            existing.amount = normalizedAmount;
+          } else {
+            task.starCommission.push({ level, amount: normalizedAmount });
+          }
+        }
+
+        function setText(id, text) {
+          const el = document.getElementById(id);
+          if (el) {
+            el.textContent = text || "-";
+          }
+        }
+
+        function updatePositions(list) {
+          const container = document.getElementById("field-positions");
+          if (!container) return;
+          const items = Array.isArray(list) ? list : [];
+          if (!items.length) {
+            container.innerHTML = '<span class="empty-text">暂未添加岗位</span>';
+            return;
+          }
+          container.innerHTML = items.map((item) => `<span class="position-pill">${item.name}</span>`).join("");
+        }
+
+        function updateStarLevels(levels) {
+          const container = document.getElementById("field-star-levels");
+          const badge = document.getElementById("badge-star-levels");
+          const values = Array.isArray(levels) ? levels : [];
+          const text = values.length ? values.join("、") : "-";
+          if (badge) {
+            badge.textContent = `可接星级：${text}`;
+          }
+          if (!container) return;
+          if (!values.length) {
+            container.innerHTML = '<span class="empty-text">尚未设置星级</span>';
+            return;
+          }
+          container.innerHTML = values.map((item) => `<span class="star-pill">${item}</span>`).join("");
+        }
+
+        function updateStarCommission(list) {
+          const container = document.getElementById("field-star-commission");
+          if (!container) return;
+          const items = Array.isArray(list) ? list : [];
+          if (!items.length) {
+            container.innerHTML = '<span class="empty-text">暂未设置星级佣金</span>';
+            return;
+          }
+          container.innerHTML = items
+            .map((item) => `<span>${item.level}：<strong>${item.amount || "-"}</strong></span>`)
+            .join("");
+        }
+
+        function renderTaskDetail() {
+          setText("task-id", `任务编号：${taskInfo.id || ""}`);
+          setText("field-type", taskInfo.hallTypeTitle || "-");
+          setText("badge-type", `任务类型：${taskInfo.hallTypeTitle || "-"}`);
+          setText("field-deadline", taskInfo.enddatatime || "未设置");
+          setText(
+            "field-duration",
+            taskInfo.hall_duration ? `${taskInfo.hall_duration} 个工作日` : "未设置"
+          );
+          setText(
+            "badge-duration",
+            `任务工期：${taskInfo.hall_duration ? `${taskInfo.hall_duration} 个工作日` : "-"}`
+          );
+          setText("field-remark", taskInfo.description || "无");
+          setText("field-unit", taskInfo.taskrangeInfo || "未设置");
+          const department = typeof taskInfo.taskDepartmentTitle === "string"
+            ? taskInfo.taskDepartmentTitle
+            : taskInfo.taskDepartmentTitle?.title;
+          setText("field-department", department || "未设置");
+          if (Array.isArray(taskInfo.taskuserlist) && taskInfo.taskuserlist.length) {
+            setText("field-scope", taskInfo.taskuserlist.map((user) => user.username).join("、"));
+          } else if (taskInfo.scopeText) {
+            setText("field-scope", taskInfo.scopeText);
+          } else {
+            setText("field-scope", "未设置");
+          }
+          updatePositions(taskInfo.positionArray);
+          updateStarLevels(taskInfo.starLevels);
+          const baseEl = document.getElementById("field-base-commission");
+          if (baseEl) baseEl.textContent = formatMoney(taskInfo.hall_user_money);
+          const markupEl = document.getElementById("field-markup-commission");
+          if (markupEl) markupEl.textContent = formatMoney(taskInfo.hall_money);
+          const projectEl = document.getElementById("field-project-commission");
+          if (projectEl) {
+            projectEl.textContent = taskInfo.projectCommission
+              ? `项目佣金：${formatMoney(taskInfo.projectCommission)}`
+              : "项目佣金：-";
+          }
+          updateStarCommission(taskInfo.starCommission);
+        }
+
+        function populateDrawer(sectionKey) {
+          const config = drawerConfigs[sectionKey];
+          if (!config) return;
+          document.querySelectorAll("[data-section-panel]").forEach((panel) => {
+            panel.hidden = panel.getAttribute("data-section-panel") !== sectionKey;
+          });
+          const title = document.getElementById("drawerTitle");
+          if (title) {
+            title.textContent = config.title;
+          }
+          config.fields.forEach((field) => {
+            const input = document.querySelector(`#filterDrawer [name="${field.inputName}"]`);
+            if (input) {
+              input.value = field.getter(taskInfo) || "";
+            }
+          });
+        }
+
+        function showToast(message) {
+          const toast = document.getElementById("saveToast");
+          if (!toast) return;
+          toast.textContent = message;
+          toast.classList.add("visible");
+          clearTimeout((toast)?.dataset?.timer);
+          const timer = window.setTimeout(() => toast.classList.remove("visible"), 2200);
+          toast.dataset.timer = String(timer);
+        }
+
+        function handleDrawerSave() {
+          const config = drawerConfigs[activeSection];
+          if (!config) return;
+          config.fields.forEach((field) => {
+            const input = document.querySelector(`#filterDrawer [name="${field.inputName}"]`);
+            const value = input?.value || input?.getAttribute("data-value") || "";
+            field.setter(taskInfo, value);
+          });
+          sessionStorage.setItem("projectPerformanceDetailInfo", JSON.stringify(taskInfo));
+          renderTaskDetail();
+          closeFilterDrawer();
+          showToast("已保存修改");
+        }
+
+        function handleSaveDraft() {
+          sessionStorage.setItem("projectPerformanceDetailInfo", JSON.stringify(taskInfo));
+          showToast("草稿已保存");
+        }
+
+        function loadTaskDetailFromSessionStorage() {
+          try {
+            const raw = sessionStorage.getItem("projectPerformanceDetailInfo");
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              taskInfo = normalizeIncomingTask(parsed);
+            } else {
+              taskInfo = { ...defaultTask };
+              sessionStorage.setItem("projectPerformanceDetailInfo", JSON.stringify(taskInfo));
+            }
+            renderTaskDetail();
+          } catch (error) {
+            console.error("加载任务数据失败:", error);
+            taskInfo = { ...defaultTask };
+            renderTaskDetail();
+          }
+        }
+
+        function normalizeIncomingTask(payload) {
+          const task = { ...defaultTask, ...payload };
+          if (typeof task.starLevels === "string") {
+            task.starLevels = normalizeList(task.starLevels);
+          }
+          if (!Array.isArray(task.starLevels)) {
+            if (Array.isArray(task.gradeList)) {
+              task.starLevels = task.gradeList;
+            } else {
+              task.starLevels = defaultTask.starLevels;
+            }
+          }
+          if (!Array.isArray(task.positionArray) && Array.isArray(task.positionlistarr)) {
+            task.positionArray = task.positionlistarr.map((item) => ({ name: item.position || item.name || "" }));
+          }
+          if (!Array.isArray(task.positionArray)) {
+            task.positionArray = defaultTask.positionArray;
+          }
+          if (!Array.isArray(task.starCommission)) {
+            task.starCommission = defaultTask.starCommission;
+          }
+          return task;
+        }
+
+        window.openEditDrawerForSection = function (sectionKey) {
+          activeSection = sectionKey;
+          populateDrawer(sectionKey);
+          openFilterDrawer();
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+          loadTaskDetailFromSessionStorage();
+
+          const backButton = document.getElementById("backButton");
+          if (backButton) {
+            backButton.addEventListener("click", () => {
+              if (history.length > 1) {
+                history.back();
+              } else {
+                window.location.href = "/";
+              }
+            });
+          }
+
+          const saveDraftButton = document.getElementById("saveDraftButton");
+          if (saveDraftButton) {
+            saveDraftButton.addEventListener("click", handleSaveDraft);
+          }
+
+          const drawerSaveButton = document.getElementById("drawerSaveButton");
+          if (drawerSaveButton) {
+            drawerSaveButton.addEventListener("click", handleDrawerSave);
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

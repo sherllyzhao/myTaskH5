@@ -452,7 +452,6 @@ const { id } = Astro.params;
 
           if (taskInfoStr) {
             const taskInfo = JSON.parse(taskInfoStr);
-            console.log("🚀 ~ loadTaskDetailFromSessionStorage ~ taskInfo: ", taskInfo);
 
             // 更新页面内容
             if (taskInfo.id) {

@@ -17,6 +17,8 @@ import WithdrawalInfo from "../../components/WithdrawalInfo.astro";
 import AcceptanceRecord from "../../components/AcceptanceRecord.astro";
 import FilterDrawer from "../../components/FilterDrawer.astro";
 import AddExecution from "../../components/AddExecution.astro";
+import ConfirmDialog from "../../components/ConfirmDialog.astro";
+import AlertBar from "../../components/AlertBar.astro";
 
 export async function getStaticPaths() {
   return [{ params: { id: "" } }];
@@ -385,10 +387,9 @@ await getPerformanceList()
             {
               task.functionfilelist && task.functionfilelist.length > 0 && (
                 <div>
-                  <div class="info-label">功能文档</div>
                   <div style="margin-top: 12px;">
                     <div class="info-label" style="margin-bottom: 8px;">
-                      📎 附件
+                      📎 功能文档
                     </div>
                     <AttachmentViewer attachments={task.functionfilelist} />
                   </div>
@@ -557,7 +558,7 @@ await getPerformanceList()
             !isProject(task.orderType) ? executionData.length > 0 && task.status < 3 && (
               <a href="javascript:history.back()" class="action-btn action-btn-primary">提交完成</a>
             ) : (
-              hasList && task.appendStatusLink && (<button onclick="handleFinish()" data-project-id={task.id} class="action-btn action-btn-primary">上报完结</button>)
+              hasList && task.appendStatusLink ? !(task.appendlog && 'status' in task.appendlog) || task.appendlog.status === 2 ? (<button onclick="handleFinish(event)" data-project-id={task.id} class="action-btn action-btn-primary">上报完结</button>) : null : null
             )
           }
         </div>
@@ -573,7 +574,109 @@ await getPerformanceList()
 
             <AddExecution taskId={task.id} executionData={executionData} appendlogId={appendlogId} />
 	    </FilterDrawer>
+
+	    <ConfirmDialog
+          id="finishDialog"
+          title="提示"
+          message="是否上报完结？"
+          confirmText="确定"
+          cancelText="取消"
+	    />
+
+	    <AlertBar type="error" id="finishError" fixed autoClose={true}/>
+	    <AlertBar type="success" id="finishSuccess" fixed autoClose={true}/>
     </div>
+    <script is:inline src="/js/cookies.js"></script>
     <script is:inline src="/js/drawer.js"></script>
+
+  <script is:inline>
+      function handleFinish(e){
+          e.preventDefault();
+          const projectId = e.target.dataset.projectId;
+        const finishErrorBar = document.getElementById('finishError');
+        const finishSuccessBar = document.getElementById('finishSuccess');
+
+        try {
+          const dialog = document.getElementById('finishDialog');
+          if (!dialog || !dialog.show) {
+            if(finishErrorBar){
+              finishErrorBar.show();
+              finishErrorBar.textContent = '对话框组件未找到';
+            }else{
+              alert('对话框组件未找到');
+            }
+            return;
+          }
+          dialog.show({
+            message: '是否上报完结？',
+            onConfirm: async () => {
+              dialog.dataset.loading = 'true';
+              try{
+                const response = await fetch('/taskApi/taskorder/addappend', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id: projectId, description: '', image: '', tokens: Cookies.get('employee_token') })
+                });
+                if(response.ok){
+                  if(response.status === 200){
+                    const res = await response.json();
+                    if(res.code === 1){
+                      // 处理成功逻辑
+                      if(finishSuccessBar){
+                        finishSuccessBar.show();
+                        finishSuccessBar.textContent = '上报完结成功';
+                      }else{
+                        alert('上报完结成功');
+                      }
+                      window.location.reload();
+                    }else{
+                      if(finishErrorBar){
+                        finishErrorBar.show();
+                        finishErrorBar.textContent = res.msg || res.message || "上报完结失败，请重试";
+                      }else{
+                        alert(res.msg || res.message || "上报完结失败，请重试");
+                      }
+                    }
+                  }else{
+                    if(finishErrorBar){
+                      finishErrorBar.show();
+                      finishErrorBar.textContent = '上报完结失败，请重试';
+                    }else{
+                      alert('上报完结失败，请重试');
+                    }
+                  }
+                }
+              }catch(error){
+                if(finishErrorBar){
+                  finishErrorBar.show();
+                  finishErrorBar.textContent = '上报完结失败，请重试';
+                }else{
+                  alert('上报完结失败，请重试');
+                }
+              }finally{
+                dialog.dataset.loading = 'false';
+              }
+            },
+            onCancel: () => {
+              console.log('用户点击了取消');
+            }
+          });
+
+          // 刷新列表或跳转到任务详情页
+          // window.location.reload();
+          // 或者
+          // window.location.href = `/task/${taskId}/`;
+
+        } catch (error) {
+          console.error('上报完结失败:', error);
+          if(finishErrorBar){
+            finishErrorBar.show();
+            finishErrorBar.textContent = '上报完结失败，请重试';
+          }else{
+            alert('上报完结失败，请重试');
+          }
+        }
+      }
+  </script>
   </body>
 </html>
