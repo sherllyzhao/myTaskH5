@@ -7,9 +7,9 @@ const baseFilterGroups: FilterGroup[] = [
   {
     title: "基础信息",
     items: [
-      { type: "input", icon: "#", name: "hallTypeTitle", placeholder: "任务类型（例如：等级保护测评）" },
-      { type: "input", icon: "*", name: "starLevelsText", placeholder: "可接星级，使用顿号或逗号分隔" },
-      { type: "input", icon: "@", name: "positionsText", placeholder: "可接岗位，多项以顿号分隔" },
+      { type: "input", icon: "#", name: "hallTypeTitle", placeholder: "任务类型（例如：等级保护测评）", label: "任务类型", showLabel: true },
+      { type: "input", icon: "*", name: "starLevelsText", placeholder: "可接星级，使用顿号或逗号分隔", label: "可接星级", showLabel: true },
+      { type: "input", icon: "@", name: "positionsText", placeholder: "可接岗位，多项以顿号分隔", label: "可接岗位", showLabel: true },
     ],
   },
 ];
@@ -18,12 +18,12 @@ const commissionFilterGroups: FilterGroup[] = [
   {
     title: "佣金设置",
     items: [
-      { type: "number", icon: "Y", name: "hall_user_money", placeholder: "基础佣金（元）", width: "half" },
-      { type: "number", icon: "+", name: "hall_money", placeholder: "加价佣金（元）", width: "half" },
-      { type: "number", icon: "T", name: "projectCommissionText", placeholder: "项目佣金总额", width: "half" },
-      { type: "number", icon: "3", name: "starCommissionA", placeholder: "三星佣金（元）", width: "half" },
-      { type: "number", icon: "2", name: "starCommissionB", placeholder: "二星佣金（元）", width: "half" },
-      { type: "number", icon: "1", name: "starCommissionC", placeholder: "一星佣金（元）", width: "half" },
+      { type: "number", icon: "Y", name: "hall_user_money", placeholder: "基础佣金（元）", width: "half", label: "基础佣金", showLabel: true },
+      { type: "number", icon: "+", name: "hall_money", placeholder: "加价佣金（元）", width: "half", label: "加价佣金", showLabel: true },
+      { type: "number", icon: "T", name: "projectCommissionText", placeholder: "项目佣金总额", width: "half", label: "项目佣金", showLabel: true },
+      { type: "number", icon: "3", name: "starCommissionA", placeholder: "三星佣金（元）", width: "half", label: "三星佣金", showLabel: true },
+      { type: "number", icon: "2", name: "starCommissionB", placeholder: "二星佣金（元）", width: "half", label: "二星佣金", showLabel: true },
+      { type: "number", icon: "1", name: "starCommissionC", placeholder: "一星佣金（元）", width: "half", label: "一星佣金", showLabel: true },
     ],
   },
 ];
@@ -32,9 +32,9 @@ const timelineFilterGroups: FilterGroup[] = [
   {
     title: "时间设置",
     items: [
-      { type: "input", icon: "T", name: "enddatatime", placeholder: "截止时间，例如 2025-12-31 18:00" },
-      { type: "number", icon: "D", name: "hall_duration", placeholder: "任务工期（工作日）", width: "half" },
-      { type: "input", icon: "M", name: "description", placeholder: "任务备注", width: "full" },
+      { type: "input", icon: "T", name: "enddatatime", placeholder: "截止时间，例如 2025-12-31 18:00", label: "截止时间", showLabel: true },
+      { type: "number", icon: "D", name: "hall_duration", placeholder: "任务工期（工作日）", width: "half", label: "任务工期", showLabel: true },
+      { type: "input", icon: "M", name: "description", placeholder: "任务备注", width: "full", label: "任务备注", showLabel: true },
     ],
   },
 ];
@@ -43,9 +43,9 @@ const executionFilterGroups: FilterGroup[] = [
   {
     title: "执行信息",
     items: [
-      { type: "input", icon: "U", name: "taskrangeInfo", placeholder: "执行单位" },
-      { type: "input", icon: "D", name: "taskDepartmentText", placeholder: "执行部门" },
-      { type: "input", icon: "S", name: "taskScopeText", placeholder: "任务范围或执行人员" },
+      { type: "input", icon: "U", name: "taskrangeInfo", placeholder: "执行单位", label: "执行单位", showLabel: true },
+      { type: "input", icon: "D", name: "taskDepartmentText", placeholder: "执行部门", label: "执行部门", showLabel: true },
+      { type: "input", icon: "S", name: "taskScopeText", placeholder: "任务范围或执行人员", label: "任务范围", showLabel: true },
     ],
   },
 ];
@@ -86,7 +86,7 @@ const { id } = Astro.params;
         box-shadow:
           0 30px 60px rgba(15, 23, 42, 0.15),
           inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        overflow: hidden;
+        overflow: auto;
       }
 
       .page-header {
@@ -378,11 +378,10 @@ const { id } = Astro.params;
         <div>
           <p id="task-id">任务编号：{id || ""}</p>
           <h1>项目任务编辑</h1>
-          <p id="task-desc" style="color: #7d8ba5; margin: 6px 0 0; font-size: 14px;">同步 sessionStorage 中的任务详情，可编辑后实时同步。</p>
         </div>
         <div class="page-actions">
           <button class="ghost-btn" type="button" id="backButton">返回</button>
-          <button class="primary-btn" type="button" id="saveDraftButton">保存草稿</button>
+          <button class="primary-btn" type="button" id="saveDraftButton">保存</button>
         </div>
       </header>
 

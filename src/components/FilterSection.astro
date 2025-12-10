@@ -34,63 +34,69 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
             <div class={itemClass}>
               <span class="filter-item-icon">{item.icon}</span>
 
-              {item.type === 'input' ? (
-                <input
-                  type="text"
-                  class="filter-input"
-                  name={item.name}
-                  placeholder={item.placeholder || ''}
-                  value={item.defaultValue || ''}
-                />
-              ) : item.type === 'number' ? (
-                <input
-                  type="number"
-                  class="filter-input"
-                  name={item.name}
-                  placeholder={item.placeholder || ''}
-                  value={item.defaultValue || ''}
-                  min="0"
-                  step="1"
-                />
-              ) : item.type === 'file' ? (
-                <div class="file-upload-wrapper">
+              <div class="filter-field-wrapper">
+                {item.showLabel && item.label && (
+                  <label class="filter-field-label">{item.label}</label>
+                )}
+
+                {item.type === 'input' ? (
                   <input
-                    type="file"
-                    class="file-input"
-                    id={`file-${item.name}`}
+                    type="text"
+                    class="filter-input"
                     name={item.name}
-                    accept={item.accept || '*/*'}
-                    onchange="onFileChange(event)"
+                    placeholder={item.placeholder || ''}
+                    value={item.defaultValue || ''}
                   />
-                  <label for={`file-${item.name}`} class="file-label">
-                    <span class="file-display" data-name={item.name} data-placeholder={item.placeholder || '选择文件'}>
-                      {item.placeholder || '选择文件'}
-                    </span>
-                  </label>
-                </div>
-              ) : item.type === 'date-time-picker' ? (
-                <button
-                  class="mobile-picker-trigger date-time-picker"
-                  type="button"
-                  name={item.name}
-                  data-picker="date-time"
-                  data-value={item.defaultValue || ''}
-                  data-placeholder={item.placeholder || '选择日期时间'}
-                >
-                  {item.defaultValue || item.placeholder || '选择日期时间'}
-                </button>
-              ) : (
-                <button
-                  class="mobile-picker-trigger"
-                  type="button"
-                  data-picker={item.pickerKey}
-                  name={item.name}
-                  data-value={item.defaultValue || ''}
-                  data-placeholder={item.placeholder || '请选择'}
-                >
-                  {getPickerLabel(item, item.defaultValue) || item.placeholder || '请选择'}
-                </button>
-              )}
+                ) : item.type === 'number' ? (
+                  <input
+                    type="number"
+                    class="filter-input"
+                    name={item.name}
+                    placeholder={item.placeholder || ''}
+                    value={item.defaultValue || ''}
+                    min="0"
+                    step="1"
+                  />
+                ) : item.type === 'file' ? (
+                  <div class="file-upload-wrapper">
+                    <input
+                      type="file"
+                      class="file-input"
+                      id={`file-${item.name}`}
+                      name={item.name}
+                      accept={item.accept || '*/*'}
+                      onchange="onFileChange(event)"
+                    />
+                    <label for={`file-${item.name}`} class="file-label">
+                      <span class="file-display" data-name={item.name} data-placeholder={item.placeholder || '选择文件'}>
+                        {item.placeholder || '选择文件'}
+                      </span>
+                    </label>
+                  </div>
+                ) : item.type === 'date-time-picker' ? (
+                  <button
+                    class="mobile-picker-trigger date-time-picker"
+                    type="button"
+                    name={item.name}
+                    data-picker="date-time"
+                    data-value={item.defaultValue || ''}
+                    data-placeholder={item.placeholder || '选择日期时间'}
+                  >
+                    {item.defaultValue || item.placeholder || '选择日期时间'}
+                  </button>
+                ) : (
+                  <button
+                    class="mobile-picker-trigger"
+                    type="button"
+                    data-picker={item.pickerKey}
+                    name={item.name}
+                    data-value={item.defaultValue || ''}
+                    data-placeholder={item.placeholder || '请选择'}
+                  >
+                    {getPickerLabel(item, item.defaultValue) || item.placeholder || '请选择'}
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
@@ -167,8 +173,23 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
 
   .filter-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
+  }
+
+  .filter-field-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .filter-field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    letter-spacing: 0.02em;
+    padding-left: 40px;
   }
 
   .filter-item.half-width {
@@ -183,6 +204,7 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
     font-size: 16px;
     min-width: 20px;
     text-align: center;
+    padding-top: 12px;
   }
 
   .filter-input {

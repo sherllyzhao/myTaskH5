@@ -15,6 +15,8 @@ export interface FilterItem {
   defaultValue?: string;
   accept?: string;
   options?: FilterOption[];
+  label?: string;        // 字段标签名称
+  showLabel?: boolean;   // 是否显示标签，默认 false
 }
 
 export interface FilterGroup {
