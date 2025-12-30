@@ -14,8 +14,8 @@ import { createListStateManager } from "../utils/listStateManager";
  * @param {number} options.limit - 每页加载数量
  * @returns {Object} 加载器实例
  */
-export function createTaskListLoader(options: { apiPath: any; container: any; limit?: 10 | undefined; }) {
-	const { apiPath, container, limit = 10 } = options;
+export function createTaskListLoader(options: { apiPath: any; container: any; limit?: 10 | undefined; hall_type?: any; order?: any; status?: any;}) {
+	const { apiPath, container, limit = 10, hall_type, order, status } = options;
 
 	// 状态变量
 	let currentPage = 0;
@@ -147,7 +147,10 @@ export function createTaskListLoader(options: { apiPath: any; container: any; li
 				body: JSON.stringify({
 					...requestConfig,
 					page: currentPage,
-					limit: limit
+					limit: limit,
+					hall_type: hall_type ?? '',
+					order: order ?? 'desc',
+					status: status ?? ''
 				}),
 			});
 
