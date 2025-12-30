@@ -32,23 +32,24 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
 
           return (
             <div class={itemClass}>
-              <span class="filter-item-icon">{item.icon}</span>
-
               <div class="filter-field-wrapper">
                 {item.showLabel && item.label && (
                   <label class="filter-field-label">{item.label}</label>
                 )}
 
-                {item.type === 'input' ? (
-                  <input
-                    type="text"
-                    class="filter-input"
-                    name={item.name}
-                    placeholder={item.placeholder || ''}
-                    value={item.defaultValue || ''}
-                  />
-                ) : item.type === 'number' ? (
-                  <input
+                <div class="filter-control">
+                  <span class="filter-item-icon">{item.icon}</span>
+
+                  {item.type === 'input' ? (
+                    <input
+                      type="text"
+                      class="filter-input"
+                      name={item.name}
+                      placeholder={item.placeholder || ''}
+                      value={item.defaultValue || ''}
+                    />
+                  ) : item.type === 'number' ? (
+                    <input
                     type="number"
                     class="filter-input"
                     name={item.name}
@@ -96,6 +97,7 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
                     {getPickerLabel(item, item.defaultValue) || item.placeholder || '请选择'}
                   </button>
                 )}
+                </div>
               </div>
             </div>
           );
@@ -184,12 +186,20 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
     gap: 4px;
   }
 
+  .filter-control {
+    position: relative;
+    width: 100%;
+  }
+
+  .filter-control > *:not(.filter-item-icon) {
+    width: 100%;
+  }
+
   .filter-field-label {
     font-size: 13px;
     font-weight: 600;
     color: #6b7280;
     letter-spacing: 0.02em;
-    padding-left: 40px;
   }
 
   .filter-item.half-width {
@@ -201,14 +211,19 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
   }
 
   .filter-item-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
     font-size: 16px;
-    min-width: 20px;
+    color: #9ca3af;
+    pointer-events: none;
+    width: 20px;
     text-align: center;
-    padding-top: 12px;
   }
 
   .filter-input {
-    flex: 1;
+    width: 100%;
     padding: 12px 14px 12px 40px;
     border-radius: 12px;
     border: 1px solid #e5e7eb;
