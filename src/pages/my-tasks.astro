@@ -337,6 +337,7 @@ const filterGroups: FilterGroup[] = [
 			let isLoading = false;
 			let hasMore = true;
 			const limit = 10;
+			let globalFormData = {};
 
 			// 请求配置 - 使用 myorderindex 接口
 			const requestConfig = {
@@ -357,6 +358,7 @@ const filterGroups: FilterGroup[] = [
 
 			// 全局加载数据函数
 			window.loadInitialData = async function(formData: any = {}) {
+				globalFormData = formData;
 				if (isLoading) return;
 
 				isLoading = true;
@@ -474,7 +476,11 @@ const filterGroups: FilterGroup[] = [
 						body: JSON.stringify({
 							...requestConfig,
 							page: currentPage,
-							limit: limit
+							limit: limit,
+							...globalFormData,
+							order: 'desc',
+							hall_type: '',
+							status: globalFormData.status ?? ''
 						}),
 					});
 
