@@ -9,76 +9,10 @@ import FilterBar from '../components/FilterBar.astro';
 import type { FilterGroup } from "../types/filter";
 import AlertBar from "../components/AlertBar.astro";
 
-// 初始化空数据，由客户端加载
-
-/* 统计 */
-let taskStatsRes: any;
+// 静态模式：数据由客户端加载
+// 服务器端只提供空的初始值
 let userInfo: any = null;
-const proxyUrl = `${Astro.url.origin}/proxy`;
-const proxyChina9Url = `${Astro.url.origin}/proxyChina9`;
-
-try {
-  // 获取用户信息
-  const userInfoResponse = await fetch(proxyChina9Url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Cookie": Astro.request.headers.get("cookie") || "",
-    },
-    body: JSON.stringify({
-      path: "/user/infoClient", // 假设这是获取用户信息的接口路径，请根据实际情况修改
-    }),
-  });
-
-  if (userInfoResponse.status === 200) {
-    const userInfoResult = await userInfoResponse.json();
-    if (userInfoResult.code === 200) {
-      userInfo = userInfoResult.data;
-    }
-  }
-} catch (error: any) {
-  console.error("❌ 获取用户信息失败:", error);
-}
-
-try {
-  // 统计数据
-  const statsResponse = await fetch(proxyUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Cookie": Astro.request.headers.get("cookie") || "",
-    },
-    body: JSON.stringify({
-      path: "/taskorder/monthinfo",
-    }),
-  });
-  // 检查HTTP状态码401
-  if (statsResponse.status === 401) {
-    // 在SSR环境下无法直接跳转，返回空数据让前端处理
-    taskStatsRes = {
-      list: [],
-      total: 0,
-      error: "未授权，请重新登录",
-      code: 401,
-    };
-  } else {
-    const statsRes = await statsResponse.json();
-    // 检查业务状态码401
-    if (statsRes.code === 401) {
-      taskStatsRes = {
-        data: {},
-        error: "未授权，请重新登录",
-        code: 401,
-      };
-    } else if (statsRes.code === 1) {
-      taskStatsRes = statsRes.data || statsRes;
-    }
-  }
-} catch (error: any) {
-  console.error("❌ SSR Error:", error);
-}
-
-const taskStats = taskStatsRes || {};
+const taskStats: any = {};
 
 // 筛选组件配置
 const filterGroups: FilterGroup[] = [
@@ -286,9 +220,69 @@ const filterGroups: FilterGroup[] = [
       let takeErrorBar = document.getElementById('takeError');
       let takeSuccessBar = document.getElementById('takeSuccess');
 
-      // 将用户信息设置为全局变量
-      window.currentUserInfo = userInfo;
-      localStorage.setItem('currentUserInfo', JSON.stringify(userInfo));
+      // 静态模式：从 localStorage 获取用户信息，如果没有则从 API 获取
+      window.currentUserInfo = userInfo || JSON.parse(localStorage.getItem('currentUserInfo') || 'null');
+
+      // 客户端获取用户信息和统计数据
+      (async function loadClientData() {
+        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.');
+        const apiBase = isDev ? '/api' : 'https://api.china9.cn/api';
+        const taskApiBase = isDev ? '/taskApi' : 'https://flexible.china9.cn/api';
+        const token = localStorage.getItem('employee_token') || localStorage.getItem('token') || '';
+
+        // 检查登录状态
+        if (!token) {
+          window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+          return;
+        }
+
+        try {
+          // 获取用户信息
+          const userRes = await fetch(`${apiBase}/user/infoClient`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tokens: token })
+          });
+          const userData = await userRes.json();
+          if (userData.code === 200 && userData.data) {
+            window.currentUserInfo = userData.data;
+            localStorage.setItem('currentUserInfo', JSON.stringify(userData.data));
+            // 更新页面头部显示的用户信息
+            const userNameEl = document.querySelector('.user-name');
+            if (userNameEl && userData.data.nick_name) {
+              userNameEl.textContent = userData.data.nick_name;
+            }
+          }
+        } catch (e) {
+          console.error('获取用户信息失败:', e);
+        }
+
+        try {
+          // 获取统计数据
+          const statsRes = await fetch(`${taskApiBase}/taskorder/monthinfo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tokens: token })
+          });
+          const statsData = await statsRes.json();
+          if (statsData.code === 1 && statsData.data) {
+            // 更新统计卡片
+            const stats = statsData.data;
+            const monthMoney = document.querySelector('[data-stat="monthMoney"]');
+            const monthCount = document.querySelector('[data-stat="monthCount"]');
+            const totalMoney = document.querySelector('[data-stat="totalMoney"]');
+            const totalCount = document.querySelector('[data-stat="totalCount"]');
+
+            if (monthMoney) monthMoney.textContent = stats.monthMoney || '0';
+            if (monthCount) monthCount.textContent = stats.monthCount || '0';
+            if (totalMoney) totalMoney.textContent = stats.totalMoney || '0';
+            if (totalCount) totalCount.textContent = stats.totalCount || '0';
+          }
+        } catch (e) {
+          console.error('获取统计数据失败:', e);
+        }
+      })();
+
       console.log('当前用户信息:', window.currentUserInfo);
 
       // 定义工具函数（从 map.ts 复制）
@@ -366,7 +360,10 @@ const filterGroups: FilterGroup[] = [
               onConfirm: async () => {
                   dialog.dataset.loading = 'true';
                   try{
-                    const response = await fetch('/taskApi/taskorder/addtask', {
+                    // 静态模式：直接调用后端 API
+                    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.');
+                    const taskApiBase = isDev ? '/taskApi' : 'https://flexible.china9.cn/api';
+                    const response = await fetch(`${taskApiBase}/taskorder/addtask`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ id: taskId, remark: '1', tokens: Cookies.get('employee_token') })
@@ -440,6 +437,7 @@ const filterGroups: FilterGroup[] = [
       import { createTaskCardHTML } from "../utils/taskCardTemplate";
       import { getCookie } from "../utils/tool";
       import { createListStateManager } from "../utils/listStateManager";
+      import { getTaskApiBase } from "../utils/apiConfig";
 
       // ===== 页面字段配置 =====
       // 设置为全局变量，供 getFilterFormData 使用
@@ -464,11 +462,8 @@ const filterGroups: FilterGroup[] = [
       const limit = 10;
       let globalFormData = {};
 
-      // 请求配置 - 与服务器端保持一致
-      const requestConfig = {
-        path: "/taskorder/orderindex",
-        enterpriseSide: "pc"
-      };
+      // 获取 API 基础地址（静态部署兼容）
+      const taskApiBase = getTaskApiBase();
 
       // 获取 DOM 元素
       const taskListContainer = document.getElementById("taskListContainer");
@@ -497,16 +492,17 @@ const filterGroups: FilterGroup[] = [
           try {
             currentPage = 1;
 
-            // 发送请求
-            const response = await fetch(`/proxy`, {
+            // 静态模式：直接调用后端 API
+            const response = await fetch(`${taskApiBase}/taskorder/orderindex`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                ...requestConfig,
+                enterpriseSide: "pc",
                 page: currentPage,
                 limit: limit,
+                tokens: getCookie('employee_token') || localStorage.getItem('employee_token') || '',
                 ...formData
               }),
             });
@@ -590,15 +586,17 @@ const filterGroups: FilterGroup[] = [
           try {
             currentPage += 1;
 
-            const response = await fetch(`/proxy`, {
+            // 静态模式：直接调用后端 API
+            const response = await fetch(`${taskApiBase}/taskorder/orderindex`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                ...requestConfig,
+                enterpriseSide: "pc",
                 page: currentPage,
                 limit: limit,
+                tokens: getCookie('employee_token') || localStorage.getItem('employee_token') || '',
                 ...globalFormData
               }),
             });

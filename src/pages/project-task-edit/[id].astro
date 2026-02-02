@@ -1,4 +1,9 @@
 ﻿---
+// 静态模式：生成一个通用页面，数据由客户端加载
+export async function getStaticPaths() {
+  return [{ params: { id: "placeholder" } }];
+}
+
 import FilterDrawer from "../../components/FilterDrawer.astro";
 import FilterSection from "../../components/FilterSection.astro";
 import type { FilterGroup } from "../../types/filter";

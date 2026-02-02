@@ -190,7 +190,11 @@ import AlertBar from '../components/AlertBar.astro';
         }
 
         try {
-          const res = await fetch('/api/login/auth', {
+          // 静态部署：直接调用后端 API（生产环境）
+          // 开发环境仍使用代理 /api
+          const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const apiBase = isDev ? '/api' : 'https://api.china9.cn/api';
+          const res = await fetch(`${apiBase}/login/auth`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_name: account, password, redirect: redirectValue, type: 'company', enterpriseSide: 'pc' }),
