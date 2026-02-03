@@ -1,0 +1,612 @@
+---
+import AttachmentViewer from "../../components/AttachmentViewer.astro";
+import ProjectPerformance from "../../components/ProjectPerformance.astro";
+import TaskPerformance from "../../components/TaskPerformance.astro";
+import WithdrawalInfo from "../../components/WithdrawalInfo.astro";
+import AcceptanceRecord from "../../components/AcceptanceRecord.astro";
+import FilterDrawer from "../../components/FilterDrawer.astro";
+import AddExecution from "../../components/AddExecution.astro";
+import ConfirmDialog from "../../components/ConfirmDialog.astro";
+import AlertBar from "../../components/AlertBar.astro";
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>任务详情</title>
+    <link rel="stylesheet" href="/common.css" />
+    <link rel="stylesheet" href="/task-detail-styles.css" />
+    <script src="/js/auth.js" defer></script>
+    <script src="/js/taskActions.js" defer></script>
+    <style>
+      .task-badge {
+        margin-left: 10px;
+      }
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 200px;
+        font-size: 16px;
+        color: #666;
+      }
+      .error-container {
+        padding: 20px;
+        text-align: center;
+        color: #e74c3c;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="detail-wrap">
+        <!-- 加载状态 -->
+        <div id="loadingState" class="loading-container">
+          ⏳ 加载中...
+        </div>
+
+        <!-- 错误状态 -->
+        <div id="errorState" class="error-container" style="display: none;">
+          <p id="errorMessage">加载失败</p>
+          <a href="javascript:history.back()" class="action-btn action-btn-secondary">返回列表</a>
+        </div>
+
+        <!-- 内容区域 -->
+        <div id="contentState" style="display: none;">
+          <div class="detail-header">
+            <div class="detail-title">
+              <div>
+                <span id="typeTag" class="type-badge" style="display: none;"></span>
+                <div id="statusTag" class="task-badge" style="display: none;"></div>
+              </div>
+              <div class="title-text">
+                <span id="taskName"></span>
+              </div>
+              <div class="tag-wrap" id="tagWrap"></div>
+            </div>
+          </div>
+
+          <div class="detail-content">
+            <!-- 基本信息 -->
+            <div class="detail-card">
+              <div class="section-title">📋 基本信息</div>
+              <div id="positionList" class="info-item info-item-full blue" style="margin-bottom: 12px; display: none;">
+                <span class="info-label">👔 可接单岗位</span>
+                <span class="info-value info-value-jobs" id="positionValue"></span>
+              </div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">🏢 发布公司</span>
+                  <span class="info-value" id="company">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">👤 发布人</span>
+                  <span class="info-value" id="username">公司主账号发布</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">📅 发布时间</span>
+                  <span class="info-value" id="ordertime">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">📅 接单时间</span>
+                  <span class="info-value" id="performtime">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">📅 截止日期</span>
+                  <span class="info-value" id="enddatatime">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label" id="durationLabel">⏰ 工期</span>
+                  <span class="info-value" id="duration">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">📅 完成时间</span>
+                  <span class="info-value" id="completiontime">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">🔢 项目编号</span>
+                  <span class="info-value" id="orderNumber">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">💰 总金额</span>
+                  <span class="info-value" id="totalMoney">¥0.00</span>
+                </div>
+              </div>
+              <div id="descriptionWrap" class="info-item info-item-full" style="margin-top: 12px; display: none;">
+                <span class="info-label">备注</span>
+                <span class="info-value info-value-jobs" id="description"></span>
+              </div>
+              <div id="descWrap" class="info-item info-item-full" style="margin-top: 12px; display: none;">
+                <span class="info-label">报价说明</span>
+                <span class="info-value info-value-jobs" id="desc"></span>
+              </div>
+              <!-- 附件展示 -->
+              <div id="attachmentWrap" style="display: none; margin-top: 12px;">
+                <div class="info-label" style="margin-bottom: 8px;">📎 功能文档</div>
+                <div id="attachmentList"></div>
+              </div>
+            </div>
+
+            <!-- 佣金信息 -->
+            <div class="detail-card">
+              <div class="section-title">💰 佣金信息</div>
+              <div class="salary-section">
+                <div class="salary-card">
+                  <div class="salary-label">总佣金</div>
+                  <div class="salary-value" id="salaryTotal">¥ 0.00</div>
+                </div>
+                <div class="salary-card">
+                  <div class="salary-label">基础佣金</div>
+                  <div class="salary-value" id="salaryBase">¥ 0.00</div>
+                </div>
+                <div class="salary-card">
+                  <div class="salary-label">加价佣金</div>
+                  <div class="salary-value" id="salaryAdd">¥ 0.00</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 客户信息 -->
+            <div id="customerCard" class="detail-card client-info" style="display: none;">
+              <div class="section-title">👤 客户信息</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">👤 客户名称</span>
+                  <span class="info-value" id="customerName">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">🔢 项目编号</span>
+                  <span class="info-value" id="customerOrderNumber">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">📞 手机号</span>
+                  <span class="info-value" id="customerPhone">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">👤 客户姓名</span>
+                  <span class="info-value" id="customerContact">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">📧 email</span>
+                  <span class="info-value" id="customerEmail">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">📍 联系地址</span>
+                  <span class="info-value" id="customerAddress">-</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 佣金修改记录 -->
+            <div id="moneyEditCard" class="detail-card" style="display: none;">
+              <div class="section-title">📊 佣金修改记录</div>
+              <div class="history-list" id="moneyEditList"></div>
+            </div>
+
+            <!-- 执行信息容器 -->
+            <div id="performanceContainer"></div>
+
+            <!-- 提现信息容器 -->
+            <div id="withdrawalContainer"></div>
+          </div>
+
+          <div class="action-buttons" id="actionButtons">
+            <a href="javascript:history.back()" class="action-btn action-btn-secondary">返回列表</a>
+          </div>
+        </div>
+      </div>
+
+      <FilterDrawer id="filterDrawer" title="编辑功能地址">
+        <Fragment slot="header">
+          <h3 class="filter-drawer-title">编辑功能地址</h3>
+          <button class="filter-drawer-close" onclick="closeFilterDrawer()">✕</button>
+        </Fragment>
+        <div id="addExecutionContainer"></div>
+      </FilterDrawer>
+
+      <ConfirmDialog
+        id="finishDialog"
+        title="提示"
+        message="是否上报完结？"
+        confirmText="确定"
+        cancelText="取消"
+      />
+
+      <AlertBar type="error" id="finishError" fixed autoClose={true} />
+      <AlertBar type="success" id="finishSuccess" fixed autoClose={true} />
+    </div>
+    <script is:inline src="/js/cookies.js"></script>
+    <script is:inline src="/js/drawer.js"></script>
+
+    <script is:inline>
+      // 工具函数
+      function isProject(orderType) {
+        return orderType === 2 || orderType === 4;
+      }
+
+      function getTypeName(orderType) {
+        return isProject(orderType) ? "项目" : "任务";
+      }
+
+      function isWaiting(task) {
+        return task && task.status === 0;
+      }
+
+      function isOldVersion(orderType) {
+        return orderType === 1 || orderType === 2;
+      }
+
+      function getTotalMoney(task) {
+        if (!task) return "0.00";
+        if (isProject(task.orderType)) {
+          return task.hall_money || task.money || "0.00";
+        }
+        return task.money || "0.00";
+      }
+
+      function getBaseCommission(task) {
+        if (!task) return "0.00";
+        if (isProject(task.orderType)) {
+          return task.hall_basemoney || task.basemoney || "0.00";
+        }
+        return task.basemoney || "0.00";
+      }
+
+      function getAddCommission(task) {
+        if (!task) return "0.00";
+        if (isProject(task.orderType)) {
+          return task.hall_addmoney || task.addmoney || "0.00";
+        }
+        return task.addmoney || "0.00";
+      }
+
+      function earlyWarningOfConstructionPeriod(color) {
+        if (!color) return "";
+        const map = { red: "red", orange: "orange", green: "green" };
+        return map[color] || "";
+      }
+
+      // 获取 URL 参数
+      const urlParams = new URLSearchParams(window.location.search);
+      const taskId = urlParams.get("id");
+      const oid = urlParams.get("oid");
+
+      // API 基础地址
+      const API_BASE_URL = "https://flexible.china9.cn/api";
+
+      if (!taskId) {
+        document.getElementById("loadingState").style.display = "none";
+        document.getElementById("errorState").style.display = "block";
+        document.getElementById("errorMessage").textContent = "缺少任务ID参数";
+      } else {
+        loadTaskData();
+      }
+
+      async function loadTaskData() {
+        try {
+          const token = Cookies.get("employee_token");
+          if (!token) {
+            window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+            return;
+          }
+
+          // 获取任务详情
+          const taskRes = await fetch(`${API_BASE_URL}/taskorder/show`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: taskId,
+              oid: oid,
+              tokens: token,
+              enterpriseSide: "pc",
+            }),
+          });
+
+          if (taskRes.status === 401) {
+            window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+            return;
+          }
+
+          const taskData = await taskRes.json();
+
+          if (taskData.code === 401) {
+            window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+            return;
+          }
+
+          if (taskData.code !== 1) {
+            throw new Error(taskData.msg || taskData.message || "加载失败");
+          }
+
+          const task = taskData.data || taskData;
+          renderTask(task);
+
+          // 获取客户信息
+          if (!isWaiting(task) && task.hall_orderNumber) {
+            loadCustomerData(task.hall_orderNumber);
+          }
+
+          document.getElementById("loadingState").style.display = "none";
+          document.getElementById("contentState").style.display = "block";
+        } catch (error) {
+          console.error("加载任务失败:", error);
+          document.getElementById("loadingState").style.display = "none";
+          document.getElementById("errorState").style.display = "block";
+          document.getElementById("errorMessage").textContent = error.message || "加载失败";
+        }
+      }
+
+      async function loadCustomerData(orderNumber) {
+        try {
+          const token = Cookies.get("employee_token");
+          const custRes = await fetch(`${API_BASE_URL}/taskorder/getCustomerByNumbersy`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              orderNumber: orderNumber,
+              tokens: token,
+              enterpriseSide: "pc",
+            }),
+          });
+
+          const custData = await custRes.json();
+          if (custData.code === 1 && custData.data) {
+            renderCustomer(custData.data);
+          }
+        } catch (error) {
+          console.error("加载客户信息失败:", error);
+        }
+      }
+
+      function renderTask(task) {
+        // 类型标签
+        if (task.orderType) {
+          const typeTag = document.getElementById("typeTag");
+          typeTag.style.display = "inline";
+          typeTag.className = `type-badge ${isProject(task.orderType) ? "type-project" : "type-task"}`;
+          typeTag.textContent = isProject(task.orderType) ? "📁 项目" : "📋 任务";
+        }
+
+        // 状态标签
+        if (task.statusInfo) {
+          const statusTag = document.getElementById("statusTag");
+          statusTag.style.display = "inline";
+          statusTag.className = `task-badge status-${task.statusInfo || "待接单"}`;
+          statusTag.textContent = `💼 ${task.statusInfo || "待接单"}`;
+        }
+
+        // 任务名称
+        let hall_orderNumber = task.hall_orderNumber ? "（" + task.hall_orderNumber + "）" : "";
+        const taskName = isWaiting(task)
+          ? "接取后可见项目全称"
+          : !isOldVersion(task.orderType)
+            ? task.hall_customer + hall_orderNumber
+            : task.name;
+        document.getElementById("taskName").textContent = taskName;
+
+        // 标签
+        const tagWrap = document.getElementById("tagWrap");
+        tagWrap.innerHTML = "";
+        if (task.hallTypeTitle) {
+          tagWrap.innerHTML += `<span class="tag tag-type-blue">${task.hallTypeTitle}</span>`;
+        }
+        if (task.button_info) {
+          tagWrap.innerHTML += `<span class="tag tag-overdue tag-overdue-${earlyWarningOfConstructionPeriod(task.button_color)}">${task.button_info}</span>`;
+        }
+        if (task.timeout) {
+          tagWrap.innerHTML += `<span class="tag tag-pending-2d">${task.timeout}</span>`;
+        }
+
+        // 可接单岗位
+        if (task.positionlistarr && task.positionlistarr.length > 0) {
+          document.getElementById("positionList").style.display = "block";
+          document.getElementById("positionValue").textContent = task.positionlistarr.map(item => item.position).join("、");
+        }
+
+        // 基本信息
+        document.getElementById("company").textContent = task.company || "-";
+        document.getElementById("username").textContent = task.username || "公司主账号发布";
+        document.getElementById("ordertime").textContent = task.ordertime || "-";
+        document.getElementById("performtime").textContent = task.performtime || "-";
+        document.getElementById("enddatatime").textContent = task.enddatatime || "-";
+        document.getElementById("durationLabel").textContent = `⏰ ${getTypeName(task.orderType)}工期`;
+        document.getElementById("duration").textContent = task.hall_duration ? `${task.hall_duration}个工作日` : "-";
+        document.getElementById("completiontime").textContent = task.completiontime || "-";
+        document.getElementById("orderNumber").textContent = isWaiting(task)
+          ? getTypeName(task.orderType) + "接取后展示"
+          : (task.hall_orderNumber ?? "-");
+        document.getElementById("totalMoney").textContent = `¥${getTotalMoney(task) || "0.00"}`;
+
+        // 备注
+        if (task.description) {
+          document.getElementById("descriptionWrap").style.display = "block";
+          document.getElementById("description").textContent = task.description;
+        }
+
+        // 报价说明
+        if (task.desc) {
+          document.getElementById("descWrap").style.display = "block";
+          document.getElementById("desc").textContent = task.desc;
+        }
+
+        // 佣金信息
+        document.getElementById("salaryTotal").textContent = `¥ ${getTotalMoney(task) || "0.00"}`;
+        document.getElementById("salaryBase").textContent = `¥ ${getBaseCommission(task) || "0.00"}`;
+        document.getElementById("salaryAdd").textContent = `¥ ${getAddCommission(task) || "0.00"}`;
+
+        // 佣金修改记录
+        if (task.moneyeditlst && task.moneyeditlst.length > 0 && !isWaiting(task)) {
+          document.getElementById("moneyEditCard").style.display = "block";
+          const listHtml = task.moneyeditlst.map(record => {
+            const befor = normalizeCommissionSnapshot(record.befor, task.orderType);
+            const after = normalizeCommissionSnapshot(record.after, task.orderType);
+            return `
+              <div class="history-item">
+                <div class="history-date">${record.createtime || "-"}</div>
+                <div class="history-changes">
+                  <div class="history-change">
+                    <div class="history-label">修改依据：</div>
+                    <div class="history-value">${record.remarks || "-"}</div>
+                  </div>
+                  <div class="history-change">
+                    <div class="history-label">修改前：</div>
+                    <div class="history-value">总佣金：¥${getTotalMoney(befor) || "0.00"}</div>
+                    <div class="history-value">基础佣金：¥${getBaseCommission(befor) || "0.00"}</div>
+                    <div class="history-value">加价佣金：¥${getAddCommission(befor) || "0.00"}</div>
+                  </div>
+                  <div class="history-change">
+                    <div class="history-label">修改后：</div>
+                    <div class="history-value">总佣金：¥${getTotalMoney(after) || "0.00"}</div>
+                    <div class="history-value">基础佣金：¥${getBaseCommission(after) || "0.00"}</div>
+                    <div class="history-value">加价佣金：¥${getAddCommission(after) || "0.00"}</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join("");
+          document.getElementById("moneyEditList").innerHTML = listHtml;
+        }
+
+        // 操作按钮
+        const actionButtons = document.getElementById("actionButtons");
+        if (isWaiting(task)) {
+          actionButtons.innerHTML = `
+            <button class="action-btn action-btn-primary" onclick="acceptTask('${taskId}', '${oid || ""}')">🚀 立即接取</button>
+            <a href="javascript:history.back()" class="action-btn action-btn-secondary">返回列表</a>
+          `;
+        }
+
+        // 存储任务数据供其他函数使用
+        window.__taskData__ = task;
+      }
+
+      function renderCustomer(custom) {
+        if (!custom) return;
+        document.getElementById("customerCard").style.display = "block";
+        document.getElementById("customerName").textContent = custom?.customer?.customer_name ?? "-";
+        document.getElementById("customerOrderNumber").textContent = custom.hall_orderNumber ?? "-";
+        document.getElementById("customerPhone").textContent = custom?.contact?.contact_phone ?? "-";
+        document.getElementById("customerContact").textContent = custom?.contact?.contacts ?? "-";
+        document.getElementById("customerEmail").textContent = custom?.contact?.email ?? "-";
+        document.getElementById("customerAddress").textContent = custom?.contact?.contact_address ?? "-";
+      }
+
+      function normalizeCommissionSnapshot(payload, fallbackOrderType) {
+        if (!payload) {
+          return { orderType: fallbackOrderType || 0 };
+        }
+
+        if (typeof payload === "string") {
+          try {
+            return normalizeCommissionSnapshot(JSON.parse(payload), fallbackOrderType);
+          } catch {
+            return { orderType: fallbackOrderType || 0 };
+          }
+        }
+
+        if (typeof payload === "object") {
+          return {
+            ...payload,
+            orderType: payload.orderType ?? fallbackOrderType ?? 0,
+          };
+        }
+
+        return { orderType: fallbackOrderType || 0 };
+      }
+
+      function handleFinish(e) {
+        e.preventDefault();
+        const projectId = e.target.dataset.projectId;
+        const finishErrorBar = document.getElementById("finishError");
+        const finishSuccessBar = document.getElementById("finishSuccess");
+
+        try {
+          const dialog = document.getElementById("finishDialog");
+          if (!dialog || !dialog.show) {
+            if (finishErrorBar) {
+              finishErrorBar.show();
+              finishErrorBar.textContent = "对话框组件未找到";
+            } else {
+              alert("对话框组件未找到");
+            }
+            return;
+          }
+          dialog.show({
+            message: "是否上报完结？",
+            onConfirm: async () => {
+              dialog.dataset.loading = "true";
+              try {
+                const response = await fetch(`${API_BASE_URL}/taskorder/addappend`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    id: projectId,
+                    description: "",
+                    image: "",
+                    tokens: Cookies.get("employee_token"),
+                    enterpriseSide: "pc",
+                  }),
+                });
+                if (response.ok) {
+                  if (response.status === 200) {
+                    const res = await response.json();
+                    if (res.code === 1) {
+                      if (finishSuccessBar) {
+                        finishSuccessBar.show();
+                        finishSuccessBar.textContent = "上报完结成功";
+                      } else {
+                        alert("上报完结成功");
+                      }
+                      window.location.reload();
+                    } else {
+                      if (finishErrorBar) {
+                        finishErrorBar.show();
+                        finishErrorBar.textContent = res.msg || res.message || "上报完结失败，请重试";
+                      } else {
+                        alert(res.msg || res.message || "上报完结失败，请重试");
+                      }
+                    }
+                  } else {
+                    if (finishErrorBar) {
+                      finishErrorBar.show();
+                      finishErrorBar.textContent = "上报完结失败，请重试";
+                    } else {
+                      alert("上报完结失败，请重试");
+                    }
+                  }
+                }
+              } catch (error) {
+                if (finishErrorBar) {
+                  finishErrorBar.show();
+                  finishErrorBar.textContent = "上报完结失败，请重试";
+                } else {
+                  alert("上报完结失败，请重试");
+                }
+              } finally {
+                dialog.dataset.loading = "false";
+              }
+            },
+            onCancel: () => {
+              console.log("用户点击了取消");
+            },
+          });
+        } catch (error) {
+          console.error("上报完结失败:", error);
+          if (finishErrorBar) {
+            finishErrorBar.show();
+            finishErrorBar.textContent = "上报完结失败，请重试";
+          } else {
+            alert("上报完结失败，请重试");
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

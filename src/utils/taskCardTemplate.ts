@@ -124,7 +124,7 @@ export function createTaskCardHTML(task: any): string {
 
       <div class="task-actions">
         ${acceptButton}
-        <a href="/task/${task.id}/${task.oid ? `?oid=${task.oid}` : ''}" class="btn btn-secondary">👁️ 查看详情</a>
+        <a href="/task?id=${task.id}${task.oid ? `&oid=${task.oid}` : ''}" class="btn btn-secondary">👁️ 查看详情</a>
       </div>
     </div>
   `.trim();

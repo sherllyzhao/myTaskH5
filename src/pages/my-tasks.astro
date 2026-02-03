@@ -8,76 +8,9 @@ import FilterBar from '../components/FilterBar.astro';
 import ConfirmDialog from '../components/ConfirmDialog.astro';
 import type { FilterGroup } from "../types/filter";
 
-// 初始化空数据,由客户端加载
-
-/* 统计 */
-let taskStatsRes: any;
-let userInfo: any = null;
-const proxyUrl = `${Astro.url.origin}/proxy`;
-const proxyChina9Url = `${Astro.url.origin}/proxyChina9`;
-
-try {
-  // 获取用户信息
-  const userInfoResponse = await fetch(proxyChina9Url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Cookie": Astro.request.headers.get("cookie") || "",
-    },
-    body: JSON.stringify({
-      path: "/user/infoClient",
-    }),
-  });
-
-  if (userInfoResponse.status === 200) {
-    const userInfoResult = await userInfoResponse.json();
-    if (userInfoResult.code === 200) {
-      userInfo = userInfoResult.data;
-    }
-  }
-} catch (error: any) {
-  console.error("❌ 获取用户信息失败:", error);
-}
-
-try {
-  // 统计数据
-  const statsResponse = await fetch(proxyUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Cookie": Astro.request.headers.get("cookie") || "",
-    },
-    body: JSON.stringify({
-      path: "/taskorder/monthinfo",
-    }),
-  });
-  // 检查HTTP状态码401
-  if (statsResponse.status === 401) {
-    // 在SSR环境下无法直接跳转,返回空数据让前端处理
-    taskStatsRes = {
-      list: [],
-      total: 0,
-      error: "未授权,请重新登录",
-      code: 401,
-    };
-  } else {
-    const statsRes = await statsResponse.json();
-    // 检查业务状态码401
-    if (statsRes.code === 401) {
-      taskStatsRes = {
-        data: {},
-        error: "未授权,请重新登录",
-        code: 401,
-      };
-    } else if (statsRes.code === 1) {
-      taskStatsRes = statsRes.data || statsRes;
-    }
-  }
-} catch (error: any) {
-  console.error("❌ SSR Error:", error);
-}
-
-const taskStats = taskStatsRes || {};
+// 静态模式：数据由客户端加载
+const userInfo: any = null;
+const taskStats: any = {};
 
 // 筛选组件配置
 const filterGroups: FilterGroup[] = [
@@ -300,12 +233,15 @@ const filterGroups: FilterGroup[] = [
 			window.filterGroupsConfig = filterGroups;
 		</script>
 
-		<!-- 用户信息全局变量 -->
-		<script is:inline define:vars={{ userInfo }}>
-			// 将用户信息设置为全局变量
-			window.currentUserInfo = userInfo;
-			localStorage.setItem('currentUserInfo', JSON.stringify(userInfo));
-			console.log('当前用户信息:', window.currentUserInfo);
+		<!-- 用户信息全局变量 - 从 localStorage 恢复 -->
+		<script is:inline>
+			// 尝试从 localStorage 恢复用户信息
+			try {
+				const savedUserInfo = localStorage.getItem('currentUserInfo');
+				window.currentUserInfo = savedUserInfo ? JSON.parse(savedUserInfo) : null;
+			} catch (e) {
+				window.currentUserInfo = null;
+			}
 		</script>
 
 		<!-- 触底加载脚本 -->
@@ -313,6 +249,10 @@ const filterGroups: FilterGroup[] = [
 			import { createTaskCardHTML } from "../utils/taskCardTemplate";
 			import { getCookie } from "../utils/tool";
 			import { createListStateManager } from "../utils/listStateManager";
+
+			// ===== API 基础地址 =====
+			const API_BASE_URL = "https://flexible.china9.cn/api";
+			const USER_API_BASE_URL = "https://china9.cn/api";
 
 			// ===== 页面字段配置 =====
 			// 设置为全局变量，供 getFilterFormData 使用
@@ -338,12 +278,6 @@ const filterGroups: FilterGroup[] = [
 			let hasMore = true;
 			const limit = 10;
 			let globalFormData = {};
-
-			// 请求配置 - 使用 myorderindex 接口
-			const requestConfig = {
-				path: "/taskorder/myorderindex",
-				enterpriseSide: "pc"
-			};
 
 			// 获取 DOM 元素
 			const taskListContainer = document.getElementById("taskListContainer");
@@ -372,14 +306,21 @@ const filterGroups: FilterGroup[] = [
 				try {
 					currentPage = 1;
 
-					// 发送请求
-					const response = await fetch(`/proxy`, {
+					const token = getCookie("employee_token") || localStorage.getItem("employee_token") || "";
+					if (!token) {
+						window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+						return;
+					}
+
+					// 发送请求 - 直接调用后端 API
+					const response = await fetch(`${API_BASE_URL}/taskorder/myorderindex`, {
 						method: "POST",
 						headers: {
 							"Content-Type": "application/json",
 						},
 						body: JSON.stringify({
-							...requestConfig,
+							tokens: token,
+							enterpriseSide: "pc",
 							page: currentPage,
 							limit: limit,
 							...formData,
@@ -449,12 +390,69 @@ const filterGroups: FilterGroup[] = [
 				}
 			}
 
-			const clientToken =
-				getCookie("token") || localStorage.getItem("token") || "";
-			const clientEmployeeToken =
-				getCookie("employee_token") ||
-				localStorage.getItem("employee_token") ||
-				"";
+			// 加载统计数据
+			async function loadStats() {
+				try {
+					const token = getCookie("employee_token") || localStorage.getItem("employee_token") || "";
+					if (!token) return;
+
+					const response = await fetch(`${API_BASE_URL}/taskorder/monthinfo`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ tokens: token, enterpriseSide: "pc" }),
+					});
+
+					if (response.status === 401) return;
+
+					const result = await response.json();
+					if (result.code === 1 && result.data) {
+						const stats = result.data;
+						// 更新统计卡片
+						const statValues = document.querySelectorAll('.stat-value');
+						if (statValues.length >= 8) {
+							statValues[0].textContent = stats?.qd_num?.xmnum || '0';
+							statValues[1].textContent = stats?.qd_num?.rwnum || '0';
+							statValues[2].textContent = '￥' + (stats?.qd_price?.xmprice || '0');
+							statValues[3].textContent = '￥' + (stats?.qd_price?.rwprice || '0');
+							statValues[4].textContent = stats?.end_num?.xmnum || '0';
+							statValues[5].textContent = stats?.end_num?.rwnum || '0';
+							statValues[6].textContent = '￥' + (stats?.end_price?.xmprice || '0');
+							statValues[7].textContent = stats?.end_price?.rwprice || '0';
+						}
+					}
+				} catch (error) {
+					console.error("加载统计数据失败:", error);
+				}
+			}
+
+			// 加载用户信息
+			async function loadUserInfo() {
+				try {
+					const token = getCookie("token") || localStorage.getItem("token") || "";
+					if (!token) return;
+
+					const response = await fetch(`${USER_API_BASE_URL}/user/infoClient`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ token: token }),
+					});
+
+					if (response.status === 401) return;
+
+					const result = await response.json();
+					if (result.code === 200 && result.data) {
+						window.currentUserInfo = result.data;
+						localStorage.setItem('currentUserInfo', JSON.stringify(result.data));
+						// 更新头像
+						const avatar = document.querySelector('.avatar') as HTMLImageElement;
+						if (avatar && result.data?.memberInfo?.avatar) {
+							avatar.src = result.data.memberInfo.avatar;
+						}
+					}
+				} catch (error) {
+					console.error("加载用户信息失败:", error);
+				}
+			}
 
 			// 加载更多数据
 			window.loadMore = async function() {
@@ -468,13 +466,20 @@ const filterGroups: FilterGroup[] = [
 				try {
 					currentPage += 1;
 
-					const response = await fetch(`/proxy`, {
+					const token = getCookie("employee_token") || localStorage.getItem("employee_token") || "";
+					if (!token) {
+						window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+						return;
+					}
+
+					const response = await fetch(`${API_BASE_URL}/taskorder/myorderindex`, {
 						method: "POST",
 						headers: {
 							"Content-Type": "application/json",
 						},
 						body: JSON.stringify({
-							...requestConfig,
+							tokens: token,
+							enterpriseSide: "pc",
 							page: currentPage,
 							limit: limit,
 							...globalFormData,
@@ -568,6 +573,8 @@ const filterGroups: FilterGroup[] = [
 			}
 
 			// 页面加载时立即获取初始数据
+			loadStats();
+			loadUserInfo();
 			window.loadInitialData();
 		</script>
 	</body>

@@ -1,9 +1,5 @@
-﻿---
-// 静态模式：生成一个通用页面，数据由客户端加载
-export async function getStaticPaths() {
-  return [{ params: { id: "placeholder" } }];
-}
-
+---
+// 静态模式：使用查询参数 ?id=xxx
 import FilterDrawer from "../../components/FilterDrawer.astro";
 import FilterSection from "../../components/FilterSection.astro";
 import type { FilterGroup } from "../../types/filter";
@@ -54,8 +50,6 @@ const executionFilterGroups: FilterGroup[] = [
     ],
   },
 ];
-
-const { id } = Astro.params;
 ---
 
 <html lang="zh-CN">
@@ -381,7 +375,7 @@ const { id } = Astro.params;
     <main class="task-edit-page">
       <header class="page-header">
         <div>
-          <p id="task-id">任务编号：{id || ""}</p>
+          <p id="task-id">任务编号：</p>
           <h1>项目任务编辑</h1>
         </div>
         <div class="page-actions">
@@ -554,12 +548,11 @@ const { id } = Astro.params;
     <script is:inline src="/js/cookies.js"></script>
     <script is:inline src="/js/money.js"></script>
     <script is:inline src="/js/drawer.js"></script>
-    <script is:inline define:vars={{id}}>
-        window.__taskId__ = id;
-    </script>
 
     <script is:inline>
-      const initialTaskId = window.__taskId__;
+      // 从 URL 查询参数获取 id
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialTaskId = urlParams.get("id");
 
       (function () {
         let activeSection = "base";

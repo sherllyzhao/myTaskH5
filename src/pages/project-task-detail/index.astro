@@ -1,10 +1,5 @@
 ---
-// 静态模式：生成一个通用页面，数据由客户端加载
-export async function getStaticPaths() {
-  return [{ params: { id: "placeholder" } }];
-}
-
-const { id } = Astro.params;
+// 静态模式：使用查询参数 ?id=xxx
 ---
 
 <html lang="zh-CN">
@@ -323,7 +318,7 @@ const { id } = Astro.params;
     <main class="task-detail-page">
       <header class="page-header">
         <div>
-          <p id="task-id">任务编号：{id || ""}</p>
+          <p id="task-id">任务编号：</p>
           <h1 id="task-detail-title">任务详情</h1>
         </div>
         <div class="page-actions">
@@ -449,6 +444,18 @@ const { id } = Astro.params;
     <script is:inline src="/js/money.js"></script>
 
     <script is:inline>
+      // 从 URL 查询参数获取 id
+      const urlParams = new URLSearchParams(window.location.search);
+      const taskId = urlParams.get("id");
+
+      // 更新页面上的任务编号
+      if (taskId) {
+        const taskIdEl = document.getElementById('task-id');
+        if (taskIdEl) taskIdEl.textContent = '任务编号：' + taskId;
+      }
+
+      const API_BASE_URL = "https://flexible.china9.cn/api";
+
       // 从 sessionStorage 加载数据
       function loadTaskDetailFromSessionStorage() {
         try {
@@ -472,30 +479,34 @@ const { id } = Astro.params;
               if (fieldTypeEl) fieldTypeEl.textContent = taskInfo.hallTypeTitle;
             }
 
-            fetch('/taskApi/Position/gradeList', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  tokens: Cookies.get('employee_token')
-                }),
-            })
-              .then(res => res.json())
-              .then(r => {
-                if (r.data && r.code === 1) {
-                  const gradeList = Object.values(r.data);
-
-                  if (gradeList && Array.isArray(gradeList)) {
-                    const badgeStarEl = document.getElementById('badge-star-levels');
-                    if (badgeStarEl) badgeStarEl.textContent = '可接星级：' + gradeList.join('、');
-
-                    const fieldStarEl = document.getElementById('field-star-levels');
-                    if (fieldStarEl) fieldStarEl.textContent = gradeList.join('、');
-                  }
-                }
+            const token = Cookies.get('employee_token');
+            if (token) {
+              fetch(`${API_BASE_URL}/Position/gradeList`, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    tokens: token,
+                    enterpriseSide: 'pc'
+                  }),
               })
-              .catch(error => console.error('Failed to fetch project info:', error));
+                .then(res => res.json())
+                .then(r => {
+                  if (r.data && r.code === 1) {
+                    const gradeList = Object.values(r.data);
+
+                    if (gradeList && Array.isArray(gradeList)) {
+                      const badgeStarEl = document.getElementById('badge-star-levels');
+                      if (badgeStarEl) badgeStarEl.textContent = '可接星级：' + gradeList.join('、');
+
+                      const fieldStarEl = document.getElementById('field-star-levels');
+                      if (fieldStarEl) fieldStarEl.textContent = gradeList.join('、');
+                    }
+                  }
+                })
+                .catch(error => console.error('Failed to fetch project info:', error));
+            }
 
             if (taskInfo.hall_duration) {
               const badgeDurationEl = document.getElementById('badge-duration');
@@ -505,16 +516,14 @@ const { id } = Astro.params;
               if (fieldDurationEl) fieldDurationEl.textContent = taskInfo.hall_duration + '个工作日';
             }
 
+            const positionsContainer = document.getElementById('field-positions');
             if(taskInfo.hall_type){
-              if (taskInfo.positionArray && Array.isArray(taskInfo.positionArray)) {
-                const positionsContainer = document.getElementById('field-positions');
-                if (positionsContainer) {
-                  positionsContainer.innerHTML = taskInfo.positionArray
-                    .map(pos => `<span class="position-pill">${pos.name}</span>`)
-                    .join('');
-                }
+              if (taskInfo.positionArray && Array.isArray(taskInfo.positionArray) && positionsContainer) {
+                positionsContainer.innerHTML = taskInfo.positionArray
+                  .map(pos => `<span class="position-pill">${pos.name}</span>`)
+                  .join('');
               }
-            }else{
+            } else if (positionsContainer) {
               positionsContainer.innerHTML = '无';
             }
 
@@ -576,7 +585,6 @@ const { id } = Astro.params;
               if (unitEl) unitEl.textContent = taskInfo.taskrangeInfo || '无';
             }
 
-            console.log("🚀 ~ loadTaskDetailFromSessionStorage ~ taskInfo.taskDepartmentTitle: ", taskInfo.taskDepartmentTitle);
             if (taskInfo.taskDepartmentTitle && taskInfo.taskDepartmentTitle.title) {
               const deptEl = document.getElementById('field-department');
               if (deptEl) deptEl.textContent = taskInfo.taskDepartmentTitle.title || '无';
