@@ -182,7 +182,7 @@ import AlertBar from "../../components/AlertBar.astro";
 
             <!-- 佣金修改记录 -->
             <div id="moneyEditCard" class="detail-card" style="display: none;">
-              <div class="section-title">📊 佣金修改记录</div>
+              <div class="section-title">📊 变更记录</div>
               <div class="history-list" id="moneyEditList"></div>
             </div>
 
@@ -220,55 +220,9 @@ import AlertBar from "../../components/AlertBar.astro";
     </div>
     <script is:inline src="/js/cookies.js"></script>
     <script is:inline src="/js/drawer.js"></script>
+    <script is:inline src="/js/utils.js"></script>
 
     <script is:inline>
-      // 工具函数
-      function isProject(orderType) {
-        return orderType === 2 || orderType === 4;
-      }
-
-      function getTypeName(orderType) {
-        return isProject(orderType) ? "项目" : "任务";
-      }
-
-      function isWaiting(task) {
-        return task && task.status === 0;
-      }
-
-      function isOldVersion(orderType) {
-        return orderType === 1 || orderType === 2;
-      }
-
-      function getTotalMoney(task) {
-        if (!task) return "0.00";
-        if (isProject(task.orderType)) {
-          return task.hall_money || task.money || "0.00";
-        }
-        return task.money || "0.00";
-      }
-
-      function getBaseCommission(task) {
-        if (!task) return "0.00";
-        if (isProject(task.orderType)) {
-          return task.hall_basemoney || task.basemoney || "0.00";
-        }
-        return task.basemoney || "0.00";
-      }
-
-      function getAddCommission(task) {
-        if (!task) return "0.00";
-        if (isProject(task.orderType)) {
-          return task.hall_addmoney || task.addmoney || "0.00";
-        }
-        return task.addmoney || "0.00";
-      }
-
-      function earlyWarningOfConstructionPeriod(color) {
-        if (!color) return "";
-        const map = { red: "red", orange: "orange", green: "green" };
-        return map[color] || "";
-      }
-
       // 获取 URL 参数
       const urlParams = new URLSearchParams(window.location.search);
       const taskId = urlParams.get("id");

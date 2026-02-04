@@ -208,6 +208,7 @@ const filterGroups: FilterGroup[] = [
     </div>
 
     <script :inline src="/js/cookies.js"></script>
+    <script is:inline src="/js/utils.js"></script>
 
     <!-- 筛选器配置全局变量 -->
     <script is:inline define:vars={{ filterGroups }}>
@@ -225,14 +226,13 @@ const filterGroups: FilterGroup[] = [
 
       // 客户端获取用户信息和统计数据
       (async function loadClientData() {
-        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.');
-        const apiBase = isDev ? '/api' : 'https://api.china9.cn/api';
-        const taskApiBase = isDev ? '/taskApi' : 'https://flexible.china9.cn/api';
-        const token = localStorage.getItem('employee_token') || localStorage.getItem('token') || '';
+        const apiBase = getApiBase();
+        const taskApiBase = getTaskApiBase();
+        const token = getToken();
 
         // 检查登录状态
         if (!token) {
-          window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+          redirectToLogin();
           return;
         }
 
@@ -285,21 +285,7 @@ const filterGroups: FilterGroup[] = [
 
       console.log('当前用户信息:', window.currentUserInfo);
 
-      // 定义工具函数（从 map.ts 复制）
-      function isOldVersion(task) {
-        return task.orderType === 1;
-      }
-
-      function getTypeName(task) {
-        const typeNameMap = {
-          2: '项目',
-          1: '任务',
-          3: '任务',
-        };
-        return typeNameMap[task.orderType] || '未知';
-      }
-
-      // 处理接任务的全局函数
+      // 处理接任务的全局函数（工具函数 isOldVersion, getTypeName 已在 utils.js 中定义）
       window.handleTaskAccept = function(event, taskId, taskCompanyId, taskCompanyName, task) {
         event.preventDefault();
 
@@ -307,12 +293,7 @@ const filterGroups: FilterGroup[] = [
 
         // 如果没有用户信息，提示登录
         if (!currentUser) {
-          if(takeErrorBar){
-            takeErrorBar.show();
-            takeErrorBar.textContent = '请先登录';
-          }else{
-            alert('请先登录');
-          }
+          showError('请先登录', takeErrorBar);
           window.location.href = '/login';
           return;
         }
@@ -333,13 +314,8 @@ const filterGroups: FilterGroup[] = [
         }
 
         // 检查是否为旧版本任务
-        if(isOldVersion(task)){
-          if(takeErrorBar){
-            takeErrorBar.show();
-            takeErrorBar.textContent = '该条任务为旧版本，请到PC端接取';
-          }else{
-            alert(`该条${getTypeName(task)}为旧版本，请到PC端接取`);
-          }
+        if(isOldVersion(task.orderType)){
+          showError(`该条${getTypeName(task.orderType)}为旧版本，请到PC端接取`, takeErrorBar);
           return;
         }
 
@@ -347,12 +323,7 @@ const filterGroups: FilterGroup[] = [
         try {
           const dialog = document.getElementById('myDialog');
           if (!dialog || !dialog.show) {
-            if(takeErrorBar){
-              takeErrorBar.show();
-              takeErrorBar.textContent = '对话框组件未找到';
-            }else{
-              alert('对话框组件未找到');
-            }
+            showError('对话框组件未找到', takeErrorBar);
             return;
           }
             dialog.show({
@@ -360,9 +331,8 @@ const filterGroups: FilterGroup[] = [
               onConfirm: async () => {
                   dialog.dataset.loading = 'true';
                   try{
-                    // 静态模式：直接调用后端 API
-                    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.');
-                    const taskApiBase = isDev ? '/taskApi' : 'https://flexible.china9.cn/api';
+                    // 使用公共函数获取 API 地址
+                    const taskApiBase = getTaskApiBase();
                     const response = await fetch(`${taskApiBase}/taskorder/addtask`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -373,37 +343,17 @@ const filterGroups: FilterGroup[] = [
                         const res = await response.json();
                         if(res.code === 1){
                           // 处理成功逻辑
-                          if(takeSuccessBar){
-                            takeSuccessBar.show();
-                            takeSuccessBar.textContent = '接单成功，祝您工作愉快！';
-                          }else{
-                            alert('接单成功，祝您工作愉快！');
-                          }
+                          showSuccess('接单成功，祝您工作愉快！', takeSuccessBar);
                           window.location.reload();
                         }else{
-                          if(takeErrorBar){
-                            takeErrorBar.show();
-                            takeErrorBar.textContent = res.msg || res.message || "接取任务失败，请重试";
-                          }else{
-                            alert(res.msg || res.message || "接取任务失败，请重试");
-                          }
+                          showError(res.msg || res.message || "接取任务失败，请重试", takeErrorBar);
                         }
                       }else{
-                        if(takeErrorBar){
-                          takeErrorBar.show();
-                          takeErrorBar.textContent = '接取任务失败，请重试';
-                        }else{
-                          alert('接取任务失败，请重试');
-                        }
+                        showError('接取任务失败，请重试', takeErrorBar);
                       }
                     }
                   } catch (error) {
-                    if(takeErrorBar){
-                      takeErrorBar.show();
-                      takeErrorBar.textContent = '接取任务失败，请重试';
-                    }else{
-                      alert('接取任务失败，请重试');
-                    }
+                    showError('接取任务失败，请重试', takeErrorBar);
                   } finally {
                     dialog.dataset.loading = 'false';
                   }
@@ -422,12 +372,7 @@ const filterGroups: FilterGroup[] = [
 
         } catch (error) {
           console.error('接取任务失败:', error);
-          if(takeErrorBar){
-            takeErrorBar.show();
-            takeErrorBar.textContent = '接取任务失败，请重试';
-          }else{
-            alert('接取任务失败，请重试');
-          }
+          showError('接取任务失败，请重试', takeErrorBar);
         }
       };
     </script>
