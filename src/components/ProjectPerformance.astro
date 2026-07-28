@@ -13,78 +13,10 @@ type AnyRecord = Record<string, any>;
 
 const { data }: Props = Astro.props;
 
-const proxyUrl = `${Astro.url.origin}/proxy`;
-
+// 静态部署：构建阶段不访问 SSR proxy，数据由客户端按需加载。
 let projectPerformanceInfo: any[] = [];
-let page = 1;
-let limit = 100;
-
-async function getPerformanceList(){
-  try{
-    if(!data || !data.id) return
-    const response = await fetch(proxyUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cookie": Astro.request.headers.get("cookie") || "",
-      },
-      body: JSON.stringify({
-        path: "/taskorder/getHallShow",
-        id: data.id,
-        limit: limit,
-        page: page
-      }),
-    })
-
-    if (response.status === 200) {
-      const res = await response.json();
-      if (res.code === 1) {
-        projectPerformanceInfo = projectPerformanceInfo.concat(...res.data.data);
-        if(res.last_page > limit){
-          page ++;
-          await getPerformanceList();
-        }
-      }
-    }
-  }catch (e) {
-    console.log(e)
-  }
-}
-await getPerformanceList()
 
 let projectPerformanceDetailInfo: any[] = [];
-async function getPerformanceDetailList(){
-  try{
-    if(!data || !data.id) return
-    const response = await fetch(proxyUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cookie": Astro.request.headers.get("cookie") || "",
-      },
-      body: JSON.stringify({
-        path: "/taskorder/getHallTaskList",
-        id: data.id,
-        limit: limit,
-        page: page
-      }),
-    })
-
-    if (response.status === 200) {
-      const res = await response.json();
-      if (res.code === 1) {
-        projectPerformanceDetailInfo = projectPerformanceDetailInfo.concat(...res.data.data);
-        if(res.last_page > limit){
-          page ++;
-          await getPerformanceDetailList();
-        }
-      }
-    }
-  }catch (e) {
-    console.log(e)
-  }
-}
-await getPerformanceDetailList()
 
 const pickArray = (source: AnyRecord | undefined | null, keys: string[]) => {
   if (!source) return [];
@@ -1311,6 +1243,6 @@ const detailModalId = "execution-detail-modal";
     let projectPerformanceInfo= window.__projectPerformanceInfo__.find(item => '' + item.id === taskId);
     sessionStorage.setItem("projectPerformanceDetailInfo", JSON.stringify(projectPerformanceInfo));
     sessionStorage.setItem("projectDetailInfo", JSON.stringify(window.__projectDetail__));
-    window.location.href = `/project-task-detail/${taskId}`;
+    window.location.href = window.sitePath(`/project-task-detail/${taskId}`);
   }
 </script>

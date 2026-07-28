@@ -56,7 +56,7 @@ if (Number(data.hall_user_money)) {
     }
     confirmDialog && confirmDialog.addEventListener('click', async (e) => {
         try{
-            const result = await fetch('/taskApi/taskorder/addwithdraw', {
+            const result = await fetch(`${window.__TASK_API_BASE__}/taskorder/addwithdraw`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -164,24 +164,27 @@ const filterGroups: FilterGroup[] = [
     ]
   }
 ];
+
+const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 
 <html lang="zh-CN">
 	<head>
+        <script is:inline src={`${basePath}js/site-path.js`}></script>
 		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/svg+xml" href={`${basePath}favicon.svg`} />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="generator" content={Astro.generator} />
 		<title>我的任务</title>
-		<link rel="stylesheet" href="/common.css" />
-		<link rel="stylesheet" href="/task-styles.css" />
-		<script src="/js/auth.js" defer></script>
+		<link rel="stylesheet" href={`${basePath}common.css`} />
+		<link rel="stylesheet" href={`${basePath}task-styles.css`} />
+		<script is:inline src={`${basePath}js/auth.js`} defer></script>
 	</head>
 	<body>
 		<!-- 移动端选择器弹层 -->
 		<MobilePicker />
 
-		<script is:inline src="/js/drawer.js"></script>
+		<script is:inline src={`${basePath}js/drawer.js`}></script>
 		<div class="container">
 			<div class="wrap">
 				<PageHeader userInfo={userInfo} currentTab="tasks" />
@@ -225,8 +228,8 @@ const filterGroups: FilterGroup[] = [
 			/>
 		</div>
 
-		<script :inline src="/js/cookies.js"></script>
-		<script is:inline src="/js/utils.js"></script>
+		<script is:inline src={`${basePath}js/cookies.js`}></script>
+		<script is:inline src={`${basePath}js/utils.js`}></script>
 
 		<!-- 筛选器配置全局变量 -->
 		<script is:inline define:vars={{ filterGroups }}>
@@ -279,7 +282,7 @@ const filterGroups: FilterGroup[] = [
 			let isLoading = false;
 			let hasMore = true;
 			const limit = 10;
-			let globalFormData = {};
+			let globalFormData: any = {};
 
 			// 获取 DOM 元素
 			const taskListContainer = document.getElementById("taskListContainer");
@@ -310,7 +313,7 @@ const filterGroups: FilterGroup[] = [
 
 					const token = getCookie("employee_token") || localStorage.getItem("employee_token") || "";
 					if (!token) {
-						window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+						window.location.href = window.sitePath("/login") + "?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
 						return;
 					}
 
@@ -333,14 +336,14 @@ const filterGroups: FilterGroup[] = [
 					});
 
 					if (response.status === 401) {
-						window.location.href = "/login";
+						window.location.href = window.sitePath("/login");
 						return;
 					}
 
 					const result = await response.json();
 
 					if (result.code === 401) {
-						window.location.href = "/login";
+						window.location.href = window.sitePath("/login");
 						return;
 					}
 
@@ -470,7 +473,7 @@ const filterGroups: FilterGroup[] = [
 
 					const token = getCookie("employee_token") || localStorage.getItem("employee_token") || "";
 					if (!token) {
-						window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+						window.location.href = window.sitePath("/login") + "?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
 						return;
 					}
 
@@ -492,14 +495,14 @@ const filterGroups: FilterGroup[] = [
 					});
 
 					if (response.status === 401) {
-						window.location.href = "/login";
+						window.location.href = window.sitePath("/login");
 						return;
 					}
 
 					const result = await response.json();
 
 					if (result.code === 401 || result.code === 401) {
-						window.location.href = "/login";
+						window.location.href = window.sitePath("/login");
 						return;
 					}
 

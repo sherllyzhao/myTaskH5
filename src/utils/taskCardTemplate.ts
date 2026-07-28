@@ -21,6 +21,10 @@ export function createTaskCardHTML(task: any): string {
   const isWaitingTask = isWaiting(task);
   const hallOrderNumber = task.hall_orderNumber ? '（' + task.hall_orderNumber + '）' : '';
   const projectName = isWaitingTask ? getTypeName(task.orderType) + "接取后展示" : task.hall_customer + hallOrderNumber;
+  const taskDetailQuery = `/task?id=${task.id}${task.oid ? `&oid=${task.oid}` : ''}`;
+  const taskDetailPath = typeof (globalThis as any).sitePath === 'function'
+    ? (globalThis as any).sitePath(taskDetailQuery)
+    : taskDetailQuery;
 
   // 立即接取按钮
   const acceptButton = isWaitingTask
@@ -124,7 +128,7 @@ export function createTaskCardHTML(task: any): string {
 
       <div class="task-actions">
         ${acceptButton}
-        <a href="/task?id=${task.id}${task.oid ? `&oid=${task.oid}` : ''}" class="btn btn-secondary">👁️ 查看详情</a>
+        <a href="${taskDetailPath}" class="btn btn-secondary">👁️ 查看详情</a>
       </div>
     </div>
   `.trim();

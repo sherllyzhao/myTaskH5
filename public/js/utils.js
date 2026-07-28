@@ -225,7 +225,7 @@
     const path =
       currentPath ||
       window.location.pathname + (window.location.search || "");
-    window.location.href = "/login?redirect=" + encodeURIComponent(path);
+    window.location.href = (window.sitePath ? window.sitePath("/login") : "/login") + "?redirect=" + encodeURIComponent(path);
   }
 
   /**

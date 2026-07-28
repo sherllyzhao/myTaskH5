@@ -742,7 +742,7 @@ const {isAngance = false, username, totalMoney, taskId, executionData, appendlog
 						  const formData = new FormData();
 						  formData.append('file', file);
 						  formData.append('name', file.name);
-						  const result = await fetch('/taskApi/ajax/upload', {
+						  const result = await fetch(`${window.__TASK_API_BASE__}/ajax/upload`, {
 							  method: 'POST',
 							  body: formData
 						  })
@@ -806,7 +806,7 @@ const {isAngance = false, username, totalMoney, taskId, executionData, appendlog
 				  formData.append('name', file.name);
 
 				  try {
-					  const result = await fetch('/taskApi/ajax/upload', {
+					  const result = await fetch(`${window.__TASK_API_BASE__}/ajax/upload`, {
 						  method: 'POST',
 						  body: formData
 					  });
@@ -1054,10 +1054,10 @@ const {isAngance = false, username, totalMoney, taskId, executionData, appendlog
 		  }
 
 		  try {
-			  let api = '/taskApi/taskorder/addappend';
+			  let api = `${window.__TASK_API_BASE__}/taskorder/addappend`;
 			  let executionData = (window as any).__EXECUTION_DATA__;
 			  if(executionData && executionData.length > 0){
-				  api = '/taskApi/taskorder/editAppend';
+				  api = `${window.__TASK_API_BASE__}/taskorder/editAppend`;
 			  }
 			  // 这里添加您的提交逻辑
 			  // 示例：发送到服务器

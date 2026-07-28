@@ -1,9 +1,10 @@
 ---
 // 登录过期提示组件
+const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 
 <div style="text-align: center; padding: 40px; color: #ef4444;">
   <div style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">🔐 登录已过期</div>
   <div style="margin-bottom: 20px;">请重新登录以继续使用</div>
-  <a href="/login" style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">重新登录</a>
+  <a href={`${basePath}login`} style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">重新登录</a>
 </div>

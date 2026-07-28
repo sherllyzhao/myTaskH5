@@ -1,14 +1,16 @@
 ---
 import AlertBar from '../components/AlertBar.astro';
+const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 
 <html lang="zh-CN">
   <head>
+        <script is:inline src={`${basePath}js/site-path.js`}></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
     <title>登录</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="/common.css" />
+    <link rel="icon" type="image/svg+xml" href={`${basePath}favicon.svg`} />
+    <link rel="stylesheet" href={`${basePath}common.css`} />
     <style>
       /* 与首页统一的移动端风格与主色细节 */
       body {
@@ -122,7 +124,7 @@ import AlertBar from '../components/AlertBar.astro';
   <body>
     <div class="login-page">
       <div class="login-header">
-        <img src="/favicon.svg" class="login-logo" alt="logo" />
+        <img src={`${basePath}favicon.svg`} class="login-logo" alt="logo" />
         <div class="login-title">欢迎登录</div>
       </div>
       <div class="login-subtitle">请使用账号与密码登录后继续访问</div>
@@ -154,7 +156,7 @@ import AlertBar from '../components/AlertBar.astro';
       <AlertBar type="error" id="errorBar" autoClose={true} />
       <AlertBar type="success" id="successBar" autoClose={true} />
 
-    <script is:inline src="/js/cookies.js"></script>
+    <script is:inline src={`${basePath}js/cookies.js`}></script>
     <script is:inline>
       const $ = (s) => document.querySelector(s);
 

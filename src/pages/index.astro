@@ -133,24 +133,27 @@ const filterGroups: FilterGroup[] = [
     ]
   }
 ];
+
+const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 
 <html lang="zh-CN">
   <head>
+        <script is:inline src={`${basePath}js/site-path.js`}></script>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={`${basePath}favicon.svg`} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
     <title>任务管理</title>
-    <link rel="stylesheet" href="/common.css" />
-    <link rel="stylesheet" href="/task-styles.css" />
-    <script src="/js/auth.js" defer></script>
+    <link rel="stylesheet" href={`${basePath}common.css`} />
+    <link rel="stylesheet" href={`${basePath}task-styles.css`} />
+    <script is:inline src={`${basePath}js/auth.js`} defer></script>
   </head>
   <body>
     <!-- 移动端选择器弹层 -->
     <MobilePicker />
 
-    <script is:inline src="/js/drawer.js"></script>
+    <script is:inline src={`${basePath}js/drawer.js`}></script>
     <div class="container">
       <div class="wrap">
         <!-- <Debug data={userInfo} /> -->
@@ -207,8 +210,8 @@ const filterGroups: FilterGroup[] = [
 	    <AlertBar type="success" id="takeSuccess" fixed autoClose={true}/>
     </div>
 
-    <script :inline src="/js/cookies.js"></script>
-    <script is:inline src="/js/utils.js"></script>
+    <script is:inline src={`${basePath}js/cookies.js`}></script>
+    <script is:inline src={`${basePath}js/utils.js`}></script>
 
     <!-- 筛选器配置全局变量 -->
     <script is:inline define:vars={{ filterGroups }}>
@@ -294,7 +297,7 @@ const filterGroups: FilterGroup[] = [
         // 如果没有用户信息，提示登录
         if (!currentUser) {
           showError('请先登录', takeErrorBar);
-          window.location.href = '/login';
+          window.location.href = window.sitePath('/login');
           return;
         }
 
@@ -453,14 +456,14 @@ const filterGroups: FilterGroup[] = [
             });
 
             if (response.status === 401) {
-              window.location.href = "/login";
+              window.location.href = window.sitePath("/login");
               return;
             }
 
             const result = await response.json();
 
             if (result.code === 401) {
-              window.location.href = "/login";
+              window.location.href = window.sitePath("/login");
               return;
             }
 
@@ -547,14 +550,14 @@ const filterGroups: FilterGroup[] = [
             });
 
             if (response.status === 401) {
-              window.location.href = "/login";
+              window.location.href = window.sitePath("/login");
               return;
             }
 
             const result = await response.json();
 
             if (result.code === 401 || result.code === 401) {
-              window.location.href = "/login";
+              window.location.href = window.sitePath("/login");
               return;
             }
 

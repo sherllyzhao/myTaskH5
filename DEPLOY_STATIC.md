@@ -1,227 +1,151 @@
-# 静态部署指南
+# GitHub Pages 静态部署指南
 
-本项目已改造为**纯静态模式**，可以部署到任何静态文件服务器。
+本项目已按 GitHub Pages 项目站点进行配置，仓库名为 `myTaskH5`。
 
-## 📦 构建步骤
+## 一、部署地址
+
+GitHub Pages 项目站点的地址格式为：
+
+```text
+https://<GitHub用户名>.github.io/myTaskH5/
+```
+
+Astro 配置中的：
+
+```js
+base: '/myTaskH5'
+```
+
+已经与仓库名保持一致。GitHub Actions 构建时会从 `GITHUB_REPOSITORY_OWNER` 自动生成站点 owner；因此不需要把具体 GitHub 用户名写死在代码里。
+
+## 二、首次启用 GitHub Pages
+
+1. 将本项目推送到 GitHub 仓库 `myTaskH5`。
+2. 打开 GitHub 仓库的 **Settings → Pages**。
+3. 在 **Build and deployment** 的 **Source** 中选择 **GitHub Actions**。
+4. 推送到 `master` 或 `main` 分支，或者在 **Actions** 页面手动执行 `Deploy Astro site to GitHub Pages`。
+5. 等待 `build` 和 `deploy` 两个 Job 都成功后，再访问上面的站点地址。
+
+项目已经包含：
+
+```text
+.github/workflows/deploy.yml
+```
+
+它会自动完成：
+
+```text
+安装依赖 → Astro 静态构建 → 上传 dist → 发布 GitHub Pages
+```
+
+## 三、本地检查
 
 ```bash
-# 1. 安装依赖
 npm install
-
-# 2. 构建静态文件
-npm run build
+npx astro check
+npm run dev
 ```
 
-构建完成后，所有静态文件将生成到 `dist/` 目录。
+本地开发仍然使用 Vite proxy：
 
-## 🚀 部署方式
-
-### 方式 1：直接上传到静态文件服务器
-
-将 `dist/` 目录中的所有文件上传到服务器的 web 根目录：
-
-```
-dist/
-├── index.html          # 首页
-├── login/              # 登录页
-├── my-tasks/           # 我的任务
-├── task/               # 任务详情
-├── _astro/             # JS/CSS 资源
-├── js/                 # 公共 JS
-├── common.css          # 公共样式
-└── ...
+```text
+/api      → https://api.china9.cn/api
+/taskApi  → https://flexible.china9.cn/api
 ```
 
-### 方式 2：使用 Nginx
+生产环境由客户端直接请求后端 API，不依赖 GitHub Pages 提供服务器端 API。
 
-**nginx.conf 配置示例：**
+## 四、静态托管限制
 
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-    root /path/to/dist;
-    index index.html;
+### 1. GitHub Pages 不运行 SSR
 
-    # 处理客户端路由（SPA 模式）
-    location / {
-        try_files $uri $uri/ $uri.html /index.html;
-    }
+GitHub Pages 只托管构建后的静态文件，不会运行：
 
-    # 静态资源缓存
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
+- Astro SSR middleware；
+- `src/pages/*.ts` 的运行时 API endpoint；
+- Node.js server；
+- 服务端反向代理。
+
+项目已增加客户端兼容层：
+
+```text
+public/js/site-path.js
 ```
 
-### 方式 3：使用 Apache
+它会将旧代码中的 `/proxy`、`/api`、`/taskApi` 请求转换为：
 
-**.htaccess 配置：**
+- 本地开发：继续走 Vite proxy；
+- GitHub Pages：改为直接请求后端 API。
 
-```apache
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteBase /
+因此，GitHub Pages 上不能把 `/proxy` 当作真正的后端代理使用。
 
-    # 如果请求的是文件或目录，直接返回
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
+### 2. 后端必须允许 CORS
 
-    # 否则重定向到 index.html
-    RewriteRule . /index.html [L]
-</IfModule>
+GitHub Pages 页面访问后端时，浏览器会执行跨域检查。后端至少需要允许 GitHub Pages 域名访问相关接口，并正确处理：
 
-# 静态资源缓存
-<FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg)$">
-    Header set Cache-Control "max-age=31536000, public"
-</FilesMatch>
+- `OPTIONS` 预检请求；
+- `Content-Type` 请求头；
+- `Tokens` / `employee_token` 等认证字段；
+- 文件上传接口；
+- 错误响应和 401 响应。
+
+如果后端不支持 CORS，页面即使部署成功，也可能出现登录失败、列表为空或文件上传失败。
+
+### 3. Token 存储
+
+当前前端会使用 Cookie、`localStorage` 和 `sessionStorage` 中的认证信息。GitHub Pages 是 HTTPS 站点，后端接口需要确认 Token 的传递方式与跨域策略匹配。
+
+建议重点检查：
+
+- 登录接口返回的 Token 是否能被前端保存；
+- 后续请求是否携带 `tokens`；
+- 401 响应是否能够跳转到 `/myTaskH5/login`；
+- 后端是否依赖只在同域请求中才会发送的 Cookie。
+
+### 4. 页面路径
+
+项目站点必须使用带仓库名的路径：
+
+```text
+/myTaskH5/
+/myTaskH5/login/
+/myTaskH5/my-tasks/
+/myTaskH5/task/
 ```
 
-## ⚙️ 环境说明
+页面内的本地资源和导航已经使用 `import.meta.env.BASE_URL` 或 `sitePath()` 处理，不能再随意写成从域名根目录开始的 `/login`、`/common.css` 等路径。
 
-### 开发环境 vs 生产环境
+任务详情目前通过查询参数加载，例如：
 
-项目会自动检测运行环境：
-
-- **开发环境**（localhost/127.0.0.1/192.168.*）：
-  - API 请求通过 Vite 代理（`/api` 和 `/taskApi`）
-  - 需要运行 `npm run dev`
-
-- **生产环境**（其他域名）：
-  - API 请求直接调用后端：
-    - `https://api.china9.cn/api`
-    - `https://flexible.china9.cn/api`
-
-### 后端 CORS 要求
-
-**重要**：后端 API 必须支持 CORS，允许前端域名访问。
-
-如果后端不支持 CORS，需要在 Nginx 中配置反向代理：
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-    root /path/to/dist;
-
-    # 代理 /api 请求
-    location /api/ {
-        proxy_pass https://api.china9.cn/api/;
-        proxy_set_header Host api.china9.cn;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    # 代理 /taskApi 请求
-    location /taskApi/ {
-        proxy_pass https://flexible.china9.cn/api/;
-        proxy_set_header Host flexible.china9.cn;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    # 静态文件
-    location / {
-        try_files $uri $uri/ $uri.html /index.html;
-    }
-}
+```text
+/myTaskH5/task/?id=123
 ```
 
-## 🔍 验证部署
+## 五、故障排查
 
-部署完成后，访问以下页面验证：
+### 页面打开后空白
 
-1. **登录页**：`https://your-domain.com/login`
-2. **首页**：`https://your-domain.com/`（需要先登录）
-3. **我的任务**：`https://your-domain.com/my-tasks`
+1. 打开浏览器开发者工具的 Console；
+2. 查看 Network 中的 API 请求；
+3. 确认请求是否被 CORS 拦截；
+4. 确认 API 返回的数据结构和登录 Token 是否正常。
 
-## ⚠️ 注意事项
+### 刷新页面 404
 
-### 1. 动态路由处理
+优先访问构建后实际生成的目录 URL，例如：
 
-动态路由（如 `/task/123`）在静态模式下的处理方式：
-
-- 构建时生成一个通用页面（`/task/placeholder/`）
-- 实际访问时，数据由客户端 JavaScript 从 URL 中获取 ID 并调用 API 加载
-
-**重要**：确保服务器配置了 URL 重写，将所有路由请求指向对应的 HTML 文件。
-
-### 2. 认证机制
-
-- 使用 `localStorage` 和 `cookie` 存储 token
-- 客户端 JavaScript 检查登录状态
-- 未登录自动跳转到 `/login`
-
-### 3. API 调用
-
-所有 API 调用都在客户端进行：
-
-```javascript
-// 自动检测环境
-const isDev = window.location.hostname === 'localhost';
-const apiBase = isDev ? '/api' : 'https://api.china9.cn/api';
-
-// 发送请求
-fetch(`${apiBase}/taskorder/orderindex`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ /* ... */ })
-});
+```text
+/myTaskH5/login/
+/myTaskH5/my-tasks/
 ```
 
-### 4. 警告信息
+不要把项目站点误当成根站点访问。如果需要自定义域名，应重新评估 `base` 配置。
 
-构建时可能看到以下警告，可以忽略：
+### GitHub Actions 构建失败
 
-```
-[WARN] `Astro.request.headers` was used when rendering...
-```
+重点查看：
 
-这是因为某些页面在 SSR 时使用了 `Astro.request.headers`，但在静态模式下这些代码不会执行。
-
-## 📝 改造说明
-
-本项目从 SSR 模式改造为静态模式，主要变更：
-
-1. ✅ 移除服务器端中间件（`middleware.ts`）
-2. ✅ 所有数据获取改为客户端进行
-3. ✅ API 调用直接访问后端（生产环境）
-4. ✅ 动态路由使用 placeholder 预渲染
-5. ✅ 认证逻辑改为客户端检查
-
-## 🆘 故障排查
-
-### 问题 1：页面空白
-
-**原因**：API 请求失败或 CORS 错误
-
-**解决**：
-1. 打开浏览器开发者工具（F12）
-2. 查看 Console 和 Network 标签
-3. 检查 API 请求是否成功
-4. 确认后端支持 CORS
-
-### 问题 2：登录后跳转失败
-
-**原因**：token 未正确存储
-
-**解决**：
-1. 检查 `localStorage` 中是否有 `token` 或 `employee_token`
-2. 检查 cookie 是否正确设置
-3. 清除浏览器缓存后重试
-
-### 问题 3：动态路由 404
-
-**原因**：服务器未配置 URL 重写
-
-**解决**：
-- Nginx：添加 `try_files $uri $uri/ $uri.html /index.html;`
-- Apache：添加 `.htaccess` 重写规则
-
-## 📞 技术支持
-
-如有问题，请检查：
-1. 浏览器控制台错误信息
-2. 网络请求是否成功
-3. 后端 API 是否正常
-4. 服务器配置是否正确
+1. Actions 日志中的 `npm ci` 错误；
+2. `npx astro check` 报出的 TypeScript/Astro 错误；
+3. 是否在仓库 Settings → Pages 中选择了 GitHub Actions；
+4. workflow 是否运行在 `master` 或 `main` 分支。

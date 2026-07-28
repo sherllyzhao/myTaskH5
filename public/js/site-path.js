@@ -1,0 +1,63 @@
+(function () {
+  const currentScript = document.currentScript;
+  const scriptPath = currentScript && currentScript.src
+    ? new URL(currentScript.src, window.location.href).pathname
+    : '';
+  const marker = '/js/site-path.js';
+  const basePath = scriptPath.endsWith(marker)
+    ? scriptPath.slice(0, -marker.length)
+    : '/';
+  const isLocalHost = window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.');
+
+  window.__SITE_BASE_PATH__ = basePath || '/';
+  window.__API_BASE__ = isLocalHost ? '/api' : 'https://api.china9.cn/api';
+  window.__TASK_API_BASE__ = isLocalHost ? '/taskApi' : 'https://flexible.china9.cn/api';
+
+  window.sitePath = function (path) {
+    const normalizedPath = String(path || '').replace(/^\/+/, '');
+    return window.__SITE_BASE_PATH__ + normalizedPath;
+  };
+
+  // GitHub Pages 没有 Astro SSR endpoint。兼容旧代码中的 /proxy 和 /taskApi 请求，
+  // 本地继续走 Vite proxy，生产环境改为直连后端 API。
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = function (input, init) {
+    const requestUrl = typeof input === 'string'
+      ? input
+      : input instanceof URL
+        ? input.toString()
+        : input && input.url;
+    const pathname = requestUrl ? new URL(requestUrl, window.location.origin).pathname : '';
+    const options = { ...(init || {}) };
+
+    if (pathname === '/proxy' || pathname.endsWith('/proxy')) {
+      let requestBody = {};
+      try {
+        requestBody = options.body ? JSON.parse(options.body) : {};
+      } catch {
+        return nativeFetch(input, init);
+      }
+
+      const targetPath = requestBody.path || '/taskorder/orderindex';
+      delete requestBody.path;
+      options.body = JSON.stringify(requestBody);
+      return nativeFetch(`${window.__TASK_API_BASE__}${targetPath.startsWith('/') ? targetPath : `/${targetPath}`}`, options);
+    }
+
+    if (pathname === '/taskApi' || pathname.startsWith('/taskApi/')) {
+      const targetPath = pathname.slice('/taskApi'.length) || '/';
+      const targetUrl = `${window.__TASK_API_BASE__}${targetPath}${requestUrl.includes('?') ? requestUrl.slice(requestUrl.indexOf('?')) : ''}`;
+      return nativeFetch(targetUrl, options);
+    }
+
+    if (pathname === '/api' || pathname.startsWith('/api/')) {
+      const targetPath = pathname.slice('/api'.length) || '/';
+      const targetUrl = `${window.__API_BASE__}${targetPath}${requestUrl.includes('?') ? requestUrl.slice(requestUrl.indexOf('?')) : ''}`;
+      return nativeFetch(targetUrl, options);
+    }
+
+    return nativeFetch(input, init);
+  };
+})();

@@ -1,10 +1,16 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
-// https://astro.build/config
+// GitHub Pages 项目站点的仓库路径；本地和 Actions 构建都保持一致。
+const repositoryName = 'myTaskH5';
+const repositoryOwner = process.env.GITHUB_REPOSITORY_OWNER || process.env.GITHUB_REPOSITORY?.split('/')[0];
+const site = repositoryOwner ? `https://${repositoryOwner}.github.io` : undefined;
+
 export default defineConfig({
   output: 'static',
-  // 开发环境仍保留代理配置，方便本地调试
+  site,
+  base: `/${repositoryName}`,
+  // 开发环境仍保留代理配置，方便本地调试；生产环境由客户端直连后端 API。
   vite: {
     server: {
       proxy: {

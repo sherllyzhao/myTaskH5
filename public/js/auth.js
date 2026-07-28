@@ -116,12 +116,12 @@ class AuthHandler {
                     return response;
                 }
 
-                // 检查响应体中的业务状态码401
+                // 检查响应体中的业务状态码401或登录过期提示
                 if (response.headers.get('content-type')?.includes('application/json')) {
                     const clone = response.clone();
                     try {
                         const data = await clone.json();
-                        if (data && data.code === 401) {
+                        if (data && (data.code === 401 || self.isLoginExpiredMessage(data))) {
                             this.handleUnauthorized();
                         }
                     } catch (e) {
@@ -163,8 +163,21 @@ class AuthHandler {
         }
     }
 
+    // 判断响应体是否为登录过期提示（后端可能返回 HTTP 200 + 非 401 业务码）
+    isLoginExpiredMessage(data) {
+        const msg = (data && (data.msg || data.message)) || '';
+        if (typeof msg !== 'string') return false;
+        return msg.includes('登录过期') || msg.includes('请重新登录') || msg.includes('登录已过期');
+    }
+
     // 处理未授权状态
     handleUnauthorized() {
+        // 防止重复触发；登录页本身不做跳转，避免循环
+        if (this.unauthorizedHandled) return;
+        const loginPath = window.sitePath ? new URL(window.sitePath('/login'), window.location.origin).pathname : '/login';
+        if (window.location.pathname === loginPath || window.location.pathname.indexOf(loginPath + '/') === 0) return;
+        this.unauthorizedHandled = true;
+
         console.log('🔐 检测到未授权状态，准备跳转到登录页');
 
         // 清除本地存储的token
@@ -175,7 +188,7 @@ class AuthHandler {
 
         // 延迟跳转到登录页
         setTimeout(() => {
-            window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.href = (window.sitePath ? window.sitePath('/login') : '/login') + '?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
         }, 1500);
     }
 

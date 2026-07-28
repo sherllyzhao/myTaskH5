@@ -1,16 +1,18 @@
 ---
 import FilterDrawer from "../components/FilterDrawer.astro";
+const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 
 <html lang="zh-CN">
 	<head>
+        <script is:inline src={`${basePath}js/site-path.js`}></script>
 		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/svg+xml" href={`${basePath}favicon.svg`} />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="generator" content={Astro.generator} />
 		<title>筛选器测试</title>
-		<link rel="stylesheet" href="/common.css" />
-		<script src="/js/auth.js" defer></script>
+		<link rel="stylesheet" href={`${basePath}common.css`} />
+		<script is:inline src={`${basePath}js/auth.js`} defer></script>
 	</head>
 	<body>
 		<div class="container">
@@ -22,7 +24,7 @@ import FilterDrawer from "../components/FilterDrawer.astro";
 				</div>
 
 				<div class="profile-section">
-					<img src="/favicon.svg" alt="用户头像" class="avatar" />
+					<img src={`${basePath}favicon.svg`} alt="用户头像" class="avatar" />
 					<button class="profile-btn">👤 个人主页</button>
 				</div>
 			</div>

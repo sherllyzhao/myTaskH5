@@ -64,14 +64,14 @@ export function createTaskListLoader(options: { apiPath: any; container: any; li
 			});
 
 			if (response.status === 401) {
-				window.location.href = "/login";
+				window.location.href = typeof (globalThis as any).sitePath === "function" ? (globalThis as any).sitePath("/login") : "/login";
 				return;
 			}
 
 			const result = await response.json();
 
 			if (result.code === 401) {
-				window.location.href = "/login";
+				window.location.href = typeof (globalThis as any).sitePath === "function" ? (globalThis as any).sitePath("/login") : "/login";
 				return;
 			}
 
@@ -155,14 +155,14 @@ export function createTaskListLoader(options: { apiPath: any; container: any; li
 			});
 
 			if (response.status === 401) {
-				window.location.href = "/login";
+				window.location.href = typeof (globalThis as any).sitePath === "function" ? (globalThis as any).sitePath("/login") : "/login";
 				return;
 			}
 
 			const result = await response.json();
 
 			if (result.code === 401) {
-				window.location.href = "/login";
+				window.location.href = typeof (globalThis as any).sitePath === "function" ? (globalThis as any).sitePath("/login") : "/login";
 				return;
 			}
 

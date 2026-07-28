@@ -1,26 +1,23 @@
 ---
-import AttachmentViewer from "../../components/AttachmentViewer.astro";
-import ProjectPerformance from "../../components/ProjectPerformance.astro";
-import TaskPerformance from "../../components/TaskPerformance.astro";
-import WithdrawalInfo from "../../components/WithdrawalInfo.astro";
-import AcceptanceRecord from "../../components/AcceptanceRecord.astro";
 import FilterDrawer from "../../components/FilterDrawer.astro";
-import AddExecution from "../../components/AddExecution.astro";
 import ConfirmDialog from "../../components/ConfirmDialog.astro";
 import AlertBar from "../../components/AlertBar.astro";
+
+const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 
 <html lang="zh-CN">
   <head>
+        <script is:inline src={`${basePath}js/site-path.js`}></script>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={`${basePath}favicon.svg`} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
     <title>任务详情</title>
-    <link rel="stylesheet" href="/common.css" />
-    <link rel="stylesheet" href="/task-detail-styles.css" />
-    <script src="/js/auth.js" defer></script>
-    <script src="/js/taskActions.js" defer></script>
+    <link rel="stylesheet" href={`${basePath}common.css`} />
+    <link rel="stylesheet" href={`${basePath}task-detail-styles.css`} />
+    <script is:inline src={`${basePath}js/auth.js`} defer></script>
+    <script is:inline src={`${basePath}js/taskActions.js`} defer></script>
     <style>
       .task-badge {
         margin-left: 10px;
@@ -32,11 +29,466 @@ import AlertBar from "../../components/AlertBar.astro";
         min-height: 200px;
         font-size: 16px;
         color: #666;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e2e8f0;
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .loading-text {
+        color: #64748b;
+        font-size: 14px;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
       }
       .error-container {
         padding: 20px;
         text-align: center;
         color: #e74c3c;
+      }
+
+      /* 执行信息样式 */
+      .project-performance-card {
+        border-radius: 20px;
+        padding: 20px 16px;
+        background: #ffffff;
+        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+        border: 1px solid #e2e8f0;
+      }
+
+      .summary-grid {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 12px;
+      }
+
+      .summary-item {
+        padding: 12px;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 1px solid #e2e8f0;
+      }
+
+      .summary-label {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-bottom: 4px;
+      }
+
+      .summary-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .execution-mobile-list {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .execution-card {
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        padding: 16px;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+      }
+
+      .execution-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .execution-stage {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .stage-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .execution-status {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        box-shadow: none;
+      }
+
+      .execution-card-body {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .meta-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 13px;
+        color: #475569;
+      }
+
+      .meta-label {
+        color: #94a3b8;
+        min-width: 70px;
+      }
+
+      .meta-value {
+        flex: 1;
+        text-align: right;
+        color: #0f172a;
+        word-break: break-all;
+        display: inline-flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .meta-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        border: 1px solid transparent;
+        line-height: 1.4;
+      }
+
+      .meta-tag-leave {
+        background: rgba(248, 113, 113, 0.12);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #b91c1c;
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid transparent;
+      }
+
+      .audit-status-badge {
+        padding: 2px 8px;
+        font-size: 11px;
+        box-shadow: none;
+      }
+
+      .status-success {
+        color: #047857;
+        background: #ecfdf5;
+        border-color: #bbf7d0;
+      }
+
+      .status-pending {
+        color: #92400e;
+        background: #fef3c7;
+        border-color: #fde68a;
+      }
+
+      .status-danger {
+        color: #b91c1c;
+        background: #fee2e2;
+        border-color: #fecaca;
+      }
+
+      .execution-remark {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .execution-card-footer {
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+      }
+
+      .btn {
+        border: none;
+        border-radius: 14px;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        color: #1f2937;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      }
+
+      .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+      }
+
+      .btn-secondary.detail-btn {
+        color: #0f172a;
+      }
+
+      .satisfaction-score {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-left: 6px;
+      }
+
+      .empty-performance {
+        margin-top: 12px;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        text-align: left;
+        color: #475569;
+        border-radius: 18px;
+        border: 1px solid rgba(59, 130, 246, 0.16);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(239, 246, 255, 0.96) 58%, rgba(248, 250, 252, 0.98) 100%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.92),
+          0 10px 24px rgba(59, 130, 246, 0.08);
+      }
+
+      .empty-performance .empty-icon {
+        flex: 0 0 52px;
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 0;
+        color: #2563eb;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.94),
+          0 8px 18px rgba(59, 130, 246, 0.16);
+      }
+
+      .empty-performance .empty-copy {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .empty-performance .empty-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 4px;
+      }
+
+      .empty-performance .empty-text {
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.5;
+      }
+
+      /* 提现信息样式 */
+      .withdrawal-panel {
+        margin-top: 12px;
+        padding: 18px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(239, 246, 255, 0.96) 58%, rgba(248, 250, 252, 0.98) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.16);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.92),
+          0 10px 24px rgba(59, 130, 246, 0.1);
+      }
+
+      .withdrawal-summary {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .withdrawal-summary-label {
+        font-size: 12px;
+        color: #64748b;
+        letter-spacing: 0.2px;
+      }
+
+      .withdrawal-summary-note {
+        margin-top: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.5;
+        color: #0f172a;
+      }
+
+      .withdrawal-amount {
+        font-size: 26px;
+        font-weight: 800;
+        color: #1d4ed8;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .withdrawal-btn {
+        width: 100%;
+        min-height: 52px;
+        padding: 14px 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        appearance: none;
+        -webkit-appearance: none;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 58%, #1d4ed8 100%);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.22),
+          0 12px 22px rgba(37, 99, 235, 0.28);
+      }
+
+      .withdrawal-btn-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.16);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+        font-size: 14px;
+      }
+
+      .withdrawal-btn:hover {
+        transform: translateY(-2px);
+        filter: saturate(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.22),
+          0 16px 28px rgba(37, 99, 235, 0.34);
+      }
+
+      .withdrawal-btn:active {
+        transform: translateY(0);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.16),
+          0 8px 16px rgba(37, 99, 235, 0.24);
+      }
+
+      .withdrawal-btn:focus-visible {
+        outline: none;
+        box-shadow:
+          0 0 0 4px rgba(59, 130, 246, 0.18),
+          inset 0 1px 0 rgba(255, 255, 255, 0.22),
+          0 12px 22px rgba(37, 99, 235, 0.28);
+      }
+
+      .withdrawal-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+      }
+
+      .withdrawal-status-mark {
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        color: #2563eb;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.94),
+          0 6px 12px rgba(59, 130, 246, 0.12);
+      }
+
+      .withdrawal-status-copy {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .withdrawal-status-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 4px;
+      }
+
+      .withdrawal-status {
+        color: #475569;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 374px) {
+        .empty-performance {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .withdrawal-summary {
+          flex-direction: column;
+          align-items: flex-start;
+        }
       }
     </style>
   </head>
@@ -45,7 +497,8 @@ import AlertBar from "../../components/AlertBar.astro";
       <div class="detail-wrap">
         <!-- 加载状态 -->
         <div id="loadingState" class="loading-container">
-          ⏳ 加载中...
+          <div class="loading-spinner"></div>
+          <div class="loading-text">加载中...</div>
         </div>
 
         <!-- 错误状态 -->
@@ -218,9 +671,9 @@ import AlertBar from "../../components/AlertBar.astro";
       <AlertBar type="error" id="finishError" fixed autoClose={true} />
       <AlertBar type="success" id="finishSuccess" fixed autoClose={true} />
     </div>
-    <script is:inline src="/js/cookies.js"></script>
-    <script is:inline src="/js/drawer.js"></script>
-    <script is:inline src="/js/utils.js"></script>
+    <script is:inline src={`${basePath}js/cookies.js`}></script>
+    <script is:inline src={`${basePath}js/drawer.js`}></script>
+    <script is:inline src={`${basePath}js/utils.js`}></script>
 
     <script is:inline>
       // 获取 URL 参数
@@ -243,7 +696,7 @@ import AlertBar from "../../components/AlertBar.astro";
         try {
           const token = Cookies.get("employee_token");
           if (!token) {
-            window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.href = window.sitePath("/login") + "?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
             return;
           }
 
@@ -262,14 +715,14 @@ import AlertBar from "../../components/AlertBar.astro";
           });
 
           if (taskRes.status === 401) {
-            window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.href = window.sitePath("/login") + "?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
             return;
           }
 
           const taskData = await taskRes.json();
 
           if (taskData.code === 401) {
-            window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.href = window.sitePath("/login") + "?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
             return;
           }
 
@@ -284,6 +737,14 @@ import AlertBar from "../../components/AlertBar.astro";
           if (!isWaiting(task) && task.hall_orderNumber) {
             loadCustomerData(task.hall_orderNumber);
           }
+
+          // 加载执行信息（非待接单状态）
+          if (!isWaiting(task) && isProject(task.orderType)) {
+            loadPerformanceData(task.id);
+          }
+
+          // 渲染提现信息
+          renderWithdrawalInfo(task);
 
           document.getElementById("loadingState").style.display = "none";
           document.getElementById("contentState").style.display = "block";
@@ -450,6 +911,381 @@ import AlertBar from "../../components/AlertBar.astro";
         document.getElementById("customerContact").textContent = custom?.contact?.contacts ?? "-";
         document.getElementById("customerEmail").textContent = custom?.contact?.email ?? "-";
         document.getElementById("customerAddress").textContent = custom?.contact?.contact_address ?? "-";
+      }
+
+      // 加载执行信息
+      async function loadPerformanceData(taskId) {
+        try {
+          const token = Cookies.get("employee_token");
+          let allPerformanceInfo = [];
+          let page = 1;
+          const limit = 100;
+
+          // 递归加载所有执行信息
+          async function fetchAllPerformance() {
+            const response = await fetch(`${API_BASE_URL}/taskorder/getHallShow`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                id: taskId,
+                page: page,
+                limit: limit,
+                tokens: token,
+                enterpriseSide: "pc",
+              }),
+            });
+
+            const res = await response.json();
+            if (res.code === 1 && res.data && res.data.data) {
+              allPerformanceInfo = allPerformanceInfo.concat(res.data.data);
+              if (res.data.last_page > page) {
+                page++;
+                await fetchAllPerformance();
+              }
+            }
+          }
+
+          await fetchAllPerformance();
+
+          // 加载执行详情列表（用于获取工期信息）
+          let allDetailInfo = [];
+          page = 1;
+          async function fetchAllDetail() {
+            const response = await fetch(`${API_BASE_URL}/taskorder/getHallTaskList`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                id: taskId,
+                page: page,
+                limit: limit,
+                tokens: token,
+                enterpriseSide: "pc",
+              }),
+            });
+
+            const res = await response.json();
+            if (res.code === 1 && res.data && res.data.data) {
+              allDetailInfo = allDetailInfo.concat(res.data.data);
+              if (res.data.last_page > page) {
+                page++;
+                await fetchAllDetail();
+              }
+            }
+          }
+
+          await fetchAllDetail();
+
+          // 存储数据供详情页使用
+          window.__projectPerformanceInfo__ = allPerformanceInfo;
+          window.__projectPerformanceDetailInfo__ = allDetailInfo;
+
+          renderPerformanceInfo(allPerformanceInfo, allDetailInfo);
+        } catch (error) {
+          console.error("加载执行信息失败:", error);
+        }
+      }
+
+      // 渲染执行信息
+      function renderPerformanceInfo(performanceList, detailList) {
+        const container = document.getElementById("performanceContainer");
+        if (!container) return;
+
+        if (!performanceList || performanceList.length === 0) {
+          container.innerHTML = `
+            <div class="detail-card">
+              <div class="section-title">⚡ 执行信息</div>
+              <div class="empty-performance">
+                <div class="empty-icon">🗂️</div>
+                <div class="empty-copy">
+                  <div class="empty-title">暂无执行信息</div>
+                  <div class="empty-text">当前还没有可展示的执行记录，后续执行内容会在这里展示。</div>
+                </div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // 计算状态统计
+        const excludeStatusInfo = ['删除', '已转移', '已撤销'];
+        let totalMoney = 0;
+        const statusMap = performanceList.reduce((acc, item) => {
+          acc[item.statusInfo] = (acc[item.statusInfo] || 0) + 1;
+          let total = Number(item.hall_user_money) ? Number(item.hall_user_money) : (Number(item.bountymoney) + Number(item.hall_money));
+          if (!excludeStatusInfo.includes(item.statusInfo)) {
+            totalMoney += total;
+          }
+          return acc;
+        }, {});
+
+        // 生成统计卡片HTML
+        const statsHtml = Object.entries(statusMap).map(([label, value]) => `
+          <div class="summary-item">
+            <div class="summary-label">${label}</div>
+            <div class="summary-value">${value}</div>
+          </div>
+        `).join('') + `
+          <div class="summary-item">
+            <div class="summary-label">合计金额</div>
+            <div class="summary-value">${totalMoney.toFixed(2)}</div>
+          </div>
+        `;
+
+        // 获取审核状态
+        function getAuditStatusMeta(status) {
+          const auditStatusMetaMap = {
+            0: { label: "待审核", className: "status-pending" },
+            1: { label: "已通过", className: "status-success" },
+            2: { label: "已驳回", className: "status-danger" },
+          };
+          if (status === undefined || status === null || status === "") {
+            return null;
+          }
+          const parsed = Number(status);
+          if (Number.isNaN(parsed)) {
+            return null;
+          }
+          return auditStatusMetaMap[parsed] || null;
+        }
+
+        // 检查是否离职
+        function isLeave(item) {
+          return item?.userlist?.[0]?.status === 2 || item?.userlist?.[0]?.is_leave === 1;
+        }
+
+        // 生成执行卡片HTML
+        const cardsHtml = performanceList.map((stage, index) => {
+          const auditStatusMeta = getAuditStatusMeta(stage?.appendlog?.status);
+          const detailInfo = detailList[index] || {};
+          const leaveTag = isLeave(stage) ? '<span class="meta-tag meta-tag-leave">已离职</span>' : '';
+          const auditStatusHtml = auditStatusMeta ? `<span class="status-badge audit-status-badge ${auditStatusMeta.className}">${auditStatusMeta.label}</span>` : '';
+
+          return `
+            <div class="execution-card" data-status-key="${stage.statusInfo}">
+              <div class="execution-card-header">
+                <div class="execution-stage">
+                  <span class="stage-name">${stage.hallTypeTitle || '-'}</span>
+                </div>
+                <div class="execution-status">
+                  <span class="task-badge status-${stage.statusInfo}">${stage.statusInfo}</span>
+                </div>
+              </div>
+
+              <div class="execution-card-body">
+                <div class="meta-row">
+                  <span class="meta-label">申请人</span>
+                  <span class="meta-value">
+                    ${stage?.userlist?.[0]?.username ?? "-"}
+                    ${leaveTag}
+                  </span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">下发人</span>
+                  <span class="meta-value">${stage.username || "-"}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">基础佣金</span>
+                  <span class="meta-value">￥${getBaseCommission(stage) || "0.00"}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">加价佣金</span>
+                  <span class="meta-value">￥${getAddCommission(stage) || "0.00"}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">工期（工作日）</span>
+                  <span class="meta-value">
+                    <span class="tag tag-overdue tag-overdue-${earlyWarningOfConstructionPeriod(stage.button_color)}">${detailInfo.button_info || '-'}</span>
+                  </span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">发布时间</span>
+                  <span class="meta-value">${stage.createtime || "-"}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">接单时间</span>
+                  <span class="meta-value">${stage.performtime || "-"}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">截止时间</span>
+                  <span class="meta-value">${stage.enddatatime || "-"}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">完成时间</span>
+                  <span class="meta-value">${stage.appendlog?.createtime || "-"}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">审核时间</span>
+                  <span class="meta-value">${stage?.appendlog?.audittime || "-"}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">验收情况</span>
+                  <span class="meta-value">${auditStatusHtml}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">满意度</span>
+                  <span class="meta-value satisfaction-score">${stage.evaluate || "-"}</span>
+                </div>
+              </div>
+
+              ${stage.remark ? `<div class="execution-remark">${stage.remark}</div>` : ''}
+
+              <div class="execution-card-footer">
+                <button class="btn btn-secondary detail-btn" data-task-id="${stage.id}" onclick="handlePerformanceDetail(event)">详情</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        container.innerHTML = `
+          <div class="detail-card project-performance-card">
+            <div class="section-title">⚡ 执行信息</div>
+            <div class="summary-grid">${statsHtml}</div>
+            <div class="execution-mobile-list">${cardsHtml}</div>
+          </div>
+        `;
+      }
+
+      // 执行信息详情跳转
+      function handlePerformanceDetail(event) {
+        const taskId = event.target.dataset.taskId;
+        if (!taskId) return;
+        const performanceInfo = window.__projectPerformanceInfo__?.find(item => '' + item.id === taskId);
+        if (performanceInfo) {
+          sessionStorage.setItem("projectPerformanceDetailInfo", JSON.stringify(performanceInfo));
+          sessionStorage.setItem("projectDetailInfo", JSON.stringify(window.__taskData__));
+        }
+        window.location.href = window.sitePath(`/project-task-detail/${taskId}`);
+      }
+
+      // 渲染提现信息
+      function renderWithdrawalInfo(task) {
+        const container = document.getElementById("withdrawalContainer");
+        if (!container) return;
+
+        const withdrawValue = task?.withdraw?.toString();
+        const showStatus = ['false', '0', '1'];
+
+        if (!showStatus.includes(withdrawValue)) {
+          return;
+        }
+
+        let money = (Number(task.bountymoney) + Number(task.hall_money)).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        if (Number(task.hall_user_money)) {
+          money = task.hall_user_money;
+        }
+
+        let contentHtml = '';
+        if (withdrawValue === 'false') {
+          contentHtml = `
+            <div class="withdrawal-panel">
+              <div class="withdrawal-summary">
+                <div>
+                  <div class="withdrawal-summary-label">可提现佣金</div>
+                  <div class="withdrawal-summary-note">任务已完结后，可在这里发起提现申请。</div>
+                </div>
+                <div class="withdrawal-amount">￥${money}</div>
+              </div>
+              <button type="button" class="withdrawal-btn" onclick="showWithdrawalConfirm()">
+                <span class="withdrawal-btn-icon">￥</span>
+                <span>申请提现</span>
+              </button>
+            </div>
+          `;
+        } else if (withdrawValue === '0' || withdrawValue === '1') {
+          contentHtml = `
+            <div class="withdrawal-panel">
+              <div class="withdrawal-summary">
+                <div>
+                  <div class="withdrawal-summary-label">佣金金额</div>
+                  <div class="withdrawal-summary-note">当前提现申请进度</div>
+                </div>
+                <div class="withdrawal-amount">￥${money}</div>
+              </div>
+              <div class="withdrawal-content">
+                <div class="withdrawal-status-mark">💳</div>
+                <div class="withdrawal-status-copy">
+                  <div class="withdrawal-status-title">提现状态</div>
+                  <div class="withdrawal-status">${task.withdrawText || '提现处理中'}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        container.innerHTML = `
+          <div class="detail-card">
+            <div class="section-title">💳 提现信息</div>
+            ${contentHtml}
+          </div>
+        `;
+
+        // 存储提现金额供确认弹窗使用
+        window.__withdrawalMoney__ = money;
+      }
+
+      // 显示提现确认弹窗
+      function showWithdrawalConfirm() {
+        const money = window.__withdrawalMoney__ || '0.00';
+        const finishDialog = document.getElementById("finishDialog");
+        if (!finishDialog || !finishDialog.show) {
+          alert(`当前任务已完结，佣金￥${money}，是否确认申请提现？`);
+          return;
+        }
+
+        finishDialog.show({
+          message: `当前任务已完结，佣金￥${money}，是否确认申请提现？`,
+          onConfirm: async () => {
+            try {
+              const token = Cookies.get("employee_token");
+              const response = await fetch(`${API_BASE_URL}/taskorder/addwithdraw`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  id: taskId,
+                  tokens: token,
+                  enterpriseSide: "pc",
+                }),
+              });
+
+              const res = await response.json();
+              if (res.code === 1) {
+                const successBar = document.getElementById("finishSuccess");
+                if (successBar) {
+                  successBar.show();
+                  successBar.textContent = '提现申请成功';
+                } else {
+                  alert('提现申请成功');
+                }
+                window.location.reload();
+              } else {
+                const errorBar = document.getElementById("finishError");
+                if (errorBar) {
+                  errorBar.show();
+                  errorBar.textContent = res.msg || res.message || '提现申请失败';
+                } else {
+                  alert(res.msg || res.message || '提现申请失败');
+                }
+              }
+            } catch (error) {
+              const errorBar = document.getElementById("finishError");
+              if (errorBar) {
+                errorBar.show();
+                errorBar.textContent = '提现申请失败';
+              } else {
+                alert('提现申请失败');
+              }
+            }
+          },
+          onCancel: () => {
+            console.log('用户取消提现');
+          }
+        });
       }
 
       function normalizeCommissionSnapshot(payload, fallbackOrderType) {

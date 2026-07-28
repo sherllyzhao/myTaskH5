@@ -128,7 +128,7 @@ const getPickerLabel = (item: FilterItem, value: string | undefined) => {
           const formData = new FormData();
           formData.append('file', file);
           formData.append('name', file.name);
-          const result = await fetch('/taskApi/ajax/upload', {
+          const result = await fetch(`${window.__TASK_API_BASE__}/ajax/upload`, {
             method: 'POST',
             body: formData
           })

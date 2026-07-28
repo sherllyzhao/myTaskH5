@@ -1,36 +1,28 @@
 ---
 interface Props {
-	userInfo: any;
-	currentTab: 'hall' | 'tasks' | 'commission';
+  userInfo: any;
+  currentTab: 'hall' | 'tasks' | 'commission';
 }
 
 const { userInfo, currentTab } = Astro.props;
+const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 
 <div class="header">
-	<div class="nav-tabs">
-		<div
-			class={`nav-tab ${currentTab === 'hall' ? 'active' : ''}`}
-			onclick="window.location.href='/'"
-		>
-			任务大厅
-		</div>
-		<div
-			class={`nav-tab ${currentTab === 'tasks' ? 'active' : ''}`}
-			onclick="window.location.href='/my-tasks'"
-		>
-			我的任务
-		</div>
-		<div
-			class={`nav-tab ${currentTab === 'commission' ? 'active' : ''}`}
-			onclick="window.location.href='/my-commission'"
-		>
-			我的佣金
-		</div>
-	</div>
+  <div class="nav-tabs">
+    <a class={`nav-tab ${currentTab === 'hall' ? 'active' : ''}`} href={basePath}>
+      任务大厅
+    </a>
+    <a class={`nav-tab ${currentTab === 'tasks' ? 'active' : ''}`} href={`${basePath}my-tasks`}>
+      我的任务
+    </a>
+    <a class={`nav-tab ${currentTab === 'commission' ? 'active' : ''}`} href={`${basePath}my-commission`}>
+      我的佣金
+    </a>
+  </div>
 
-	<div class="profile-section">
-		<img src={userInfo?.memberInfo?.avatar || '/favicon.svg'} alt="用户头像" class="avatar" />
-		<a href="/profile" class="profile-btn">个人主页</a>
-	</div>
+  <div class="profile-section">
+    <img src={userInfo?.memberInfo?.avatar || `${basePath}favicon.svg`} alt="用户头像" class="avatar" />
+    <a href={`${basePath}profile`} class="profile-btn">个人主页</a>
+  </div>
 </div>

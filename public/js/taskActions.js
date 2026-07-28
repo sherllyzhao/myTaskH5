@@ -10,28 +10,24 @@ async function acceptTask(taskId, oid = '') {
   }
 
   try {
-    const response = await fetch('/proxy', {
+    const response = await fetch(`${window.__TASK_API_BASE__}/taskorder/accept`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        path: '/taskorder/accept',
         id: taskId,
-        oid: oid
+        oid: oid,
       }),
     });
 
     const result = await response.json();
 
     if (result.code === 1) {
-      // 接取成功，刷新页面
       window.location.reload();
     } else if (result.code === 401) {
-      // 未授权，跳转到登录页
-      window.location.href = '/login';
+      window.location.href = window.sitePath ? window.sitePath('/login') : '/login';
     } else {
-      // 显示错误信息
       alert(result.msg || '接取失败，请重试');
     }
   } catch (error) {

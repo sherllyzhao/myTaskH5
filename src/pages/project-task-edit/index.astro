@@ -50,15 +50,18 @@ const executionFilterGroups: FilterGroup[] = [
     ],
   },
 ];
+
+const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 ---
 
 <html lang="zh-CN">
   <head>
+        <script is:inline src={`${basePath}js/site-path.js`}></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>项目任务编辑</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="/common.css" />
+    <link rel="icon" type="image/svg+xml" href={`${basePath}favicon.svg`} />
+    <link rel="stylesheet" href={`${basePath}common.css`} />
     <style>
       :root {
         color-scheme: light;
@@ -545,9 +548,9 @@ const executionFilterGroups: FilterGroup[] = [
       </Fragment>
     </FilterDrawer>
 
-    <script is:inline src="/js/cookies.js"></script>
-    <script is:inline src="/js/money.js"></script>
-    <script is:inline src="/js/drawer.js"></script>
+    <script is:inline src={`${basePath}js/cookies.js`}></script>
+    <script is:inline src={`${basePath}js/money.js`}></script>
+    <script is:inline src={`${basePath}js/drawer.js`}></script>
 
     <script is:inline>
       // 从 URL 查询参数获取 id
@@ -949,7 +952,7 @@ const executionFilterGroups: FilterGroup[] = [
               if (history.length > 1) {
                 history.back();
               } else {
-                window.location.href = "/";
+                window.location.href = window.sitePath("/");
               }
             });
           }
