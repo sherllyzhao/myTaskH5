@@ -23,6 +23,13 @@ export function getApiBase(): string {
 }
 
 /**
+ * 获取 China9 API 基础 URL（登录、用户信息等账号接口）
+ */
+export function getChina9ApiBase(): string {
+  return isDev() ? '/api' : 'https://api.china9.cn/api';
+}
+
+/**
  * 获取 TaskAPI 基础 URL
  */
 export function getTaskApiBase(): string {
@@ -35,7 +42,7 @@ export function getTaskApiBase(): string {
  * @param isTaskApi 是否是 taskApi
  */
 export function getApiUrl(path: string, isTaskApi = false): string {
-  const base = isTaskApi ? getTaskApiBase() : getApiBase();
+  const base = isTaskApi ? getTaskApiBase() : getChina9ApiBase();
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${base}${normalizedPath}`;
 }

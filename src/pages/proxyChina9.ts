@@ -20,7 +20,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const body = await request.json();
 
     // 基础 URL（固定部分）
-    const baseUrl = 'https://china9.cn/api';
+    const baseUrl = 'https://api.china9.cn/api';
 
     // 从请求体中获取目标路径（可选，默认为 /taskorder/orderindex）
     const path = body.path || '/user/infoClient';

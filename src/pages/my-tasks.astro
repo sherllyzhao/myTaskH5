@@ -253,11 +253,11 @@ const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_U
 			import { createTaskCardHTML } from "../utils/taskCardTemplate";
 			import { getCookie } from "../utils/tool";
 			import { createListStateManager } from "../utils/listStateManager";
-			import { getTaskApiBase, getApiBase } from "../utils/apiConfig";
+			import { getTaskApiBase, getChina9ApiBase } from "../utils/apiConfig";
 
 			// ===== API 基础地址（使用公共函数）=====
 			const API_BASE_URL = getTaskApiBase();
-			const USER_API_BASE_URL = getApiBase();
+			const USER_API_BASE_URL = getChina9ApiBase();
 
 			// ===== 页面字段配置 =====
 			// 设置为全局变量，供 getFilterFormData 使用

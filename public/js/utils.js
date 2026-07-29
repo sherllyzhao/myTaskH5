@@ -292,6 +292,14 @@
   }
 
   /**
+   * 获取 China9 API 基础 URL（登录、用户信息等账号接口）
+   * @returns {string}
+   */
+  function getChina9ApiBase() {
+    return isDev() ? "/api" : "https://api.china9.cn/api";
+  }
+
+  /**
    * 获取 TaskAPI 基础 URL
    * @returns {string}
    */
@@ -646,6 +654,7 @@
     // API 配置
     isDev,
     getApiBase,
+    getChina9ApiBase,
     getTaskApiBase,
 
     // DOM 工具
@@ -694,6 +703,7 @@
   global.handleAuthError = handleAuthError;
   global.isDev = isDev;
   global.getApiBase = getApiBase;
+  global.getChina9ApiBase = getChina9ApiBase;
   global.getTaskApiBase = getTaskApiBase;
   global.debounce = debounce;
   global.throttle = throttle;
