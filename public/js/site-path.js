@@ -17,7 +17,10 @@
 
   window.sitePath = function (path) {
     const normalizedPath = String(path || '').replace(/^\/+/, '');
-    return window.__SITE_BASE_PATH__ + normalizedPath;
+    const normalizedBasePath = window.__SITE_BASE_PATH__.replace(/\/+$/, '');
+    return normalizedPath
+      ? `${normalizedBasePath}/${normalizedPath}`
+      : `${normalizedBasePath}/`;
   };
 
   // GitHub Pages 没有 Astro SSR endpoint。兼容旧代码中的 /proxy 和 /taskApi 请求，

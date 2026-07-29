@@ -221,7 +221,7 @@ const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_U
                 localStorage.setItem('employee_token', data?.data?.user?.token)
               }
             }
-            setTimeout(() => { location.href = '/'; }, 4000);
+            setTimeout(() => { location.href = window.sitePath('/'); }, 4000);
           } else {
             (errorBar)?.show?.(data?.message || data?.msg || '登录失败，请重试');
           }
