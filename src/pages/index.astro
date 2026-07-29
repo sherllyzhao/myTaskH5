@@ -229,7 +229,7 @@ const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_U
 
       // 客户端获取用户信息和统计数据
       (async function loadClientData() {
-        const apiBase = getChina9ApiBase();
+        const userApiBase = getUserApiBase();
         const taskApiBase = getTaskApiBase();
         const token = getToken();
 
@@ -241,7 +241,7 @@ const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_U
 
         try {
           // 获取用户信息
-          const userRes = await fetch(`${apiBase}/user/infoClient`, {
+          const userRes = await fetch(`${userApiBase}/user/infoClient`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tokens: token })

@@ -292,11 +292,19 @@
   }
 
   /**
-   * 获取 China9 API 基础 URL（登录、用户信息等账号接口）
+   * 获取登录 API 基础 URL
    * @returns {string}
    */
   function getChina9ApiBase() {
     return isDev() ? "/api" : "https://api.china9.cn/api";
+  }
+
+  /**
+   * 获取用户信息 API 基础 URL
+   * @returns {string}
+   */
+  function getUserApiBase() {
+    return isDev() ? "/userApi" : "https://china9.cn/api";
   }
 
   /**
@@ -655,6 +663,7 @@
     isDev,
     getApiBase,
     getChina9ApiBase,
+    getUserApiBase,
     getTaskApiBase,
 
     // DOM 工具
@@ -704,6 +713,7 @@
   global.isDev = isDev;
   global.getApiBase = getApiBase;
   global.getChina9ApiBase = getChina9ApiBase;
+  global.getUserApiBase = getUserApiBase;
   global.getTaskApiBase = getTaskApiBase;
   global.debounce = debounce;
   global.throttle = throttle;

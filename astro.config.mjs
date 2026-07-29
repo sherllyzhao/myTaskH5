@@ -28,6 +28,13 @@ export default defineConfig({
           secure: true,
           ws: true,
         },
+        '/userApi': {
+          target: 'https://china9.cn/api',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/userApi/, ''),
+          secure: true,
+          ws: true,
+        },
       },
     },
   },

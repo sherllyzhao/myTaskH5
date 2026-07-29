@@ -16,17 +16,26 @@ export function isDev(): boolean {
 /**
  * 获取业务 API 基础 URL
  *
- * 登录接口单独使用 api.china9.cn，其他业务接口统一使用 flexible.china9.cn。
+ * 任务和统计等业务接口统一使用 flexible.china9.cn。
  */
 export function getApiBase(): string {
   return isDev() ? '/taskApi' : 'https://flexible.china9.cn/api';
 }
 
 /**
- * 获取 China9 API 基础 URL（登录、用户信息等账号接口）
+ * 获取登录 API 基础 URL
  */
 export function getChina9ApiBase(): string {
   return isDev() ? '/api' : 'https://api.china9.cn/api';
+}
+
+/**
+ * 获取用户信息 API 基础 URL
+ *
+ * 用户信息接口与登录接口不是同一个后端域名。
+ */
+export function getUserApiBase(): string {
+  return isDev() ? '/userApi' : 'https://china9.cn/api';
 }
 
 /**

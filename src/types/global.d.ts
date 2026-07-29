@@ -12,6 +12,7 @@ declare global {
     pageFieldConfig?: Record<string, unknown>;
     __SITE_BASE_PATH__: string;
     __LOGIN_API_BASE__: string;
+    __USER_API_BASE__: string;
     __API_BASE__: string;
     __TASK_API_BASE__: string;
     sitePath: (path?: string) => string;
