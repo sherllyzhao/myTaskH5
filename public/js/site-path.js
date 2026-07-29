@@ -12,8 +12,10 @@
     window.location.hostname.startsWith('192.168.');
 
   window.__SITE_BASE_PATH__ = basePath || '/';
-  window.__API_BASE__ = isLocalHost ? '/api' : 'https://api.china9.cn/api';
+  window.__LOGIN_API_BASE__ = isLocalHost ? '/api' : 'https://api.china9.cn/api';
   window.__TASK_API_BASE__ = isLocalHost ? '/taskApi' : 'https://flexible.china9.cn/api';
+  // 兼容旧代码：/api 前缀默认视为业务 API，登录路径单独走 __LOGIN_API_BASE__。
+  window.__API_BASE__ = window.__TASK_API_BASE__;
 
   window.sitePath = function (path) {
     const normalizedPath = String(path || '').replace(/^\/+/, '');
@@ -57,7 +59,9 @@
 
     if (pathname === '/api' || pathname.startsWith('/api/')) {
       const targetPath = pathname.slice('/api'.length) || '/';
-      const targetUrl = `${window.__API_BASE__}${targetPath}${requestUrl.includes('?') ? requestUrl.slice(requestUrl.indexOf('?')) : ''}`;
+      const isLoginRequest = targetPath === '/login/auth' || targetPath.startsWith('/login/');
+      const apiBase = isLoginRequest ? window.__LOGIN_API_BASE__ : window.__TASK_API_BASE__;
+      const targetUrl = `${apiBase}${targetPath}${requestUrl.includes('?') ? requestUrl.slice(requestUrl.indexOf('?')) : ''}`;
       return nativeFetch(targetUrl, options);
     }
 

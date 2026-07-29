@@ -283,11 +283,12 @@
   }
 
   /**
-   * 获取 API 基础 URL
+   * 获取业务 API 基础 URL
+   * 登录接口单独使用 api.china9.cn，其他业务接口统一使用 flexible.china9.cn。
    * @returns {string}
    */
   function getApiBase() {
-    return isDev() ? "/api" : "https://api.china9.cn/api";
+    return isDev() ? "/taskApi" : "https://flexible.china9.cn/api";
   }
 
   /**
@@ -295,7 +296,7 @@
    * @returns {string}
    */
   function getTaskApiBase() {
-    return isDev() ? "/taskApi" : "https://flexible.china9.cn/api";
+    return getApiBase();
   }
 
   /**

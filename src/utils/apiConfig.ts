@@ -14,17 +14,19 @@ export function isDev(): boolean {
 }
 
 /**
- * 获取 API 基础 URL
+ * 获取业务 API 基础 URL
+ *
+ * 登录接口单独使用 api.china9.cn，其他业务接口统一使用 flexible.china9.cn。
  */
 export function getApiBase(): string {
-  return isDev() ? '/api' : 'https://api.china9.cn/api';
+  return isDev() ? '/taskApi' : 'https://flexible.china9.cn/api';
 }
 
 /**
  * 获取 TaskAPI 基础 URL
  */
 export function getTaskApiBase(): string {
-  return isDev() ? '/taskApi' : 'https://flexible.china9.cn/api';
+  return getApiBase();
 }
 
 /**

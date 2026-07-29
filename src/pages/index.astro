@@ -498,7 +498,7 @@ const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_U
               hasMore = !isComplete;
 
             } else {
-              console.error("加载失败:", result.msg || "未知错误");
+              console.error("加载失败:", result.msg || result.message || "未知错误");
               if (taskListContainer) {
                 taskListContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #f56565;">❌ 加载失败</div>';
               }
@@ -582,7 +582,7 @@ const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_U
               hasMore = !isComplete;
 
             } else {
-              console.error("加载失败:", result.msg || "未知错误");
+              console.error("加载失败:", result.msg || result.message || "未知错误");
               stateManager.onRequestError();
               hasMore = false;
             }
